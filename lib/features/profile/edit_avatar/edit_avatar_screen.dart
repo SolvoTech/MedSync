@@ -19,6 +19,8 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
   bool _isLoading = false;
 
   Future<void> _pickAndUploadImage(ImageSource source) async {
+    final toolbarColor = Theme.of(context).primaryColor;
+
     try {
       final pickedFile = await ImagePickerHelper.pickAndCompressImage(source);
       if (pickedFile == null) return;
@@ -29,7 +31,7 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Potong Avatar',
-            toolbarColor: Theme.of(context).primaryColor,
+            toolbarColor: toolbarColor,
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: true,

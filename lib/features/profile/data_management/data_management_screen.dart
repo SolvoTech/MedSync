@@ -75,6 +75,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
     );
 
     if (confirmed != true) return;
+    if (!mounted) return;
 
     // Second confirmation
     final confirmed2 = await AppDialog.showConfirm(
@@ -86,6 +87,8 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
     );
 
     if (confirmed2 != true) return;
+
+    if (!mounted) return;
 
     setState(() => _isDeleting = true);
 

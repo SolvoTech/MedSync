@@ -15,8 +15,8 @@ class AppException implements Exception {
 
 /// Network-specific exception.
 class NetworkException extends AppException {
-  const NetworkException([String message = 'Tidak ada koneksi internet'])
-      : super(message, code: 'network/offline');
+  const NetworkException([super.message = 'Tidak ada koneksi internet'])
+      : super(code: 'network/offline');
 }
 
 /// Authentication-specific exception.
@@ -26,13 +26,12 @@ class AuthException extends AppException {
 
 /// Data not found exception.
 class NotFoundException extends AppException {
-  const NotFoundException([String message = 'Data tidak ditemukan'])
-      : super(message, code: 'data/not-found');
+  const NotFoundException([super.message = 'Data tidak ditemukan'])
+      : super(code: 'data/not-found');
 }
 
 /// Permission denied exception.
 class PermissionDeniedException extends AppException {
-  const PermissionDeniedException([
-    String message = 'Izin tidak diberikan',
-  ]) : super(message, code: 'permission/denied');
+  const PermissionDeniedException([super.message = 'Izin tidak diberikan'])
+      : super(code: 'permission/denied');
 }

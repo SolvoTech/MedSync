@@ -68,33 +68,36 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
           const SizedBox(height: 8),
           AppCard(
             padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                RadioListTile<String>(
-                  title: const Text('Ikuti Sistem'),
-                  subtitle: const Text('Otomatis sesuai pengaturan perangkat'),
-                  secondary: const Icon(Icons.settings_brightness),
-                  value: 'system',
-                  groupValue: _themeMode,
-                  onChanged: (v) => _saveTheme(v!),
-                ),
-                const Divider(height: 1, indent: 56),
-                RadioListTile<String>(
-                  title: const Text('Terang'),
-                  secondary: const Icon(Icons.light_mode),
-                  value: 'light',
-                  groupValue: _themeMode,
-                  onChanged: (v) => _saveTheme(v!),
-                ),
-                const Divider(height: 1, indent: 56),
-                RadioListTile<String>(
-                  title: const Text('Gelap'),
-                  secondary: const Icon(Icons.dark_mode),
-                  value: 'dark',
-                  groupValue: _themeMode,
-                  onChanged: (v) => _saveTheme(v!),
-                ),
-              ],
+            child: RadioGroup<String>(
+              groupValue: _themeMode,
+              onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+                _saveTheme(value);
+              },
+              child: Column(
+                children: [
+                  RadioListTile<String>(
+                    title: const Text('Ikuti Sistem'),
+                    subtitle: const Text('Otomatis sesuai pengaturan perangkat'),
+                    secondary: const Icon(Icons.settings_brightness),
+                    value: 'system',
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  RadioListTile<String>(
+                    title: const Text('Terang'),
+                    secondary: const Icon(Icons.light_mode),
+                    value: 'light',
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  RadioListTile<String>(
+                    title: const Text('Gelap'),
+                    secondary: const Icon(Icons.dark_mode),
+                    value: 'dark',
+                  ),
+                ],
+              ),
             ),
           ),
 

@@ -373,7 +373,7 @@ Future<void> _showScheduleSheet({
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
-                    value: repeatType,
+                    initialValue: repeatType,
                     decoration: const InputDecoration(
                       labelText: 'Pola Pengulangan',
                     ),

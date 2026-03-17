@@ -186,7 +186,7 @@ Future<void> showReminderEditorSheet({
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
-                  value: selectedType,
+                  initialValue: selectedType,
                   decoration: InputDecoration(labelText: typeFieldLabel),
                   items: availableTypes
                       .map(

@@ -12,25 +12,26 @@ sealed class Failure {
 }
 
 class ServerFailure extends Failure {
-  const ServerFailure([String message = 'Terjadi kesalahan server'])
-      : super(message, code: 'server');
+  const ServerFailure([super.message = 'Terjadi kesalahan server'])
+    : super(code: 'server');
 }
 
 class CacheFailure extends Failure {
-  const CacheFailure([String message = 'Gagal memuat dari cache'])
-      : super(message, code: 'cache');
+  const CacheFailure([super.message = 'Gagal memuat dari cache'])
+    : super(code: 'cache');
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure([String message = 'Tidak ada koneksi internet'])
-      : super(message, code: 'network');
+  const NetworkFailure([super.message = 'Tidak ada koneksi internet'])
+    : super(code: 'network');
 }
 
 class AuthFailure extends Failure {
-  const AuthFailure([String message = 'Gagal autentikasi'])
-      : super(message, code: 'auth');
+  const AuthFailure([super.message = 'Gagal autentikasi'])
+    : super(code: 'auth');
 }
 
 class ValidationFailure extends Failure {
-  const ValidationFailure(super.message) : super(code: 'validation');
+  const ValidationFailure([super.message = 'Data tidak valid'])
+      : super(code: 'validation');
 }
