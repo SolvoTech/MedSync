@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# MedSync pre-commit sample
+# Usage:
+# 1) cp tooling/pre-commit.sample .git/hooks/pre-commit
+# 2) chmod +x .git/hooks/pre-commit
+
+bash tooling/check_dart_file_size.sh 500 lib
+flutter analyze
+flutter test test/widget_test.dart

@@ -1,0 +1,250 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../core/widgets/app_button.dart';
+
+/// Bottom sheet shown after marking a medicine task as done.
+/// Collects optional mood + symptom notes per spec §15.2.
+class SymptomNotesSheet extends ConsumerStatefulWidget {
+  const SymptomNotesSheet({
+    super.key,
+    required this.taskLogId,
+    required this.medicineName,
+  });
+
+  final String taskLogId;
+  final String medicineName;
+
+  /// Show as a modal bottom sheet and return true if saved.
+  static Future<bool?> show(
+    BuildContext context, {
+    required String taskLogId,
+    required String medicineName,
+  }) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: SymptomNotesSheet(
+          taskLogId: taskLogId,
+          medicineName: medicineName,
+        ),
+      ),
+    );
+  }
+
+  @override
+  ConsumerState<SymptomNotesSheet> createState() => _SymptomNotesSheetState();
+}
+
+class _SymptomNotesSheetState extends ConsumerState<SymptomNotesSheet> {
+  String? _mood;
+  final _notesController = TextEditingController();
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+
+    try {
+      final updates = <String, dynamic>{};
+      if (_mood != null) updates['mood'] = _mood;
+      if (_notesController.text.trim().isNotEmpty) {
+        updates['symptom_notes'] = _notesController.text.trim();
+      }
+
+      if (updates.isNotEmpty) {
+        await Supabase.instance.client
+            .from('task_logs')
+            .update(updates)
+            .eq('id', widget.taskLogId);
+      }
+
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colorScheme.onSurface.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Success indication
+          Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green, size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${widget.medicineName} berhasil dicatat',
+                  style: textTheme.titleSmall,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Mood section
+          Text(
+            'Bagaimana kondisimu sekarang?',
+            style: textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _MoodChip(
+                emoji: '😊',
+                label: 'Baik',
+                value: 'good',
+                selected: _mood == 'good',
+                onTap: () => setState(() =>
+                    _mood = _mood == 'good' ? null : 'good'),
+              ),
+              _MoodChip(
+                emoji: '😐',
+                label: 'Biasa',
+                value: 'neutral',
+                selected: _mood == 'neutral',
+                onTap: () => setState(() =>
+                    _mood = _mood == 'neutral' ? null : 'neutral'),
+              ),
+              _MoodChip(
+                emoji: '😔',
+                label: 'Kurang',
+                value: 'bad',
+                selected: _mood == 'bad',
+                onTap: () => setState(() =>
+                    _mood = _mood == 'bad' ? null : 'bad'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Notes field
+          TextField(
+            controller: _notesController,
+            maxLines: 2,
+            decoration: InputDecoration(
+              hintText: 'Catatan singkat (opsional), e.g. sedikit pusing, mual...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              contentPadding: const EdgeInsets.all(12),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Actions
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Lewati'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: AppButton(
+                  label: 'Simpan',
+                  onPressed: _save,
+                  isLoading: _isSaving,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MoodChip extends StatelessWidget {
+  const _MoodChip({
+    required this.emoji,
+    required this.label,
+    required this.value,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String emoji, label, value;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected
+              ? colorScheme.primaryContainer
+              : colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(16),
+          border: selected
+              ? Border.all(color: colorScheme.primary, width: 2)
+              : null,
+        ),
+        child: Column(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 28)),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontWeight:
+                        selected ? FontWeight.bold : FontWeight.normal,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
