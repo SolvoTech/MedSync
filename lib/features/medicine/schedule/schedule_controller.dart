@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../data/remote/datasources/medicine_remote_datasource.dart';
 import '../../../data/remote/supabase_client.dart';
 import '../../../data/repositories/medicine_repository_impl.dart';
 import '../../../domain/models/medicine.dart';
@@ -64,27 +65,32 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     state = const AsyncLoading();
 
     try {
+      final client = SupabaseClientRef.maybeClient;
+      if (client == null) {
+        throw StateError('Supabase client belum terinisialisasi');
+      }
+      final currentUser = client.auth.currentUser;
+      if (currentUser == null) {
+        throw StateError('User belum login');
+      }
+
       String? photoUrl;
       String? prescriptionUrl;
-      final userId = SupabaseClientRef.client.auth.currentUser!.id;
+      final userId = currentUser.id;
       final uniqueId = DateTime.now().millisecondsSinceEpoch;
 
       if (photoFile != null) {
-        final path = '$userId/medicine_$uniqueId\_photo.jpg';
-        await SupabaseClientRef.client.storage
-            .from('medicine-photos')
-            .upload(path, photoFile);
-        photoUrl = SupabaseClientRef.client.storage
-            .from('medicine-photos')
-            .getPublicUrl(path);
+        final path = '$userId/medicine_${uniqueId}_photo.jpg';
+        await client.storage.from('medicine-photos').upload(path, photoFile);
+        photoUrl = client.storage.from('medicine-photos').getPublicUrl(path);
       }
 
       if (prescriptionFile != null) {
-        final path = '$userId/medicine_$uniqueId\_prescription.jpg';
-        await SupabaseClientRef.client.storage
+        final path = '$userId/medicine_${uniqueId}_prescription.jpg';
+        await client.storage
             .from('medicine-photos')
             .upload(path, prescriptionFile);
-        prescriptionUrl = SupabaseClientRef.client.storage
+        prescriptionUrl = client.storage
             .from('medicine-photos')
             .getPublicUrl(path);
       }
