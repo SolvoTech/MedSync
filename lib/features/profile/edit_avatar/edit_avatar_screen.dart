@@ -51,17 +51,16 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
       final uniqueId = DateTime.now().millisecondsSinceEpoch;
       final path = '${user.id}/avatar_$uniqueId.jpg';
 
-      await Supabase.instance.client.storage
-          .from('avatars')
-          .upload(path, file);
+      await Supabase.instance.client.storage.from('avatars').upload(path, file);
 
       final publicUrl = Supabase.instance.client.storage
           .from('avatars')
           .getPublicUrl(path);
 
-      await Supabase.instance.client.from('profiles').update({
-        'avatar_url': publicUrl,
-      }).eq('id', user.id);
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'avatar_url': publicUrl})
+          .eq('id', user.id);
 
       if (mounted) {
         Navigator.pop(context, true);
@@ -86,21 +85,22 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) throw Exception('User not logged in');
 
-      await Supabase.instance.client.from('profiles').update({
-        'avatar_url': null,
-      }).eq('id', user.id);
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'avatar_url': null})
+          .eq('id', user.id);
 
       if (mounted) {
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Foto profil dihapus.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Foto profil dihapus.')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menghapus foto: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal menghapus foto: $e')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -110,9 +110,7 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(

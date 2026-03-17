@@ -39,7 +39,10 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                   children: [
                     const Text(
                       'Tambah Obat',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -63,7 +66,9 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                     TextFormField(
                       controller: stockController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Stok Saat Ini'),
+                      decoration: const InputDecoration(
+                        labelText: 'Stok Saat Ini',
+                      ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Stok harus diisi';
@@ -80,9 +85,10 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                         Expanded(
                           child: InkWell(
                             onTap: () async {
-                              final file = await ImagePickerHelper.pickAndCompressImage(
-                                ImageSource.camera,
-                              );
+                              final file =
+                                  await ImagePickerHelper.pickAndCompressImage(
+                                    ImageSource.camera,
+                                  );
                               if (file != null) {
                                 setState(() {
                                   photoFile = file;
@@ -98,16 +104,28 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                               child: photoFile != null
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
-                                      child: Image.file(photoFile!, fit: BoxFit.cover),
+                                      child: Image.file(
+                                        photoFile!,
+                                        fit: BoxFit.cover,
+                                      ),
                                     )
                                   : const Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Icon(Icons.camera_alt_outlined, color: Colors.grey),
+                                        Icon(
+                                          Icons.camera_alt_outlined,
+                                          color: Colors.grey,
+                                        ),
                                         SizedBox(height: 4),
-                                        Text('Foto Kemasan\n(Opsional)',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                        Text(
+                                          'Foto Kemasan\n(Opsional)',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
                                       ],
                                     ),
                             ),
@@ -117,9 +135,10 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                         Expanded(
                           child: InkWell(
                             onTap: () async {
-                              final file = await ImagePickerHelper.pickAndCompressImage(
-                                ImageSource.gallery,
-                              );
+                              final file =
+                                  await ImagePickerHelper.pickAndCompressImage(
+                                    ImageSource.gallery,
+                                  );
                               if (file != null) {
                                 setState(() {
                                   prescriptionFile = file;
@@ -135,16 +154,28 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                               child: prescriptionFile != null
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
-                                      child: Image.file(prescriptionFile!, fit: BoxFit.cover),
+                                      child: Image.file(
+                                        prescriptionFile!,
+                                        fit: BoxFit.cover,
+                                      ),
                                     )
                                   : const Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Icon(Icons.description_outlined, color: Colors.grey),
+                                        Icon(
+                                          Icons.description_outlined,
+                                          color: Colors.grey,
+                                        ),
                                         SizedBox(height: 4),
-                                        Text('Foto Resep\n(Opsional)',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                        Text(
+                                          'Foto Resep\n(Opsional)',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
                                       ],
                                     ),
                             ),
@@ -187,7 +218,9 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Gagal menambahkan obat: $error'),
+                                  content: Text(
+                                    'Gagal menambahkan obat: $error',
+                                  ),
                                 ),
                               );
                             }

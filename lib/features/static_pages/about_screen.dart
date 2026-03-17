@@ -16,15 +16,14 @@ class AboutScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 8),
-          Icon(
-            Icons.medication_rounded,
-            size: 64,
-            color: colorScheme.primary,
-          ),
+          Icon(Icons.medication_rounded, size: 64, color: colorScheme.primary),
           const SizedBox(height: 12),
-          Text('MedSync', style: textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          )),
+          Text(
+            'MedSync',
+            style: textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             'Versi 1.0.0',
@@ -96,21 +95,20 @@ class _Section extends StatelessWidget {
       children: [
         Text(
           title,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
         if (content.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
             content,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.7),
-                  height: 1.5,
-                ),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
+              height: 1.5,
+            ),
           ),
         ],
         // ignore: use_null_aware_elements
@@ -131,13 +129,14 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.6),
-                    )),
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
           ),
           Text(value, style: Theme.of(context).textTheme.bodyMedium),
         ],

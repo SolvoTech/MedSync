@@ -10,8 +10,9 @@ import '../../../services/health_connect_service.dart';
 final healthConnectAuthorizedProvider = StateProvider<bool>((ref) => false);
 
 /// State for Health Connect availability.
-final healthConnectAvailableProvider =
-    FutureProvider.autoDispose<bool>((ref) async {
+final healthConnectAvailableProvider = FutureProvider.autoDispose<bool>((
+  ref,
+) async {
   return HealthConnectService.isAvailable();
 });
 
@@ -54,11 +55,8 @@ class HealthConnectScreen extends ConsumerWidget {
                 child: Row(
                   children: [
                     Icon(
-                      authorized
-                          ? Icons.check_circle
-                          : Icons.info_outline,
-                      color:
-                          authorized ? Colors.green : colorScheme.primary,
+                      authorized ? Icons.check_circle : Icons.info_outline,
+                      color: authorized ? Colors.green : colorScheme.primary,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -66,9 +64,7 @@ class HealthConnectScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            authorized
-                                ? 'Terhubung'
-                                : 'Belum Terhubung',
+                            authorized ? 'Terhubung' : 'Belum Terhubung',
                             style: textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -78,8 +74,9 @@ class HealthConnectScreen extends ConsumerWidget {
                                 ? 'Data kesehatan tersinkronisasi.'
                                 : 'Hubungkan untuk akses data kesehatan.',
                             style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurface
-                                  .withValues(alpha: 0.5),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
                             ),
                           ),
                         ],
@@ -89,12 +86,14 @@ class HealthConnectScreen extends ConsumerWidget {
                       AppButton(
                         label: 'Hubungkan',
                         onPressed: () async {
-                          final ok = await HealthConnectService
-                              .requestAuthorization();
+                          final ok =
+                              await HealthConnectService.requestAuthorization();
                           ref
-                              .read(healthConnectAuthorizedProvider
-                                  .notifier)
-                              .state = ok;
+                                  .read(
+                                    healthConnectAuthorizedProvider.notifier,
+                                  )
+                                  .state =
+                              ok;
                         },
                       ),
                   ],
@@ -107,8 +106,7 @@ class HealthConnectScreen extends ConsumerWidget {
                 Text(
                   'DATA HARI INI',
                   style: textTheme.labelMedium?.copyWith(
-                    color: colorScheme.onSurface
-                        .withValues(alpha: 0.5),
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -120,33 +118,29 @@ class HealthConnectScreen extends ConsumerWidget {
                     children: [
                       CircleAvatar(
                         radius: 24,
-                        backgroundColor:
-                            Colors.blue.withValues(alpha: 0.12),
-                        child: const Icon(Icons.directions_walk,
-                            color: Colors.blue),
+                        backgroundColor: Colors.blue.withValues(alpha: 0.12),
+                        child: const Icon(
+                          Icons.directions_walk,
+                          color: Colors.blue,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Langkah',
-                                style: textTheme.labelMedium),
+                            Text('Langkah', style: textTheme.labelMedium),
                             stepsAsync.when(
                               data: (steps) => Text(
                                 '$steps langkah',
-                                style:
-                                    textTheme.headlineSmall?.copyWith(
+                                style: textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: colorScheme.primary,
                                 ),
                               ),
                               loading: () =>
-                                  const CircularProgressIndicator
-                                      .adaptive(),
-                                error: (_, error) =>
-                                  const Text('Gagal memuat'),
+                                  const CircularProgressIndicator.adaptive(),
+                              error: (_, error) => const Text('Gagal memuat'),
                             ),
                           ],
                         ),
@@ -173,22 +167,14 @@ class HealthConnectScreen extends ConsumerWidget {
                         spacing: 6,
                         runSpacing: 6,
                         children: [
-                          _DataChip('Langkah',
-                              Icons.directions_walk),
-                          _DataChip('Detak Jantung',
-                              Icons.favorite),
-                          _DataChip('Tekanan Darah',
-                              Icons.monitor_heart),
-                          _DataChip(
-                              'Gula Darah', Icons.bloodtype),
-                          _DataChip('Suhu Tubuh',
-                              Icons.thermostat),
-                          _DataChip(
-                              'Berat Badan', Icons.scale),
-                          _DataChip('Kalori',
-                              Icons.local_fire_department),
-                          _DataChip('Tidur',
-                              Icons.bedtime_outlined),
+                          _DataChip('Langkah', Icons.directions_walk),
+                          _DataChip('Detak Jantung', Icons.favorite),
+                          _DataChip('Tekanan Darah', Icons.monitor_heart),
+                          _DataChip('Gula Darah', Icons.bloodtype),
+                          _DataChip('Suhu Tubuh', Icons.thermostat),
+                          _DataChip('Berat Badan', Icons.scale),
+                          _DataChip('Kalori', Icons.local_fire_department),
+                          _DataChip('Tidur', Icons.bedtime_outlined),
                         ],
                       ),
                     ],
@@ -198,8 +184,7 @@ class HealthConnectScreen extends ConsumerWidget {
             ],
           );
         },
-        loading: () =>
-            const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, error) => const AppEmptyState(
           icon: Icons.error_outline,
           message: 'Gagal memeriksa Health Connect',

@@ -33,5 +33,5 @@ class AuthFailure extends Failure {
 
 class ValidationFailure extends Failure {
   const ValidationFailure([super.message = 'Data tidak valid'])
-      : super(code: 'validation');
+    : super(code: 'validation');
 }

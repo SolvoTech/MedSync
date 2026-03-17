@@ -53,9 +53,9 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengekspor: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal mengekspor: $e')));
       }
     } finally {
       if (mounted) setState(() => _isExporting = false);
@@ -81,7 +81,8 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
     final confirmed2 = await AppDialog.showConfirm(
       context,
       title: 'Konfirmasi Akhir',
-      message: 'Tindakan ini tidak dapat dibatalkan. Ketuk "Hapus" untuk melanjutkan.',
+      message:
+          'Tindakan ini tidak dapat dibatalkan. Ketuk "Hapus" untuk melanjutkan.',
       confirmLabel: 'Hapus',
       isDestructive: true,
     );
@@ -97,15 +98,15 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
       await ref.read(authControllerProvider.notifier).signOut();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Akun berhasil dihapus.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Akun berhasil dihapus.')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menghapus akun: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal menghapus akun: $e')));
       }
     } finally {
       if (mounted) setState(() => _isDeleting = false);
@@ -135,8 +136,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
             child: ListTile(
               leading: const Icon(Icons.download),
               title: const Text('Ekspor Data JSON'),
-              subtitle:
-                  const Text('Unduh semua data Anda dalam format JSON'),
+              subtitle: const Text('Unduh semua data Anda dalam format JSON'),
               trailing: _isExporting
                   ? const SizedBox(
                       width: 20,
@@ -165,8 +165,11 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.warning_amber,
-                        color: colorScheme.error, size: 20),
+                    Icon(
+                      Icons.warning_amber,
+                      color: colorScheme.error,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Hapus Akun',

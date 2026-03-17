@@ -10,7 +10,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/medsync
+  IMAGE_NAME: alfian57/medsync
 
 jobs:
   build-and-publish:

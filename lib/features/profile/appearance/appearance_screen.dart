@@ -80,7 +80,9 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                 children: [
                   RadioListTile<String>(
                     title: const Text('Ikuti Sistem'),
-                    subtitle: const Text('Otomatis sesuai pengaturan perangkat'),
+                    subtitle: const Text(
+                      'Otomatis sesuai pengaturan perangkat',
+                    ),
                     secondary: const Icon(Icons.settings_brightness),
                     value: 'system',
                   ),
