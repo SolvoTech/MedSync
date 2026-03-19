@@ -52,9 +52,7 @@ class AppTextField extends StatelessWidget {
         errorText: errorText,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        // All styling now comes from InputDecorationTheme in AppTheme
       ),
     );
   }

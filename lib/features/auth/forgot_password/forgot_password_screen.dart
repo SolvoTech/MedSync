@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/validators/app_validators.dart';
 import '../auth_controller.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -15,6 +16,7 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _hasAttemptedSubmit = false;
 
   @override
   void dispose() {
@@ -24,6 +26,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
+      if (!_hasAttemptedSubmit) {
+        setState(() => _hasAttemptedSubmit = true);
+      }
       return;
     }
 
@@ -57,21 +62,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
+          autovalidateMode: _hasAttemptedSubmit
+              ? AutovalidateMode.onUserInteraction
+              : AutovalidateMode.disabled,
           child: Column(
             children: [
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(labelText: 'Alamat Email'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Email tidak boleh kosong';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Format email tidak valid';
-                  }
-                  return null;
-                },
+                validator: AppValidators.email,
               ),
               const SizedBox(height: 20),
               SizedBox(

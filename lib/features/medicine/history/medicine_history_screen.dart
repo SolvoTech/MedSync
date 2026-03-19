@@ -18,55 +18,52 @@ final historyPeriodProvider = StateProvider<HistoryPeriod>(
 
 final medicineHistoryProvider = FutureProvider.autoDispose
     .family<List<TaskLog>, String>((ref, medicineId) async {
-  final client = Supabase.instance.client;
-  final user = client.auth.currentUser;
-  if (user == null) return [];
+      final client = Supabase.instance.client;
+      final user = client.auth.currentUser;
+      if (user == null) return [];
 
-  final period = ref.watch(historyPeriodProvider);
-  final now = DateTime.now();
-  late DateTime startDate;
+      final period = ref.watch(historyPeriodProvider);
+      final now = DateTime.now();
+      late DateTime startDate;
 
-  switch (period) {
-    case HistoryPeriod.week:
-      startDate = now.subtract(const Duration(days: 7));
-    case HistoryPeriod.month:
-      startDate = now.subtract(const Duration(days: 30));
-    case HistoryPeriod.all:
-      startDate = DateTime(2020); // effectively all
-  }
+      switch (period) {
+        case HistoryPeriod.week:
+          startDate = now.subtract(const Duration(days: 7));
+        case HistoryPeriod.month:
+          startDate = now.subtract(const Duration(days: 30));
+        case HistoryPeriod.all:
+          startDate = DateTime(2020); // effectively all
+      }
 
-  // Get schedules for this medicine to find reference_ids
-  final scheduleRows = await client
-      .from('medicine_schedules')
-      .select('id')
-      .eq('medicine_id', medicineId)
-      .eq('owner_id', user.id);
+      // Get schedules for this medicine to find reference_ids
+      final scheduleRows = await client
+          .from('medicine_schedules')
+          .select('id')
+          .eq('medicine_id', medicineId)
+          .eq('owner_id', user.id);
 
-  final scheduleIds = (scheduleRows as List)
-      .map((r) => r['id'] as String)
-      .toList();
+      final scheduleIds = (scheduleRows as List)
+          .map((r) => r['id'] as String)
+          .toList();
 
-  if (scheduleIds.isEmpty) return [];
+      if (scheduleIds.isEmpty) return [];
 
-  final rows = await client
-      .from('task_logs')
-      .select()
-      .eq('owner_id', user.id)
-      .eq('task_type', 'medicine')
-      .inFilter('reference_id', scheduleIds)
-      .gte('scheduled_at', startDate.toIso8601String())
-      .order('scheduled_at', ascending: false);
+      final rows = await client
+          .from('task_logs')
+          .select()
+          .eq('owner_id', user.id)
+          .eq('task_type', 'medicine')
+          .inFilter('reference_id', scheduleIds)
+          .gte('scheduled_at', startDate.toIso8601String())
+          .order('scheduled_at', ascending: false);
 
-  return (rows as List)
-      .map((r) => TaskLog.fromMap(r as Map<String, dynamic>))
-      .toList();
-});
+      return (rows as List)
+          .map((r) => TaskLog.fromMap(r as Map<String, dynamic>))
+          .toList();
+    });
 
 class MedicineHistoryScreen extends ConsumerWidget {
-  const MedicineHistoryScreen({
-    super.key,
-    required this.medicine,
-  });
+  const MedicineHistoryScreen({super.key, required this.medicine});
 
   final Medicine medicine;
 
@@ -98,12 +95,14 @@ class MedicineHistoryScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(medicine.name,
-                          style: textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600)),
+                      Text(
+                        medicine.name,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       if (medicine.dosage != null)
-                        Text(medicine.dosage!,
-                            style: textTheme.bodySmall),
+                        Text(medicine.dosage!, style: textTheme.bodySmall),
                     ],
                   ),
                 ),
@@ -129,18 +128,44 @@ class MedicineHistoryScreen extends ConsumerWidget {
           // Period filter
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: SegmentedButton<HistoryPeriod>(
-              segments: const [
-                ButtonSegment(value: HistoryPeriod.week, label: Text('7 Hari')),
-                ButtonSegment(
-                    value: HistoryPeriod.month, label: Text('30 Hari')),
-                ButtonSegment(value: HistoryPeriod.all, label: Text('Semua')),
-              ],
-              selected: {period},
-              onSelectionChanged: (selected) {
-                ref.read(historyPeriodProvider.notifier).state =
-                    selected.first;
-              },
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SegmentedButton<HistoryPeriod>(
+                segments: const [
+                  ButtonSegment(
+                    value: HistoryPeriod.week,
+                    label: Text(
+                      '7 Hari',
+                      softWrap: false,
+                      maxLines: 1,
+                      overflow: TextOverflow.fade,
+                    ),
+                  ),
+                  ButtonSegment(
+                    value: HistoryPeriod.month,
+                    label: Text(
+                      '30 Hari',
+                      softWrap: false,
+                      maxLines: 1,
+                      overflow: TextOverflow.fade,
+                    ),
+                  ),
+                  ButtonSegment(
+                    value: HistoryPeriod.all,
+                    label: Text(
+                      'Semua',
+                      softWrap: false,
+                      maxLines: 1,
+                      overflow: TextOverflow.fade,
+                    ),
+                  ),
+                ],
+                selected: {period},
+                onSelectionChanged: (selected) {
+                  ref.read(historyPeriodProvider.notifier).state =
+                      selected.first;
+                },
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -160,8 +185,7 @@ class MedicineHistoryScreen extends ConsumerWidget {
                 // Stats summary
                 final done = logs.where((l) => l.status == 'done').length;
                 final total = logs.length;
-                final adherence =
-                    total > 0 ? (done / total * 100).round() : 0;
+                final adherence = total > 0 ? (done / total * 100).round() : 0;
 
                 return ListView(
                   padding: const EdgeInsets.all(16),
@@ -177,8 +201,8 @@ class MedicineHistoryScreen extends ConsumerWidget {
                             color: adherence >= 80
                                 ? Colors.green
                                 : adherence >= 50
-                                    ? Colors.orange
-                                    : Colors.red,
+                                ? Colors.orange
+                                : Colors.red,
                           ),
                           _StatItem(
                             label: 'Selesai',
@@ -196,61 +220,65 @@ class MedicineHistoryScreen extends ConsumerWidget {
                     const SizedBox(height: 12),
 
                     // Log items
-                    ...logs.map((log) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: AppCard(
-                            child: Row(
-                              children: [
-                                Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _formatDate(log.scheduledAt),
-                                      style: textTheme.bodySmall?.copyWith(
-                                        color: colorScheme.onSurface
-                                            .withValues(alpha: 0.5),
+                    ...logs.map(
+                      (log) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: AppCard(
+                          child: Row(
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _formatDate(log.scheduledAt),
+                                    style: textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.5,
                                       ),
                                     ),
-                                    Text(
-                                      _formatTime(log.scheduledAt),
-                                      style: textTheme.titleSmall,
-                                    ),
-                                  ],
-                                ),
-                                if (log.completedAt != null) ...[
-                                  const SizedBox(width: 8),
-                                  Icon(Icons.arrow_forward,
-                                      size: 14,
-                                      color: colorScheme.onSurface
-                                          .withValues(alpha: 0.3)),
-                                  const SizedBox(width: 8),
+                                  ),
                                   Text(
-                                    _formatTime(log.completedAt!),
-                                    style: textTheme.bodySmall?.copyWith(
-                                      color: Colors.green,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    _formatTime(log.scheduledAt),
+                                    style: textTheme.titleSmall,
                                   ),
                                 ],
-                                const Spacer(),
-                                if (log.mood != null)
-                                  Text(
-                                    _moodEmoji(log.mood!),
-                                    style:
-                                        const TextStyle(fontSize: 16),
-                                  ),
+                              ),
+                              if (log.completedAt != null) ...[
                                 const SizedBox(width: 8),
-                                StatusChip(status: log.status),
+                                Icon(
+                                  Icons.arrow_forward,
+                                  size: 14,
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _formatTime(log.completedAt!),
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ],
-                            ),
+                              const Spacer(),
+                              if (log.mood != null)
+                                Text(
+                                  _moodEmoji(log.mood!),
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              const SizedBox(width: 8),
+                              StatusChip(status: log.status),
+                            ],
                           ),
-                        )),
+                        ),
+                      ),
+                    ),
                   ],
                 );
               },
-              loading: () => const AppListSkeleton(
-                  itemCount: 5, itemHeight: 60),
+              loading: () =>
+                  const AppListSkeleton(itemCount: 5, itemHeight: 60),
               error: (e, _) => AppErrorWidget(
                 message: 'Gagal memuat riwayat',
                 onRetry: () =>
@@ -265,8 +293,19 @@ class MedicineHistoryScreen extends ConsumerWidget {
 
   String _formatDate(DateTime dt) {
     final months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${dt.day} ${months[dt.month]}';
   }
@@ -301,18 +340,17 @@ class _StatItem extends StatelessWidget {
         Text(
           value,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
         ),
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.5),
-              ),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.5),
+          ),
         ),
       ],
     );

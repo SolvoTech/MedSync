@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/constants/app_gradients.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/extensions/string_ext.dart';
+import '../../core/widgets/app_avatar.dart';
 import '../../core/widgets/app_card.dart';
 import '../../data/remote/datasources/profile_remote_datasource.dart';
 import '../../domain/models/user_profile.dart';
@@ -39,232 +40,412 @@ class ProfileScreen extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final user = Supabase.instance.client.auth.currentUser;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.profileTitle)),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.zero,
         children: [
-          // Avatar + name + email header
-          Center(
-            child: Column(
-              children: [
-                InkWell(
-                  onTap: () async {
-                    final updated = await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const EditAvatarScreen()),
-                    );
-                    if (updated == true) {
-                      ref.invalidate(currentProfileProvider);
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(40),
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundColor: colorScheme.primaryContainer,
-                    child: profileAsync.when(
-                      data: (profile) {
-                        if (profile?.avatarUrl != null) {
-                          return ClipOval(
-                            child: Image.network(
-                              profile!.avatarUrl!,
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
+          // Gradient header with avatar
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Gradient background
+              Container(
+                width: double.infinity,
+                height: 180,
+                decoration: BoxDecoration(
+                  gradient: AppGradients.primaryFor(
+                    isDark ? Brightness.dark : Brightness.light,
+                  ),
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(28),
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // Decorative circles
+                    Positioned(
+                      top: -30,
+                      right: -20,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.06),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 20,
+                      left: -15,
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.04),
+                        ),
+                      ),
+                    ),
+                    // Title
+                    SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                        child: Text(
+                          AppStrings.profileTitle,
+                          style: textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Floating avatar card
+              Positioned(
+                top: 112,
+                left: 20,
+                right: 20,
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: isDark
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: const Color(
+                                0xFF0F1419,
+                              ).withValues(alpha: 0.08),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                    border: isDark
+                        ? Border.all(
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.3,
+                            ),
+                          )
+                        : null,
+                  ),
+                  child: Row(
+                    children: [
+                      InkWell(
+                        onTap: () async {
+                          final updated = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const EditAvatarScreen(),
                             ),
                           );
-                        }
-                        return Text(
-                          (profile?.fullName ?? 'U').initials,
-                          style: textTheme.headlineMedium?.copyWith(
-                            color: colorScheme.onPrimaryContainer,
+                          if (updated == true) {
+                            ref.invalidate(currentProfileProvider);
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(40),
+                        child: profileAsync.when(
+                          data: (profile) => AppAvatar(
+                            size: 64,
+                            imageUrl: profile?.avatarUrl,
+                            name: profile?.fullName,
+                            showRing: true,
                           ),
-                        );
-                      },
-                      loading: () => const CircularProgressIndicator(),
-                      error: (_, _) => const Icon(Icons.person, size: 32),
+                          loading: () => CircleAvatar(
+                            radius: 32,
+                            backgroundColor: colorScheme.primaryContainer,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          error: (_, _) =>
+                              AppAvatar(size: 64, name: 'User', showRing: true),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            profileAsync.when(
+                              data: (profile) => Text(
+                                profile?.fullName ?? 'User',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, _) => const Text('User'),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              user?.email ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 56),
+
+          // Menu sections
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Account section
+                _SectionHeader(title: 'AKUN'),
+                const SizedBox(height: 8),
+                AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      _MenuItem(
+                        icon: Icons.person_outline,
+                        label: AppStrings.editProfile,
+                        color: const Color(0xFF4299E1),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const EditProfileScreen(),
+                          ),
+                        ),
+                      ),
+                      _MenuDivider(),
+                      _MenuItem(
+                        icon: Icons.lock_outline,
+                        label: AppStrings.changePassword,
+                        color: const Color(0xFF805AD5),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ChangePasswordScreen(),
+                          ),
+                        ),
+                      ),
+                      _MenuDivider(),
+                      _MenuItem(
+                        icon: Icons.email_outlined,
+                        label: AppStrings.changeEmail,
+                        color: const Color(0xFF38A169),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ChangeEmailScreen(),
+                          ),
+                        ),
+                      ),
+                      _MenuDivider(),
+                      _MenuItem(
+                        icon: Icons.photo_camera_outlined,
+                        label: 'Foto Profil',
+                        color: const Color(0xFFED8936),
+                        onTap: () async {
+                          final updated = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const EditAvatarScreen(),
+                            ),
+                          );
+                          if (updated == true) {
+                            ref.invalidate(currentProfileProvider);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Manage Members section
+                _SectionHeader(title: 'KELOLA ANGGOTA'),
+                const SizedBox(height: 8),
+                AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      _MenuItem(
+                        icon: Icons.people_outline,
+                        label: AppStrings.carePersons,
+                        color: const Color(0xFF4299E1),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CarePersonListScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Preferences section
+                _SectionHeader(title: 'PREFERENSI'),
+                const SizedBox(height: 8),
+                AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      _MenuItem(
+                        icon: Icons.notifications_outlined,
+                        label: AppStrings.notificationSettings,
+                        color: const Color(0xFFE53E3E),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NotificationSettingsScreen(),
+                          ),
+                        ),
+                      ),
+                      _MenuDivider(),
+                      _MenuItem(
+                        icon: Icons.palette_outlined,
+                        label: AppStrings.appearance,
+                        color: const Color(0xFF805AD5),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AppearanceScreen(),
+                          ),
+                        ),
+                      ),
+                      _MenuDivider(),
+                      _MenuItem(
+                        icon: Icons.storage_outlined,
+                        label: AppStrings.dataManagement,
+                        color: const Color(0xFF38A169),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const DataManagementScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Info section
+                _SectionHeader(title: 'INFORMASI'),
+                const SizedBox(height: 8),
+                AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      _MenuItem(
+                        icon: Icons.info_outline,
+                        label: AppStrings.about,
+                        color: const Color(0xFF4299E1),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AboutScreen(),
+                          ),
+                        ),
+                      ),
+                      _MenuDivider(),
+                      _MenuItem(
+                        icon: Icons.privacy_tip_outlined,
+                        label: AppStrings.privacyPolicy,
+                        color: const Color(0xFF38A169),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PrivacyPolicyScreen(),
+                          ),
+                        ),
+                      ),
+                      _MenuDivider(),
+                      _MenuItem(
+                        icon: Icons.description_outlined,
+                        label: AppStrings.termsConditions,
+                        color: const Color(0xFFED8936),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const TermsScreen(),
+                          ),
+                        ),
+                      ),
+                      _MenuDivider(),
+                      _MenuItem(
+                        icon: Icons.help_outline,
+                        label: AppStrings.helpSupport,
+                        color: const Color(0xFF805AD5),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const HelpSupportScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Logout
+                AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      _MenuItem(
+                        icon: Icons.logout,
+                        label: AppStrings.logout,
+                        color: colorScheme.error,
+                        isDestructive: true,
+                        onTap: () async {
+                          await ref
+                              .read(authControllerProvider.notifier)
+                              .signOut();
+                          if (context.mounted) {
+                            context.go('/login');
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Center(
+                  child: Text(
+                    'v1.0.0',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.3),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                profileAsync.when(
-                  data: (profile) => Text(
-                    profile?.fullName ?? 'User',
-                    style: textTheme.titleLarge,
-                  ),
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, _) => const Text('User'),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  user?.email ?? '',
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
               ],
             ),
           ),
-
-          // Account section
-          _SectionHeader(title: 'AKUN'),
-          const SizedBox(height: 8),
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                _MenuItem(
-                  icon: Icons.person_outline,
-                  label: AppStrings.editProfile,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen())),
-                ),
-                const Divider(height: 1, indent: 56),
-                _MenuItem(
-                  icon: Icons.lock_outline,
-                  label: AppStrings.changePassword,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen())),
-                ),
-                const Divider(height: 1, indent: 56),
-                _MenuItem(
-                  icon: Icons.email_outlined,
-                  label: AppStrings.changeEmail,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangeEmailScreen())),
-                ),
-                const Divider(height: 1, indent: 56),
-                _MenuItem(
-                  icon: Icons.photo_camera_outlined,
-                  label: 'Foto Profil',
-                  onTap: () async {
-                    final updated = await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const EditAvatarScreen()),
-                    );
-                    if (updated == true) {
-                      ref.invalidate(currentProfileProvider);
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Manage Members section
-          _SectionHeader(title: 'KELOLA ANGGOTA'),
-          const SizedBox(height: 8),
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                _MenuItem(
-                  icon: Icons.people_outline,
-                  label: AppStrings.carePersons,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CarePersonListScreen())),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Preferences section
-          _SectionHeader(title: 'PREFERENSI'),
-          const SizedBox(height: 8),
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                _MenuItem(
-                  icon: Icons.notifications_outlined,
-                  label: AppStrings.notificationSettings,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationSettingsScreen())),
-                ),
-                const Divider(height: 1, indent: 56),
-                _MenuItem(
-                  icon: Icons.palette_outlined,
-                  label: AppStrings.appearance,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AppearanceScreen())),
-                ),
-                const Divider(height: 1, indent: 56),
-                _MenuItem(
-                  icon: Icons.storage_outlined,
-                  label: AppStrings.dataManagement,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DataManagementScreen())),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Info section
-          _SectionHeader(title: 'INFORMASI'),
-          const SizedBox(height: 8),
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                _MenuItem(
-                  icon: Icons.info_outline,
-                  label: AppStrings.about,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutScreen())),
-                ),
-                const Divider(height: 1, indent: 56),
-                _MenuItem(
-                  icon: Icons.privacy_tip_outlined,
-                  label: AppStrings.privacyPolicy,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen())),
-                ),
-                const Divider(height: 1, indent: 56),
-                _MenuItem(
-                  icon: Icons.description_outlined,
-                  label: AppStrings.termsConditions,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TermsScreen())),
-                ),
-                const Divider(height: 1, indent: 56),
-                _MenuItem(
-                  icon: Icons.help_outline,
-                  label: AppStrings.helpSupport,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen())),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Logout + Delete
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                _MenuItem(
-                  icon: Icons.logout,
-                  label: AppStrings.logout,
-                  color: colorScheme.error,
-                  onTap: () async {
-                    await ref.read(authControllerProvider.notifier).signOut();
-                    if (context.mounted) {
-                      context.go('/login');
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-          Center(
-            child: Text(
-              'v1.0.0',
-              style: textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurface.withValues(alpha: 0.4),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
         ],
       ),
     );
@@ -279,13 +460,42 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-              letterSpacing: 1.2,
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 14,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(2),
             ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class _MenuDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 1,
+      indent: 56,
+      color: Theme.of(
+        context,
+      ).colorScheme.outlineVariant.withValues(alpha: 0.5),
     );
   }
 }
@@ -295,23 +505,45 @@ class _MenuItem extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.color,
+    required this.color,
+    this.isDestructive = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final Color? color;
+  final Color color;
+  final bool isDestructive;
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = color ?? Theme.of(context).colorScheme.onSurface;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final effectiveTextColor = isDestructive
+        ? colorScheme.error
+        : colorScheme.onSurface;
+
     return ListTile(
-      leading: Icon(icon, color: effectiveColor),
-      title: Text(label, style: TextStyle(color: effectiveColor)),
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isDark ? 0.2 : 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+      title: Text(
+        label,
+        style: TextStyle(
+          color: effectiveTextColor,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
       trailing: Icon(
         Icons.chevron_right,
-        color: effectiveColor.withValues(alpha: 0.5),
+        color: colorScheme.onSurface.withValues(alpha: 0.3),
+        size: 20,
       ),
       onTap: onTap,
     );

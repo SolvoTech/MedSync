@@ -20,12 +20,18 @@ class AuthController extends AutoDisposeNotifier<AsyncValue<void>> {
     });
   }
 
-  Future<void> signUp({required String email, required String password}) async {
+  Future<void> signUp({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       await Supabase.instance.client.auth.signUp(
+        data: {'full_name': fullName.trim()},
         email: email.trim(),
         password: password,
+        emailRedirectTo: 'io.supabase.medsync://login-callback/',
       );
     });
   }
@@ -33,7 +39,10 @@ class AuthController extends AutoDisposeNotifier<AsyncValue<void>> {
   Future<void> resetPassword({required String email}) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      await Supabase.instance.client.auth.resetPasswordForEmail(email.trim());
+      await Supabase.instance.client.auth.resetPasswordForEmail(
+        email.trim(),
+        redirectTo: 'io.supabase.medsync://login-callback/',
+      );
     });
   }
 

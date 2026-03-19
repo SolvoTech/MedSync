@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_empty_state.dart';
@@ -17,12 +18,9 @@ final reportPeriodProvider = StateProvider<ReportPeriod>(
   (ref) => ReportPeriod.weekly,
 );
 
-final reportDateProvider = StateProvider<DateTime>(
-  (ref) => DateTime.now(),
-);
+final reportDateProvider = StateProvider<DateTime>((ref) => DateTime.now());
 
-final reportDataProvider =
-    FutureProvider.autoDispose<_ReportData>((ref) async {
+final reportDataProvider = FutureProvider.autoDispose<_ReportData>((ref) async {
   final client = SupabaseClientRef.maybeClient;
   if (client == null) throw Exception('Supabase belum diinisialisasi.');
   final user = client.auth.currentUser;
@@ -37,8 +35,11 @@ final reportDataProvider =
     case ReportPeriod.daily:
       startDate = DateTime(now.year, now.month, now.day);
     case ReportPeriod.weekly:
-      startDate = DateTime(now.year, now.month, now.day)
-          .subtract(Duration(days: now.weekday - 1));
+      startDate = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: now.weekday - 1));
     case ReportPeriod.monthly:
       startDate = DateTime(now.year, now.month, 1);
   }
@@ -46,8 +47,7 @@ final reportDataProvider =
   final endDate = switch (period) {
     ReportPeriod.daily => startDate.add(const Duration(days: 1)),
     ReportPeriod.weekly => startDate.add(const Duration(days: 7)),
-    ReportPeriod.monthly =>
-      DateTime(startDate.year, startDate.month + 1, 1),
+    ReportPeriod.monthly => DateTime(startDate.year, startDate.month + 1, 1),
   };
 
   final rows = await client
@@ -70,12 +70,13 @@ final reportDataProvider =
   final adherencePercent = total > 0 ? (done / total * 100).round() : 0;
 
   // Group by type
-  final medicineTasks =
-      tasks.where((t) => t.taskType == 'medicine').toList();
-  final measurementTasks =
-      tasks.where((t) => t.taskType == 'measurement').toList();
-  final activityTasks =
-      tasks.where((t) => t.taskType == 'physical_activity').toList();
+  final medicineTasks = tasks.where((t) => t.taskType == 'medicine').toList();
+  final measurementTasks = tasks
+      .where((t) => t.taskType == 'measurement')
+      .toList();
+  final activityTasks = tasks
+      .where((t) => t.taskType == 'physical_activity')
+      .toList();
 
   return _ReportData(
     total: total,
@@ -85,14 +86,11 @@ final reportDataProvider =
     pending: pending,
     adherencePercent: adherencePercent,
     medicineCount: medicineTasks.length,
-    medicineDone:
-        medicineTasks.where((t) => t.status == 'done').length,
+    medicineDone: medicineTasks.where((t) => t.status == 'done').length,
     measurementCount: measurementTasks.length,
-    measurementDone:
-        measurementTasks.where((t) => t.status == 'done').length,
+    measurementDone: measurementTasks.where((t) => t.status == 'done').length,
     activityCount: activityTasks.length,
-    activityDone:
-        activityTasks.where((t) => t.status == 'done').length,
+    activityDone: activityTasks.where((t) => t.status == 'done').length,
     startDate: startDate,
     endDate: endDate,
     tasks: tasks,
@@ -151,8 +149,10 @@ class ReportScreen extends ConsumerWidget {
                 onPressed: () async {
                   final client = SupabaseClientRef.maybeClient;
                   final user = client?.auth.currentUser;
-                  final userName = user?.userMetadata?['full_name'] as String? ?? 'Pengguna';
-                  final currentStreak = streakState.valueOrNull?.currentStreak ?? 0;
+                  final userName =
+                      user?.userMetadata?['full_name'] as String? ?? 'Pengguna';
+                  final currentStreak =
+                      streakState.valueOrNull?.currentStreak ?? 0;
 
                   try {
                     await PdfExportService.exportReport(
@@ -182,19 +182,40 @@ class ReportScreen extends ConsumerWidget {
           // Period filter bar
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: SegmentedButton<ReportPeriod>(
-              segments: const [
-                ButtonSegment(value: ReportPeriod.daily, label: Text('Harian')),
-                ButtonSegment(
-                    value: ReportPeriod.weekly, label: Text('Mingguan')),
-                ButtonSegment(
-                    value: ReportPeriod.monthly, label: Text('Bulanan')),
-              ],
-              selected: {period},
-              onSelectionChanged: (selected) {
-                ref.read(reportPeriodProvider.notifier).state =
-                    selected.first;
-              },
+            child: SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<ReportPeriod>(
+                showSelectedIcon: false,
+                style: ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  padding: const WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                  ),
+                  textStyle: const WidgetStatePropertyAll(
+                    TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                segments: const [
+                  ButtonSegment(
+                    value: ReportPeriod.daily,
+                    label: Text('Harian', maxLines: 1),
+                  ),
+                  ButtonSegment(
+                    value: ReportPeriod.weekly,
+                    label: Text('Mingguan', maxLines: 1),
+                  ),
+                  ButtonSegment(
+                    value: ReportPeriod.monthly,
+                    label: Text('Bulanan', maxLines: 1),
+                  ),
+                ],
+                selected: {period},
+                onSelectionChanged: (selected) {
+                  ref.read(reportPeriodProvider.notifier).state =
+                      selected.first;
+                },
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -213,8 +234,7 @@ class ReportScreen extends ConsumerWidget {
                 }
 
                 return RefreshIndicator(
-                  onRefresh: () async =>
-                      ref.invalidate(reportDataProvider),
+                  onRefresh: () async => ref.invalidate(reportDataProvider),
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
@@ -222,53 +242,73 @@ class ReportScreen extends ConsumerWidget {
                       AppCard(
                         child: Column(
                           children: [
-                            Text('Kepatuhan Keseluruhan',
-                                style: textTheme.labelLarge),
-                            const SizedBox(height: 12),
+                            Text(
+                              'Kepatuhan Keseluruhan',
+                              style: textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
                             SizedBox(
-                              width: 120,
-                              height: 120,
+                              width: 130,
+                              height: 130,
                               child: Stack(
                                 fit: StackFit.expand,
                                 children: [
                                   CircularProgressIndicator(
                                     value: data.adherencePercent / 100,
-                                    strokeWidth: 10,
+                                    strokeWidth: 12,
+                                    strokeCap: StrokeCap.round,
                                     backgroundColor:
                                         colorScheme.surfaceContainerHighest,
                                     valueColor: AlwaysStoppedAnimation(
-                                        colorScheme.primary),
+                                      colorScheme.primary,
+                                    ),
                                   ),
                                   Center(
-                                    child: Text(
-                                      '${data.adherencePercent}%',
-                                      style: textTheme.headlineMedium
-                                          ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: colorScheme.primary,
-                                      ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          '${data.adherencePercent}%',
+                                          style: textTheme.headlineMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w800,
+                                                color: colorScheme.primary,
+                                              ),
+                                        ),
+                                        Text(
+                                          'kepatuhan',
+                                          style: textTheme.labelSmall?.copyWith(
+                                            color: colorScheme.onSurface
+                                                .withValues(alpha: 0.5),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
                             Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceEvenly,
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 _StatPill(
-                                    label: 'Selesai',
-                                    value: '${data.done}',
-                                    color: Colors.green),
+                                  label: 'Selesai',
+                                  value: '${data.done}',
+                                  color: AppColors.success,
+                                ),
                                 _StatPill(
-                                    label: 'Lewati',
-                                    value: '${data.skipped}',
-                                    color: Colors.orange),
+                                  label: 'Lewati',
+                                  value: '${data.skipped}',
+                                  color: AppColors.warning,
+                                ),
                                 _StatPill(
-                                    label: 'Terlewat',
-                                    value: '${data.missed}',
-                                    color: Colors.red),
+                                  label: 'Terlewat',
+                                  value: '${data.missed}',
+                                  color: AppColors.error,
+                                ),
                               ],
                             ),
                           ],
@@ -278,27 +318,27 @@ class ReportScreen extends ConsumerWidget {
 
                       // Category breakdown
                       _CategoryCard(
-                        icon: Icons.medication,
+                        icon: Icons.medication_rounded,
                         label: 'Obat',
                         done: data.medicineDone,
                         total: data.medicineCount,
-                        color: const Color(0xFF0077B6),
+                        color: AppColors.medicineAccent,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       _CategoryCard(
-                        icon: Icons.monitor_heart,
+                        icon: Icons.monitor_heart_rounded,
                         label: 'Pengukuran',
                         done: data.measurementDone,
                         total: data.measurementCount,
-                        color: const Color(0xFF16A34A),
+                        color: AppColors.measurementAccent,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       _CategoryCard(
-                        icon: Icons.directions_run,
+                        icon: Icons.directions_run_rounded,
                         label: 'Aktivitas Fisik',
                         done: data.activityDone,
                         total: data.activityCount,
-                        color: const Color(0xFFEA580C),
+                        color: AppColors.activityAccent,
                       ),
                     ],
                   ),
@@ -314,7 +354,7 @@ class ReportScreen extends ConsumerWidget {
                       child: AppLoadingSkeleton(
                         width: double.infinity,
                         height: 80,
-                        borderRadius: 16,
+                        borderRadius: 20,
                       ),
                     ),
                   ),
@@ -343,25 +383,34 @@ class _StatPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-        ),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.5),
-              ),
-        ),
-      ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.15 : 0.08),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -383,38 +432,51 @@ class _CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final percent = total > 0 ? done / total : 0.0;
     final textTheme = Theme.of(context).textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AppCard(
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: color.withValues(alpha: 0.15),
-            child: Icon(icon, color: color, size: 20),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: isDark ? 0.2 : 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: textTheme.titleSmall),
-                const SizedBox(height: 6),
+                Text(
+                  label,
+                  style: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(6),
                   child: LinearProgressIndicator(
                     value: percent,
                     minHeight: 8,
-                    backgroundColor: color.withValues(alpha: 0.1),
+                    backgroundColor: color.withValues(
+                      alpha: isDark ? 0.15 : 0.08,
+                    ),
                     valueColor: AlwaysStoppedAnimation(color),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Text(
             '$done/$total',
             style: textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               color: color,
             ),
           ),

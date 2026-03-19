@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/validators/app_validators.dart';
+
 typedef ReminderSubmit =
     Future<void> Function({
       required String selectedType,
@@ -162,6 +164,8 @@ Future<void> showReminderEditorSheet({
       ? initialType
       : availableTypes.first;
   final nameController = TextEditingController(text: initialCustomName ?? '');
+  final formKey = GlobalKey<FormState>();
+  var hasAttemptedSubmit = false;
   final parts = initialTimeOfDay.split(':');
   TimeOfDay selectedTime = TimeOfDay(
     hour: int.parse(parts[0]),
@@ -182,111 +186,129 @@ Future<void> showReminderEditorSheet({
               top: 16,
               bottom: MediaQuery.of(context).viewInsets.bottom + 16,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<String>(
-                  initialValue: selectedType,
-                  decoration: InputDecoration(labelText: typeFieldLabel),
-                  items: availableTypes
-                      .map(
-                        (type) => DropdownMenuItem<String>(
-                          value: type,
-                          child: Text(typeLabelBuilder(type)),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value == null) {
-                      return;
-                    }
-                    setLocalState(() {
-                      selectedType = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nama Kustom (Opsional)',
-                  ),
-                ),
-                ListTile(
-                  title: const Text('Tanggal Mulai'),
-                  subtitle: Text(
-                    '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
-                  ),
-                  trailing: const Icon(Icons.calendar_month),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDate,
-                      firstDate: DateTime.now().subtract(
-                        const Duration(days: 365),
-                      ),
-                      lastDate: DateTime.now().add(const Duration(days: 3650)),
-                    );
-                    if (picked != null) {
-                      setLocalState(() {
-                        selectedDate = picked;
-                      });
-                    }
-                  },
-                ),
-                ListTile(
-                  title: Text(timeFieldLabel),
-                  subtitle: Text(
-                    '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
-                  ),
-                  onTap: () async {
-                    final picked = await showTimePicker(
-                      context: context,
-                      initialTime: selectedTime,
-                    );
-                    if (picked != null) {
-                      setLocalState(() => selectedTime = picked);
-                    }
-                  },
-                ),
-                FilledButton(
-                  onPressed: () async {
-                    final timeString =
-                        '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}:00';
-
-                    try {
-                      await onSubmit(
-                        selectedType: selectedType,
-                        customName: nameController.text.trim().isEmpty
-                            ? null
-                            : nameController.text.trim(),
-                        timeOfDay: timeString,
-                        startDate: selectedDate,
-                      );
-
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              isEditing
-                                  ? updateSuccessMessage
-                                  : createSuccessMessage,
-                            ),
+            child: Form(
+              key: formKey,
+              autovalidateMode: hasAttemptedSubmit
+                  ? AutovalidateMode.onUserInteraction
+                  : AutovalidateMode.disabled,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedType,
+                    decoration: InputDecoration(labelText: typeFieldLabel),
+                    items: availableTypes
+                        .map(
+                          (type) => DropdownMenuItem<String>(
+                            value: type,
+                            child: Text(typeLabelBuilder(type)),
                           ),
-                        );
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value == null) {
+                        return;
                       }
-                    } catch (error) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Aksi gagal: $error')),
-                        );
+                      setLocalState(() {
+                        selectedType = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama Kustom (Opsional)',
+                    ),
+                    validator: (value) => AppValidators.maxLengthOptional(
+                      value,
+                      60,
+                      label: 'Nama kustom',
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Tanggal Mulai'),
+                    subtitle: Text(
+                      '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
+                    ),
+                    trailing: const Icon(Icons.calendar_month),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime.now().subtract(
+                          const Duration(days: 365),
+                        ),
+                        lastDate: DateTime.now().add(
+                          const Duration(days: 3650),
+                        ),
+                      );
+                      if (picked != null) {
+                        setLocalState(() {
+                          selectedDate = picked;
+                        });
                       }
-                    }
-                  },
-                  child: Text(isEditing ? 'Simpan Perubahan' : 'Simpan'),
-                ),
-              ],
+                    },
+                  ),
+                  ListTile(
+                    title: Text(timeFieldLabel),
+                    subtitle: Text(
+                      '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+                    ),
+                    onTap: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: selectedTime,
+                      );
+                      if (picked != null) {
+                        setLocalState(() => selectedTime = picked);
+                      }
+                    },
+                  ),
+                  FilledButton(
+                    onPressed: () async {
+                      if (!formKey.currentState!.validate()) {
+                        setLocalState(() => hasAttemptedSubmit = true);
+                        return;
+                      }
+
+                      final timeString =
+                          '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}:00';
+
+                      try {
+                        await onSubmit(
+                          selectedType: selectedType,
+                          customName: nameController.text.trim().isEmpty
+                              ? null
+                              : nameController.text.trim(),
+                          timeOfDay: timeString,
+                          startDate: selectedDate,
+                        );
+
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isEditing
+                                    ? updateSuccessMessage
+                                    : createSuccessMessage,
+                              ),
+                            ),
+                          );
+                        }
+                      } catch (error) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Aksi gagal: $error')),
+                          );
+                        }
+                      }
+                    },
+                    child: Text(isEditing ? 'Simpan Perubahan' : 'Simpan'),
+                  ),
+                ],
+              ),
             ),
           );
         },

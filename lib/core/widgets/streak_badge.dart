@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Compact streak badge for displaying streak count with emoji.
+import '../constants/app_colors.dart';
+
+/// Compact streak badge for displaying streak count with emoji and gradient.
 class StreakBadge extends StatelessWidget {
   const StreakBadge({
     super.key,
@@ -17,14 +19,18 @@ class StreakBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final isHot = currentStreak >= 7;
 
     if (compact) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: currentStreak >= 7
-              ? colorScheme.primaryContainer
-              : colorScheme.surfaceContainerHighest,
+          gradient: isHot
+              ? const LinearGradient(
+                  colors: [Color(0xFFFF6B35), Color(0xFFE53E3E)],
+                )
+              : null,
+          color: isHot ? null : colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -36,7 +42,7 @@ class StreakBadge extends StatelessWidget {
               '$currentStreak',
               style: textTheme.labelLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: colorScheme.primary,
+                color: isHot ? Colors.white : colorScheme.primary,
               ),
             ),
           ],
@@ -45,12 +51,26 @@ class StreakBadge extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: currentStreak >= 7
-            ? colorScheme.primaryContainer
-            : colorScheme.surfaceContainerHighest,
+        gradient: isHot
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFFF6B35), Color(0xFFE53E3E)],
+              )
+            : null,
+        color: isHot ? null : colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(24),
+        boxShadow: isHot
+            ? [
+                BoxShadow(
+                  color: AppColors.streakAccent.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -60,8 +80,8 @@ class StreakBadge extends StatelessWidget {
           Text(
             '$currentStreak hari',
             style: textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: colorScheme.primary,
+              fontWeight: FontWeight.w700,
+              color: isHot ? Colors.white : colorScheme.primary,
             ),
           ),
         ],

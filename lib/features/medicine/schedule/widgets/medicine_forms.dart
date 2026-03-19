@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/utils/image_helper.dart';
+import '../../../../core/validators/app_validators.dart';
 
 import '../../../../domain/models/medicine.dart';
 import '../../../../domain/models/medicine_schedule.dart';
@@ -48,12 +49,7 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                     TextFormField(
                       controller: nameController,
                       decoration: const InputDecoration(labelText: 'Nama Obat'),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Nama obat tidak boleh kosong';
-                        }
-                        return null;
-                      },
+                      validator: AppValidators.name,
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -69,15 +65,12 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                       decoration: const InputDecoration(
                         labelText: 'Stok Saat Ini',
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Stok harus diisi';
-                        }
-                        if (int.tryParse(value) == null) {
-                          return 'Stok harus berupa angka';
-                        }
-                        return null;
-                      },
+                      validator: (value) => AppValidators.nonNegativeInt(
+                        value,
+                        requiredMessage: 'Stok harus diisi',
+                        invalidMessage: 'Stok harus berupa angka',
+                        negativeMessage: 'Stok tidak boleh negatif',
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -238,10 +231,6 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
       );
     },
   );
-
-  nameController.dispose();
-  dosageController.dispose();
-  stockController.dispose();
 }
 
 Future<void> showAddScheduleSheet(
@@ -532,6 +521,4 @@ Future<void> _showScheduleSheet({
       );
     },
   );
-
-  nameController.dispose();
 }

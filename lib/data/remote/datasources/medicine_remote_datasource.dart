@@ -227,8 +227,9 @@ class MedicineRemoteDataSource {
     if (!scheduleDate.isAfter(DateTime(now.year, now.month, now.day))) {
       final taskRows = timeSlots.map((time) {
         final parts = time.split(':');
-        final hour = int.parse(parts[0]);
-        final minute = int.parse(parts[1]);
+        final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
+        final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+        
         final scheduledAt = DateTime(
           now.year,
           now.month,

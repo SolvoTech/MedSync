@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../constants/app_colors.dart';
+
 class AppLoadingSkeleton extends StatelessWidget {
   const AppLoadingSkeleton({
     super.key,
     required this.width,
     required this.height,
-    this.borderRadius = 8.0,
+    this.borderRadius = 12.0,
   });
 
   final double width;
@@ -15,16 +17,13 @@ class AppLoadingSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Shimmer.fromColors(
-      baseColor: isDark
-          ? colorScheme.surface.withValues(alpha: 0.5)
-          : Colors.grey.shade300,
+      baseColor: isDark ? AppColors.darkShimmerBase : AppColors.shimmerBase,
       highlightColor: isDark
-          ? colorScheme.surface.withValues(alpha: 0.8)
-          : Colors.grey.shade100,
+          ? AppColors.darkShimmerHighlight
+          : AppColors.shimmerHighlight,
       child: Container(
         width: width,
         height: height,
@@ -58,7 +57,7 @@ class AppListSkeleton extends StatelessWidget {
       itemBuilder: (_, _) => AppLoadingSkeleton(
         width: double.infinity,
         height: itemHeight,
-        borderRadius: 16,
+        borderRadius: 20,
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/validators/app_validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../domain/models/care_person.dart';
@@ -23,21 +24,29 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
   DateTime? _birthDate;
   final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
+  bool _hasAttemptedSubmit = false;
 
   bool get _isEditing => widget.existing != null;
 
   static const _relationshipOptions = [
-    'Ayah', 'Ibu', 'Kakek', 'Nenek', 'Suami', 'Istri',
-    'Anak', 'Saudara', 'Lainnya',
+    'Ayah',
+    'Ibu',
+    'Kakek',
+    'Nenek',
+    'Suami',
+    'Istri',
+    'Anak',
+    'Saudara',
+    'Lainnya',
   ];
 
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.existing?.displayName);
-    _relationshipController =
-        TextEditingController(text: widget.existing?.relationship);
+    _nameController = TextEditingController(text: widget.existing?.displayName);
+    _relationshipController = TextEditingController(
+      text: widget.existing?.relationship,
+    );
     _notesController = TextEditingController(text: widget.existing?.notes);
     _birthDate = widget.existing?.birthDate;
   }
@@ -51,7 +60,12 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      if (!_hasAttemptedSubmit) {
+        setState(() => _hasAttemptedSubmit = true);
+      }
+      return;
+    }
 
     setState(() => _isSaving = true);
     final ds = ref.read(carePersonDataSourceProvider);
@@ -85,18 +99,20 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isEditing
-                ? 'Anggota berhasil diperbarui.'
-                : 'Anggota berhasil ditambahkan.'),
+            content: Text(
+              _isEditing
+                  ? 'Anggota berhasil diperbarui.'
+                  : 'Anggota berhasil ditambahkan.',
+            ),
           ),
         );
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menyimpan: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -128,6 +144,9 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
+          autovalidateMode: _hasAttemptedSubmit
+              ? AutovalidateMode.onUserInteraction
+              : AutovalidateMode.disabled,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -137,12 +156,7 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
                 label: 'Nama Panggilan',
                 hint: 'e.g. Ayah, Ibu, Nenek',
                 prefixIcon: const Icon(Icons.person_outline),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) {
-                    return AppStrings.nameRequired;
-                  }
-                  return null;
-                },
+                validator: AppValidators.name,
               ),
               const SizedBox(height: 16),
 
@@ -153,15 +167,13 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
                 spacing: 8,
                 runSpacing: 8,
                 children: _relationshipOptions.map((option) {
-                  final isSelected =
-                      _relationshipController.text == option;
+                  final isSelected = _relationshipController.text == option;
                   return ChoiceChip(
                     label: Text(option),
                     selected: isSelected,
                     onSelected: (selected) {
                       setState(() {
-                        _relationshipController.text =
-                            selected ? option : '';
+                        _relationshipController.text = selected ? option : '';
                       });
                     },
                   );
@@ -172,8 +184,10 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
               // Birth date
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.cake_outlined,
-                    color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                leading: Icon(
+                  Icons.cake_outlined,
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
                 title: const Text('Tanggal Lahir'),
                 subtitle: Text(
                   _birthDate != null
@@ -192,6 +206,8 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
                 hint: 'Kondisi kesehatan, alergi, dll.',
                 maxLines: 3,
                 prefixIcon: const Icon(Icons.notes),
+                validator: (v) =>
+                    AppValidators.maxLengthOptional(v, 250, label: 'Catatan'),
               ),
               const SizedBox(height: 32),
 

@@ -2,9 +2,9 @@ extension StringExt on String {
   /// "Budi Santoso" → "BS"
   String get initials {
     final parts = trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty) return '';
-    if (parts.length == 1) {
-      return parts.first.isNotEmpty ? parts.first[0].toUpperCase() : '';
+    if (parts.isEmpty || parts.first.isEmpty) return '';
+    if (parts.length == 1 || parts.last.isEmpty) {
+      return parts.first[0].toUpperCase();
     }
     return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }

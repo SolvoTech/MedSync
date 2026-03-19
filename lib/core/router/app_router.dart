@@ -14,6 +14,7 @@ import '../../features/medicine/schedule/schedule_list_screen.dart';
 import '../../features/notifications/notification_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/reports/report_screen.dart';
+import '../../features/splash/onboarding/onboarding_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
@@ -31,10 +32,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == AppRoutes.login ||
           state.matchedLocation == AppRoutes.register ||
           state.matchedLocation == AppRoutes.forgotPassword;
+      final isPublicRoute =
+          state.matchedLocation == AppRoutes.splash ||
+          state.matchedLocation == AppRoutes.onboarding;
 
-      if (!isAuthenticated &&
-          !isAuthRoute &&
-          state.matchedLocation != AppRoutes.splash) {
+      if (!isAuthenticated && !isAuthRoute && !isPublicRoute) {
         return AppRoutes.login;
       }
 
@@ -46,6 +48,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashScreen()),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (_, _) => const OnboardingScreen(),
+      ),
       GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginScreen()),
       GoRoute(
         path: AppRoutes.register,

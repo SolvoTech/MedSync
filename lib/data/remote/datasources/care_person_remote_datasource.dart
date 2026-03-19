@@ -4,7 +4,13 @@ import '../../../domain/models/care_person.dart';
 
 class CarePersonRemoteDataSource {
   SupabaseClient get _client => Supabase.instance.client;
-  String get _userId => _client.auth.currentUser!.id;
+  String get _userId {
+    final user = _client.auth.currentUser;
+    if (user == null) {
+      throw Exception('Sesi telah berakhir. Silahkan login kembali.');
+    }
+    return user.id;
+  }
 
   Future<List<CarePerson>> getCarePersons() async {
     final rows = await _client
@@ -24,8 +30,11 @@ class CarePersonRemoteDataSource {
         .select()
         .eq('id', id)
         .eq('owner_id', _userId)
-        .single();
+        .maybeSingle();
 
+    if (row == null) {
+      throw Exception('Data anggota keluarga tidak ditemukan.');
+    }
     return CarePerson.fromMap(row);
   }
 

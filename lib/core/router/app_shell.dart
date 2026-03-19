@@ -14,38 +14,54 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: navigationShell.goBranch,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Beranda',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          border: Border(
+            top: BorderSide(
+              color: isDark
+                  ? colorScheme.outlineVariant.withValues(alpha: 0.3)
+                  : colorScheme.outlineVariant.withValues(alpha: 0.5),
+              width: 0.5,
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.medication_outlined),
-            selectedIcon: Icon(Icons.medication),
-            label: 'Jadwal',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: 'Laporan',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.notifications_outlined),
-            selectedIcon: Icon(Icons.notifications),
-            label: 'Notifikasi',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-        ],
+        ),
+        child: NavigationBar(
+          selectedIndex: navigationShell.currentIndex,
+          onDestinationSelected: navigationShell.goBranch,
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home_rounded),
+              label: 'Beranda',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.medication_outlined),
+              selectedIcon: Icon(Icons.medication_rounded),
+              label: 'Jadwal',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.bar_chart_outlined),
+              selectedIcon: Icon(Icons.bar_chart_rounded),
+              label: 'Laporan',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.notifications_outlined),
+              selectedIcon: Icon(Icons.notifications_rounded),
+              label: 'Notifikasi',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person_rounded),
+              label: 'Profil',
+            ),
+          ],
+        ),
       ),
     );
   }

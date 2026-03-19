@@ -54,29 +54,6 @@ class AboutScreen extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 20),
-          _Section(
-            title: 'Sosial & Kontak',
-            content: '',
-            child: Column(
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.language),
-                  title: const Text('Website'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.email_outlined),
-                  title: const Text('Hubungi Kami'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

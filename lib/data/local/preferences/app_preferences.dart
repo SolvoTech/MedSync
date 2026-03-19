@@ -9,11 +9,19 @@ class AppPreferences {
   /// Must call init() in main.dart before using.
   static Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    await _migrateLegacyThemeMode();
+  }
+
+  static Future<void> _migrateLegacyThemeMode() async {
+    final raw = _prefs.getString(_keyThemeMode);
+    if (raw == 'system') {
+      await _prefs.setString(_keyThemeMode, 'light');
+    }
   }
 
   // ─── Theme ───────────────────────────────────────
   static const _keyThemeMode = 'theme_mode';
-  static String get themeMode => _prefs.getString(_keyThemeMode) ?? 'system';
+  static String get themeMode => _prefs.getString(_keyThemeMode) ?? 'light';
   static Future<void> setThemeMode(String value) =>
       _prefs.setString(_keyThemeMode, value);
 
@@ -32,8 +40,7 @@ class AppPreferences {
   static const _keyNotifStreak = 'notif_streak';
   static const _keyNotifDailySummary = 'notif_daily_summary';
 
-  static bool get notifMedicine =>
-      _prefs.getBool(_keyNotifMedicine) ?? true;
+  static bool get notifMedicine => _prefs.getBool(_keyNotifMedicine) ?? true;
   static Future<void> setNotifMedicine(bool v) =>
       _prefs.setBool(_keyNotifMedicine, v);
 
@@ -42,18 +49,15 @@ class AppPreferences {
   static Future<void> setNotifMeasurement(bool v) =>
       _prefs.setBool(_keyNotifMeasurement, v);
 
-  static bool get notifActivity =>
-      _prefs.getBool(_keyNotifActivity) ?? true;
+  static bool get notifActivity => _prefs.getBool(_keyNotifActivity) ?? true;
   static Future<void> setNotifActivity(bool v) =>
       _prefs.setBool(_keyNotifActivity, v);
 
-  static bool get notifStock =>
-      _prefs.getBool(_keyNotifStock) ?? true;
+  static bool get notifStock => _prefs.getBool(_keyNotifStock) ?? true;
   static Future<void> setNotifStock(bool v) =>
       _prefs.setBool(_keyNotifStock, v);
 
-  static bool get notifStreak =>
-      _prefs.getBool(_keyNotifStreak) ?? true;
+  static bool get notifStreak => _prefs.getBool(_keyNotifStreak) ?? true;
   static Future<void> setNotifStreak(bool v) =>
       _prefs.setBool(_keyNotifStreak, v);
 

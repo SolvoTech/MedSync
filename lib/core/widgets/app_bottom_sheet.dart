@@ -27,9 +27,7 @@ class AppBottomSheet extends StatelessWidget {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: isScrollControlled,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) => FractionallySizedBox(
         heightFactor: isScrollControlled ? heightFactor : null,
         child: AppBottomSheet(
@@ -46,49 +44,71 @@ class AppBottomSheet extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Drag handle
-        Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: colorScheme.onSurface.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(2),
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag handle
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 4),
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colorScheme.onSurface.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ),
-        ),
-        // Header
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: textTheme.titleLarge,
-                ),
-              ),
-              trailing ??
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-            ],
+                ),
+                trailing ??
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close,
+                          size: 18,
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
+              ],
+            ),
           ),
-        ),
-        const Divider(),
-        // Content
-        Expanded(
-          child: Padding(
-            padding: padding ?? const EdgeInsets.all(16),
-            child: child,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Divider(color: colorScheme.outlineVariant),
           ),
-        ),
-      ],
+          // Content
+          Expanded(
+            child: Padding(
+              padding: padding ?? const EdgeInsets.all(20),
+              child: child,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

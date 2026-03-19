@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/theme/theme_mode_provider.dart';
 import '../../../core/widgets/app_card.dart';
 import '../profile_screen.dart';
 
@@ -13,31 +14,41 @@ class AppearanceScreen extends ConsumerStatefulWidget {
 }
 
 class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
-  String _themeMode = 'system'; // 'light', 'dark', 'system'
+  String _themeMode = 'light'; // 'light', 'dark', 'system'
   bool _loaded = false;
+
+  static String _toRaw(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.dark:
+        return 'dark';
+      case ThemeMode.light:
+        return 'light';
+      case ThemeMode.system:
+        return 'system';
+    }
+  }
 
   void _initFromProfile() {
     if (_loaded) return;
-    final profileAsync = ref.read(currentProfileProvider);
-    profileAsync.whenData((profile) {
-      if (profile != null && !_loaded) {
-        _loaded = true;
-        setState(() {
-          _themeMode = profile.themeMode;
-        });
-      }
-    });
+    _loaded = true;
+    _themeMode = _toRaw(ref.read(themeModeProvider));
   }
 
   Future<void> _saveTheme(String mode) async {
+    final previous = _themeMode;
     setState(() => _themeMode = mode);
 
     try {
+      await ref.read(themeModeProvider.notifier).setThemeMode(mode);
       await ref.read(profileDataSourceProvider).updateProfile({
         'theme_mode': mode,
       });
       ref.invalidate(currentProfileProvider);
     } catch (e) {
+      await ref.read(themeModeProvider.notifier).setThemeMode(previous);
+      if (mounted) {
+        setState(() => _themeMode = previous);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Gagal menyimpan pengaturan: $e')),

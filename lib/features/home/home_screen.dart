@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_gradients.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/extensions/datetime_ext.dart';
 import '../../core/widgets/app_card.dart';
@@ -46,6 +48,7 @@ class HomeScreen extends ConsumerWidget {
     final streakState = ref.watch(streakProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: RefreshIndicator(
@@ -55,42 +58,116 @@ class HomeScreen extends ConsumerWidget {
         },
         child: CustomScrollView(
           slivers: [
-            // App Bar with greeting
+            // Gradient Hero App Bar
             SliverAppBar(
               floating: true,
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _greeting(),
-                    style: textTheme.titleMedium,
+              expandedHeight: 132,
+              toolbarHeight: 64,
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              flexibleSpace: Container(
+                decoration: BoxDecoration(
+                  gradient: AppGradients.primaryFor(
+                    isDark ? Brightness.dark : Brightness.light,
                   ),
-                  Text(
-                    DateTime.now().toFullIndonesianDate(),
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(24),
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // Decorative circle
+                    Positioned(
+                      top: -20,
+                      right: -20,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.06),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                    Positioned(
+                      bottom: 10,
+                      left: -15,
+                      child: Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.04),
+                        ),
+                      ),
+                    ),
+                    // Content
+                    SafeArea(
+                      bottom: false,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isCompact = constraints.maxHeight < 64;
+                          final showDate = constraints.maxHeight >= 76;
+
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
+                            child: Align(
+                              alignment: Alignment.bottomLeft,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _greeting(),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style:
+                                        (isCompact
+                                                ? textTheme.titleMedium
+                                                : textTheme.titleLarge)
+                                            ?.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                  ),
+                                  if (showDate) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      DateTime.now().toFullIndonesianDate(),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: textTheme.bodyMedium?.copyWith(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.8,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              toolbarHeight: 72,
             ),
 
             // Permissions Banner (if needed)
-            const SliverToBoxAdapter(
-              child: HomePermissionsBanner(),
-            ),
+            const SliverToBoxAdapter(child: HomePermissionsBanner()),
 
             // Streak Card
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: streakState.when(
                   data: (streak) => _StreakCard(streak: streak),
                   loading: () => const AppLoadingSkeleton(
                     width: double.infinity,
                     height: 80,
-                    borderRadius: 16,
+                    borderRadius: 20,
                   ),
                   error: (_, _) => const SizedBox.shrink(),
                 ),
@@ -105,11 +182,13 @@ class HomeScreen extends ConsumerWidget {
                   data: (tasks) {
                     final total = tasks.length;
                     final completed = tasks
-                        .where((t) =>
-                            t.status == 'done' || t.status == 'skipped')
+                        .where(
+                          (t) => t.status == 'done' || t.status == 'skipped',
+                        )
                         .length;
-                    final percent =
-                        total > 0 ? (completed / total * 100).round() : 0;
+                    final percent = total > 0
+                        ? (completed / total * 100).round()
+                        : 0;
 
                     return AppCard(
                       child: Row(
@@ -119,18 +198,23 @@ class HomeScreen extends ConsumerWidget {
                               label: 'Selesai',
                               value: '$completed/$total',
                               icon: Icons.check_circle_outline,
+                              color: AppColors.success,
                             ),
                           ),
                           Container(
                             width: 1,
                             height: 40,
-                            color: colorScheme.outlineVariant,
+                            decoration: BoxDecoration(
+                              color: colorScheme.outlineVariant,
+                              borderRadius: BorderRadius.circular(1),
+                            ),
                           ),
                           Expanded(
                             child: _StatItem(
                               label: 'Progres',
                               value: '$percent%',
                               icon: Icons.trending_up,
+                              color: AppColors.info,
                             ),
                           ),
                         ],
@@ -140,7 +224,7 @@ class HomeScreen extends ConsumerWidget {
                   loading: () => const AppLoadingSkeleton(
                     width: double.infinity,
                     height: 64,
-                    borderRadius: 16,
+                    borderRadius: 20,
                   ),
                   error: (_, _) => const SizedBox.shrink(),
                 ),
@@ -150,12 +234,26 @@ class HomeScreen extends ConsumerWidget {
             // Section header
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                child: Text(
-                  AppStrings.todayTasks,
-                  style: textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 3,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      AppStrings.todayTasks,
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -168,7 +266,8 @@ class HomeScreen extends ConsumerWidget {
                     child: AppEmptyState(
                       message: AppStrings.noTasksToday,
                       icon: Icons.task_alt,
-                      subtitle: 'Tambahkan jadwal obat atau aktivitas\nuntuk mulai melacak kesehatan Anda.',
+                      subtitle:
+                          'Tambahkan jadwal obat atau aktivitas\nuntuk mulai melacak kesehatan Anda.',
                     ),
                   );
                 }
@@ -176,7 +275,7 @@ class HomeScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverList.separated(
                     itemCount: tasks.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final task = tasks[index];
                       return TodayTaskCard(
@@ -221,7 +320,7 @@ class HomeScreen extends ConsumerWidget {
                         child: AppLoadingSkeleton(
                           width: double.infinity,
                           height: 72,
-                          borderRadius: 16,
+                          borderRadius: 20,
                         ),
                       ),
                     ),
@@ -256,18 +355,36 @@ class _StreakCard extends StatelessWidget {
     final currentStreak = streak?.currentStreak ?? 0;
     final message =
         streak?.motivationMessage ?? 'Mulai hari pertamamu hari ini!';
+    final isHot = currentStreak >= 7;
 
     return AppCard(
-      color: currentStreak >= 7
-          ? colorScheme.primaryContainer
-          : colorScheme.surfaceContainerHighest,
+      gradient: isHot
+          ? const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFFF6B35), Color(0xFFE53E3E)],
+            )
+          : null,
+      color: isHot ? null : colorScheme.surfaceContainerHighest,
       child: Row(
         children: [
-          Text(
-            currentStreak >= 7 ? '🔥' : '💪',
-            style: const TextStyle(fontSize: 32),
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: isHot
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : colorScheme.primaryContainer,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                isHot ? '🔥' : '💪',
+                style: const TextStyle(fontSize: 24),
+              ),
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,21 +394,28 @@ class _StreakCard extends StatelessWidget {
                     Text(
                       '$currentStreak',
                       style: textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w800,
+                        color: isHot ? Colors.white : colorScheme.primary,
                       ),
                     ),
                     const SizedBox(width: 6),
                     Text(
                       AppStrings.streakDays,
-                      style: textTheme.bodyMedium,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: isHot
+                            ? Colors.white.withValues(alpha: 0.9)
+                            : colorScheme.onSurface,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
                 Text(
                   message,
                   style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: isHot
+                        ? Colors.white.withValues(alpha: 0.8)
+                        : colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -308,34 +432,46 @@ class _StatItem extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
+    required this.color,
   });
 
   final String label;
   final String value;
   final IconData icon;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, size: 20, color: colorScheme.primary),
-        const SizedBox(width: 8),
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: isDark ? 0.2 : 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 16, color: color),
+        ),
+        const SizedBox(width: 10),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               value,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             Text(
               label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
             ),
           ],
         ),

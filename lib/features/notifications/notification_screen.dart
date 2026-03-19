@@ -138,15 +138,29 @@ class NotificationScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Text(
-                        groupKey,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.5),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 3,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              borderRadius: BorderRadius.circular(2),
                             ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            groupKey,
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.5),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ],
                       ),
                     ),
                     ...items.map((notif) => _NotificationTile(notif: notif)),
@@ -174,19 +188,36 @@ class _NotificationTile extends ConsumerWidget {
   IconData _typeIcon() {
     switch (notif.notificationType) {
       case 'medicine':
-        return Icons.medication;
+        return Icons.medication_rounded;
       case 'measurement':
-        return Icons.monitor_heart;
+        return Icons.monitor_heart_rounded;
       case 'activity':
-        return Icons.directions_run;
+        return Icons.directions_run_rounded;
       case 'stock_warning':
-        return Icons.warning_amber;
+        return Icons.warning_amber_rounded;
       case 'streak':
-        return Icons.local_fire_department;
+        return Icons.local_fire_department_rounded;
       case 'followup':
-        return Icons.notification_important;
+        return Icons.notification_important_rounded;
       default:
-        return Icons.notifications;
+        return Icons.notifications_rounded;
+    }
+  }
+
+  Color _typeColor(BuildContext context) {
+    switch (notif.notificationType) {
+      case 'medicine':
+        return const Color(0xFF0077B6);
+      case 'measurement':
+        return const Color(0xFF38A169);
+      case 'activity':
+        return const Color(0xFFED8936);
+      case 'stock_warning':
+        return const Color(0xFFE53E3E);
+      case 'streak':
+        return const Color(0xFFE53E3E);
+      default:
+        return Theme.of(context).colorScheme.primary;
     }
   }
 
@@ -194,59 +225,83 @@ class _NotificationTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accentColor = _typeColor(context);
 
     return Dismissible(
       key: ValueKey(notif.id),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        color: colorScheme.error,
-        child: const Icon(Icons.delete, color: Colors.white),
+        padding: const EdgeInsets.only(right: 24),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: colorScheme.error,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.delete_rounded, color: Colors.white),
       ),
       onDismissed: (_) => ref
           .read(notificationListProvider.notifier)
           .deleteNotification(notif.id),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: notif.isRead
-              ? colorScheme.surfaceContainerHighest
-              : colorScheme.primaryContainer,
-          child: Icon(
-            _typeIcon(),
-            size: 20,
-            color: notif.isRead
-                ? colorScheme.onSurface.withValues(alpha: 0.5)
-                : colorScheme.primary,
-          ),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        decoration: BoxDecoration(
+          color: notif.isRead
+              ? Colors.transparent
+              : colorScheme.primaryContainer.withValues(alpha: isDark ? 0.15 : 0.3),
+          borderRadius: BorderRadius.circular(16),
         ),
-        title: Text(
-          notif.title,
-          style: textTheme.bodyMedium?.copyWith(
-            fontWeight: notif.isRead ? FontWeight.normal : FontWeight.w600,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: notif.isRead
+                  ? colorScheme.surfaceContainerHighest
+                  : accentColor.withValues(alpha: isDark ? 0.2 : 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              _typeIcon(),
+              size: 20,
+              color: notif.isRead
+                  ? colorScheme.onSurface.withValues(alpha: 0.4)
+                  : accentColor,
+            ),
           ),
-        ),
-        subtitle: Text(
-          notif.body,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurface.withValues(alpha: 0.6),
+          title: Text(
+            notif.title,
+            style: textTheme.bodyMedium?.copyWith(
+              fontWeight: notif.isRead ? FontWeight.normal : FontWeight.w600,
+            ),
           ),
-        ),
-        trailing: Text(
-          notif.scheduledAt.toTimeString(),
-          style: textTheme.labelSmall?.copyWith(
-            color: colorScheme.onSurface.withValues(alpha: 0.4),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              notif.body,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
           ),
+          trailing: Text(
+            notif.scheduledAt.toTimeString(),
+            style: textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.35),
+            ),
+          ),
+          onTap: () {
+            if (!notif.isRead) {
+              ref
+                  .read(notificationListProvider.notifier)
+                  .markRead(notif.id);
+            }
+          },
         ),
-        onTap: () {
-          if (!notif.isRead) {
-            ref
-                .read(notificationListProvider.notifier)
-                .markRead(notif.id);
-          }
-        },
       ),
     );
   }

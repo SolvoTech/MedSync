@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/validators/app_validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../domain/models/user_profile.dart';
@@ -20,6 +21,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
   bool _loaded = false;
+  bool _hasAttemptedSubmit = false;
 
   @override
   void initState() {
@@ -53,7 +55,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      if (!_hasAttemptedSubmit) {
+        setState(() => _hasAttemptedSubmit = true);
+      }
+      return;
+    }
 
     setState(() => _isSaving = true);
 
@@ -73,9 +80,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memperbarui profil: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal memperbarui profil: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -95,6 +102,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
+          autovalidateMode: _hasAttemptedSubmit
+              ? AutovalidateMode.onUserInteraction
+              : AutovalidateMode.disabled,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -103,20 +113,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 controller: _nameController,
                 label: AppStrings.fullNameLabel,
                 prefixIcon: const Icon(Icons.person_outline),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) {
-                    return AppStrings.nameRequired;
-                  }
-                  return null;
-                },
+                validator: AppValidators.name,
               ),
               const SizedBox(height: 20),
 
               // Birth date
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.cake_outlined,
-                    color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                leading: Icon(
+                  Icons.cake_outlined,
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
                 title: const Text(AppStrings.birthDateLabel),
                 subtitle: Text(
                   _birthDate != null

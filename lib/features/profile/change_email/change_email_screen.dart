@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/validators/app_validators.dart';
+
 class ChangeEmailScreen extends ConsumerStatefulWidget {
   const ChangeEmailScreen({super.key});
 
@@ -13,6 +15,7 @@ class _ChangeEmailScreenState extends ConsumerState<ChangeEmailScreen> {
   final _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _hasAttemptedSubmit = false;
 
   @override
   void dispose() {
@@ -21,7 +24,12 @@ class _ChangeEmailScreenState extends ConsumerState<ChangeEmailScreen> {
   }
 
   Future<void> _changeEmail() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      if (!_hasAttemptedSubmit) {
+        setState(() => _hasAttemptedSubmit = true);
+      }
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
@@ -31,15 +39,17 @@ class _ChangeEmailScreenState extends ConsumerState<ChangeEmailScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Tautan konfirmasi telah dikirim ke $newEmail.')),
+          SnackBar(
+            content: Text('Tautan konfirmasi telah dikirim ke $newEmail.'),
+          ),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengganti email: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal mengganti email: $e')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -54,6 +64,9 @@ class _ChangeEmailScreenState extends ConsumerState<ChangeEmailScreen> {
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
+          autovalidateMode: _hasAttemptedSubmit
+              ? AutovalidateMode.onUserInteraction
+              : AutovalidateMode.disabled,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -61,15 +74,7 @@ class _ChangeEmailScreenState extends ConsumerState<ChangeEmailScreen> {
                 controller: _emailController,
                 decoration: const InputDecoration(labelText: 'Email Baru'),
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Email baru harus diisi';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Format email tidak valid';
-                  }
-                  return null;
-                },
+                validator: AppValidators.email,
               ),
               const SizedBox(height: 24),
               FilledButton(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/validators/app_validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 
@@ -21,6 +22,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   bool _isSaving = false;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
+  bool _hasAttemptedSubmit = false;
 
   @override
   void dispose() {
@@ -56,7 +58,12 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      if (!_hasAttemptedSubmit) {
+        setState(() => _hasAttemptedSubmit = true);
+      }
+      return;
+    }
 
     setState(() => _isSaving = true);
 
@@ -92,6 +99,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
+          autovalidateMode: _hasAttemptedSubmit
+              ? AutovalidateMode.onUserInteraction
+              : AutovalidateMode.disabled,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -102,19 +112,15 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 isObscure: _obscureNew,
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureNew
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined),
-                  onPressed: () =>
-                      setState(() => _obscureNew = !_obscureNew),
+                  icon: Icon(
+                    _obscureNew
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
+                  onPressed: () => setState(() => _obscureNew = !_obscureNew),
                 ),
                 onChanged: (_) => setState(() {}),
-                validator: (v) {
-                  if (v == null || v.length < 8) {
-                    return AppStrings.passwordTooShort;
-                  }
-                  return null;
-                },
+                validator: AppValidators.strongPassword,
               ),
               const SizedBox(height: 8),
 
@@ -129,7 +135,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           value: strength,
                           backgroundColor: Colors.grey.shade200,
                           valueColor: AlwaysStoppedAnimation(
-                              _strengthColor(strength)),
+                            _strengthColor(strength),
+                          ),
                           minHeight: 6,
                         ),
                       ),
@@ -149,11 +156,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 Text(
                   'Min 8 karakter, huruf besar, angka',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.5),
-                      ),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
                 ),
               ],
               const SizedBox(height: 16),
@@ -165,18 +171,18 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 isObscure: _obscureConfirm,
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureConfirm
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined),
+                  icon: Icon(
+                    _obscureConfirm
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
                   onPressed: () =>
                       setState(() => _obscureConfirm = !_obscureConfirm),
                 ),
-                validator: (v) {
-                  if (v != _newPasswordController.text) {
-                    return AppStrings.passwordMismatch;
-                  }
-                  return null;
-                },
+                validator: (v) => AppValidators.confirmPassword(
+                  v,
+                  _newPasswordController.text,
+                ),
               ),
               const SizedBox(height: 32),
 

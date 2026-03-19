@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/router/app_routes.dart';
+import '../../../core/validators/app_validators.dart';
 import 'onboarding_profile_controller.dart';
 
 class OnboardingProfileScreen extends ConsumerStatefulWidget {
@@ -18,6 +20,18 @@ class _OnboardingProfileScreenState
   final _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   DateTime? _birthDate;
+  bool _hasAttemptedSubmit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final fullName =
+        Supabase.instance.client.auth.currentUser?.userMetadata?['full_name']
+            as String?;
+    if (fullName != null && fullName.trim().isNotEmpty) {
+      _nameController.text = fullName.trim();
+    }
+  }
 
   @override
   void dispose() {
@@ -43,6 +57,9 @@ class _OnboardingProfileScreenState
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
+      if (!_hasAttemptedSubmit) {
+        setState(() => _hasAttemptedSubmit = true);
+      }
       return;
     }
 
@@ -74,17 +91,15 @@ class _OnboardingProfileScreenState
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
+          autovalidateMode: _hasAttemptedSubmit
+              ? AutovalidateMode.onUserInteraction
+              : AutovalidateMode.disabled,
           child: ListView(
             children: [
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Nama Lengkap'),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Nama lengkap tidak boleh kosong';
-                  }
-                  return null;
-                },
+                validator: AppValidators.name,
               ),
               const SizedBox(height: 12),
               ListTile(
