@@ -59,6 +59,11 @@ class MeasurementController
           targetValue: targetValue,
         );
 
+    final scheduleAt = _nextScheduleTime(
+      startDate: startDate,
+      timeOfDay: timeOfDay,
+    );
+
     await ref
         .read(notificationServiceProvider)
         .scheduleTaskNotification(
@@ -95,7 +100,9 @@ class MeasurementController
           targetValue: targetValue,
         );
 
-    final oldReminder = (state.valueOrNull ?? []).firstWhere((r) => r.id == reminderId);
+    final oldReminder = (state.valueOrNull ?? []).firstWhere(
+      (r) => r.id == reminderId,
+    );
     await ref
         .read(notificationServiceProvider)
         .cancelTaskNotification(
@@ -126,7 +133,9 @@ class MeasurementController
 
   Future<void> deactivateReminder(String reminderId) async {
     try {
-      final oldReminder = (state.valueOrNull ?? []).firstWhere((r) => r.id == reminderId);
+      final oldReminder = (state.valueOrNull ?? []).firstWhere(
+        (r) => r.id == reminderId,
+      );
       await ref
           .read(notificationServiceProvider)
           .cancelTaskNotification(
@@ -143,7 +152,9 @@ class MeasurementController
 
   Future<void> deleteReminder(String reminderId) async {
     try {
-      final oldReminder = (state.valueOrNull ?? []).firstWhere((r) => r.id == reminderId);
+      final oldReminder = (state.valueOrNull ?? []).firstWhere(
+        (r) => r.id == reminderId,
+      );
       await ref
           .read(notificationServiceProvider)
           .cancelTaskNotification(
