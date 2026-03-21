@@ -261,7 +261,28 @@ create index if not exists task_logs_scheduled_at_idx
   on task_logs(owner_id, scheduled_at desc);
 
 create index if not exists task_logs_date_idx
-  on task_logs(owner_id, (date(scheduled_at)));
+  on task_logs(owner_id, ((scheduled_at at time zone 'utc')::date));
 
 create index if not exists notif_logs_created_at_idx
   on notification_logs(owner_id, created_at desc);
+
+-- Allow authenticated users to permanently delete their own auth account.
+-- Deleting auth.users row cascades to profiles and all owner-linked tables.
+create or replace function public.delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
+revoke all on function public.delete_my_account() from public;
+grant execute on function public.delete_my_account() to authenticated;
+

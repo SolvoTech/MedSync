@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -31,6 +32,13 @@ class NotificationService {
     );
 
     tz.initializeTimeZones();
+    final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+    final timeZoneName = timezoneInfo.identifier;
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
+
+    if (kDebugMode) {
+      debugPrint('[NotificationService] Local timezone set to: $timeZoneName');
+    }
 
     const channels = <AndroidNotificationChannel>[
       AndroidNotificationChannel(
@@ -98,6 +106,7 @@ class NotificationService {
     required String body,
     required DateTime scheduledAt,
     String? payload,
+    bool repeatDaily = false,
   }) async {
     final details = NotificationDetails(
       android: AndroidNotificationDetails(
@@ -110,7 +119,8 @@ class NotificationService {
             ? const <AndroidNotificationAction>[
                 AndroidNotificationAction(
                   markDoneActionId,
-                  'Selesai',
+                  'Selesai ✓',
+                  showsUserInterface: true,
                   cancelNotification: true,
                 ),
               ]
@@ -119,7 +129,21 @@ class NotificationService {
     );
 
     final scheduleDate = tz.TZDateTime.from(scheduledAt, tz.local);
-    if (scheduleDate.isBefore(tz.TZDateTime.now(tz.local))) {
+    final now = tz.TZDateTime.now(tz.local);
+
+    if (kDebugMode) {
+      debugPrint('[Notification] Scheduling id=$id');
+      debugPrint('[Notification]   input scheduledAt=$scheduledAt');
+      debugPrint('[Notification]   tz.local=${tz.local.name}');
+      debugPrint('[Notification]   tzScheduleDate=$scheduleDate');
+      debugPrint('[Notification]   now=$now');
+      debugPrint('[Notification]   repeatDaily=$repeatDaily');
+    }
+
+    if (scheduleDate.isBefore(now)) {
+      if (kDebugMode) {
+        debugPrint('[Notification]   ⚠️ SKIPPED — scheduleDate is in the past');
+      }
       return;
     }
 
@@ -131,11 +155,114 @@ class NotificationService {
       details,
       payload: payload,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: repeatDaily ? DateTimeComponents.time : null,
     );
+
+    if (kDebugMode) {
+      debugPrint('[Notification]   ✅ Scheduled successfully');
+    }
   }
 
   Future<void> cancelNotification(int id) async {
     await _plugin.cancel(id);
+  }
+
+  Future<void> scheduleTaskNotification({
+    required String taskType,
+    required String referenceId,
+    required String timeOfDay,
+    required String channelId,
+    required String title,
+    required String body,
+    required DateTime scheduledAt,
+  }) async {
+    final basePayload = 'task|$taskType|$referenceId|$timeOfDay';
+
+    // Schedule base notification
+    await scheduleNotification(
+      id: stableNotificationId(basePayload),
+      channelId: channelId,
+      title: title,
+      body: body,
+      scheduledAt: scheduledAt,
+      payload: '$basePayload|0',
+      repeatDaily: true,
+    );
+
+    // Schedule 6 snooze notifications (5 minutes apart, up to 30 mins)
+    for (int i = 1; i <= 6; i++) {
+      final snoozeTime = scheduledAt.add(Duration(minutes: 5 * i));
+      await scheduleNotification(
+        id: stableNotificationId('${basePayload}_snooze_$i'),
+        channelId: channelId,
+        title: title,
+        body: body,
+        scheduledAt: snoozeTime,
+        payload: '$basePayload|$i',
+        repeatDaily: true,
+      );
+    }
+  }
+
+  Future<void> advanceScheduleToTomorrow({
+    required String taskType,
+    required String referenceId,
+    required String timeOfDay,
+  }) async {
+    final targetPrefix = 'task|$taskType|$referenceId|$timeOfDay';
+
+    String channelId = 'medicine_reminders';
+    if (taskType == 'measurement') channelId = 'measurement_reminders';
+    if (taskType == 'physical_activity') channelId = 'activity_reminders';
+
+    final pendingList = await _plugin.pendingNotificationRequests();
+    final now = tz.TZDateTime.now(tz.local);
+
+    for (final pending in pendingList) {
+      if (pending.payload != null &&
+          pending.payload!.startsWith(targetPrefix)) {
+        final parts = pending.payload!.split('|');
+        final snoozeIndex = parts.length > 4 ? int.tryParse(parts[4]) ?? 0 : 0;
+
+        final timeParts = timeOfDay.split(':');
+        final h = int.tryParse(timeParts[0]) ?? 0;
+        final m = int.tryParse(timeParts[1]) ?? 0;
+
+        var nextTime = tz.TZDateTime(tz.local, now.year, now.month, now.day, h, m);
+        
+        // If the base time for today hasn't passed, tomorrow is +1 day.
+        // If it has passed, we add +1 day from now.
+        if (!nextTime.isAfter(now)) {
+          nextTime = nextTime.add(const Duration(days: 1));
+        }
+
+        // Add the snooze offset minutes
+        nextTime = nextTime.add(Duration(minutes: 5 * snoozeIndex));
+
+        // Re-schedule it to overwrite the current pending intent for today
+        await scheduleNotification(
+          id: pending.id,
+          channelId: channelId,
+          title: pending.title ?? 'Pengingat MedSync',
+          body: pending.body ?? 'Saatnya tugas Anda.',
+          scheduledAt: nextTime,
+          payload: pending.payload,
+          repeatDaily: true,
+        );
+      }
+    }
+  }
+
+  Future<void> cancelTaskNotification({
+    required String taskType,
+    required String referenceId,
+    required String timeOfDay,
+  }) async {
+    final basePayload = 'task|$taskType|$referenceId|$timeOfDay';
+    await cancelNotification(stableNotificationId(basePayload));
+    for (int i = 1; i <= 6; i++) {
+      await cancelNotification(stableNotificationId('${basePayload}_snooze_$i'));
+    }
   }
 
   String _channelName(String channelId) {
@@ -221,6 +348,14 @@ Future<void> _handleNotificationResponse(NotificationResponse response) async {
       referenceId: parsed.referenceId,
       timeOfDay: parsed.timeOfDay,
     );
+    
+    final notificationService = NotificationService();
+    await notificationService.advanceScheduleToTomorrow(
+      taskType: parsed.taskType,
+      referenceId: parsed.referenceId,
+      timeOfDay: parsed.timeOfDay ?? '',
+    );
+    
   } catch (error) {
     if (kDebugMode) {
       debugPrint('Failed to mark task from notification action: $error');

@@ -7,7 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'data/local/preferences/app_preferences.dart';
-import 'services/alarm_service.dart';
 import 'services/notification_service.dart';
 
 Future<void> main() async {
@@ -31,9 +30,6 @@ Future<void> main() async {
   final notificationService = NotificationService();
   await notificationService.initialize();
   await notificationService.requestPermission();
-
-  final alarmService = AlarmService();
-  await alarmService.initialize();
 
   runApp(const ProviderScope(child: MedSyncApp()));
 }

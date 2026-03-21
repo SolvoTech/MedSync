@@ -88,10 +88,16 @@ class AppTheme {
             return AppTextStyles.labelSmall.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.w700,
+              fontSize: 10,
+              letterSpacing: 0,
+              overflow: TextOverflow.ellipsis,
             );
           }
           return AppTextStyles.labelSmall.copyWith(
             color: AppColors.textTertiary,
+            fontSize: 10,
+            letterSpacing: 0,
+            overflow: TextOverflow.ellipsis,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
@@ -363,10 +369,16 @@ class AppTheme {
             return AppTextStyles.labelSmall.copyWith(
               color: AppColors.primaryLight,
               fontWeight: FontWeight.w700,
+              fontSize: 10,
+              letterSpacing: 0,
+              overflow: TextOverflow.ellipsis,
             );
           }
           return AppTextStyles.labelSmall.copyWith(
             color: AppColors.darkTextTertiary,
+            fontSize: 10,
+            letterSpacing: 0,
+            overflow: TextOverflow.ellipsis,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {

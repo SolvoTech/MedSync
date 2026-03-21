@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/type_labels.dart';
 import '../../data/remote/datasources/physical_activity_remote_datasource.dart';
 import '../../domain/models/physical_activity_reminder.dart';
-import '../../services/alarm_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/permission_service.dart';
 
@@ -60,26 +59,18 @@ class ActivityController
           targetValue: targetValue,
         );
 
-    final notificationId = stableNotificationId('activity:${reminder.id}');
-    final scheduleAt = _nextScheduleTime(
-      startDate: startDate,
-      timeOfDay: timeOfDay,
-    );
     await ref
         .read(notificationServiceProvider)
-        .scheduleNotification(
-          id: notificationId,
+        .scheduleTaskNotification(
+          taskType: 'physical_activity',
+          referenceId: reminder.id,
+          timeOfDay: timeOfDay,
           channelId: 'activity_reminders',
           title: 'Pengingat Aktivitas',
           body:
               'Saatnya melakukan aktivitas ${activityTypeLabel(activityType)}.',
           scheduledAt: scheduleAt,
-          payload: 'task|physical_activity|${reminder.id}|$timeOfDay',
         );
-    await ref
-        .read(alarmServiceProvider)
-        .scheduleExactAlarm(id: notificationId, dateTime: scheduleAt);
-
     await refresh();
   }
 
@@ -104,39 +95,46 @@ class ActivityController
           targetValue: targetValue,
         );
 
-    final notificationId = stableNotificationId('activity:$reminderId');
+    final oldReminder = (state.valueOrNull ?? []).firstWhere((r) => r.id == reminderId);
+    await ref
+        .read(notificationServiceProvider)
+        .cancelTaskNotification(
+          taskType: 'physical_activity',
+          referenceId: reminderId,
+          timeOfDay: oldReminder.timeOfDay,
+        );
+
     final scheduleAt = _nextScheduleTime(
       startDate: startDate,
       timeOfDay: timeOfDay,
     );
+
     await ref
         .read(notificationServiceProvider)
-        .cancelNotification(notificationId);
-    await ref.read(alarmServiceProvider).cancelAlarm(notificationId);
-    await ref
-        .read(notificationServiceProvider)
-        .scheduleNotification(
-          id: notificationId,
+        .scheduleTaskNotification(
+          taskType: 'physical_activity',
+          referenceId: reminderId,
+          timeOfDay: timeOfDay,
           channelId: 'activity_reminders',
           title: 'Pengingat Aktivitas',
           body:
               'Saatnya melakukan aktivitas ${activityTypeLabel(activityType)}.',
           scheduledAt: scheduleAt,
-          payload: 'task|physical_activity|$reminderId|$timeOfDay',
         );
-    await ref
-        .read(alarmServiceProvider)
-        .scheduleExactAlarm(id: notificationId, dateTime: scheduleAt);
-
     await refresh();
   }
 
   Future<void> deactivateReminder(String reminderId) async {
-    final notificationId = stableNotificationId('activity:$reminderId');
-    await ref
-        .read(notificationServiceProvider)
-        .cancelNotification(notificationId);
-    await ref.read(alarmServiceProvider).cancelAlarm(notificationId);
+    try {
+      final oldReminder = (state.valueOrNull ?? []).firstWhere((r) => r.id == reminderId);
+      await ref
+          .read(notificationServiceProvider)
+          .cancelTaskNotification(
+            taskType: 'physical_activity',
+            referenceId: reminderId,
+            timeOfDay: oldReminder.timeOfDay,
+          );
+    } catch (_) {}
     await ref
         .read(activityRemoteDataSourceProvider)
         .deactivateReminder(reminderId);
@@ -144,11 +142,16 @@ class ActivityController
   }
 
   Future<void> deleteReminder(String reminderId) async {
-    final notificationId = stableNotificationId('activity:$reminderId');
-    await ref
-        .read(notificationServiceProvider)
-        .cancelNotification(notificationId);
-    await ref.read(alarmServiceProvider).cancelAlarm(notificationId);
+    try {
+      final oldReminder = (state.valueOrNull ?? []).firstWhere((r) => r.id == reminderId);
+      await ref
+          .read(notificationServiceProvider)
+          .cancelTaskNotification(
+            taskType: 'physical_activity',
+            referenceId: reminderId,
+            timeOfDay: oldReminder.timeOfDay,
+          );
+    } catch (_) {}
     await ref.read(activityRemoteDataSourceProvider).deleteReminder(reminderId);
     await refresh();
   }

@@ -250,14 +250,29 @@ class MedicineTab extends ConsumerWidget {
     WidgetRef ref,
     Medicine medicine,
   ) async {
+    final colorScheme = Theme.of(context).colorScheme;
+
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return FractionallySizedBox(
-          heightFactor: 0.92,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+        return Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.only(
+            top: 24,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.paddingOf(context).bottom + 16,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+            ),
             child: Consumer(
               builder: (context, sheetRef, _) {
                 final schedulesState = sheetRef.watch(
@@ -266,84 +281,61 @@ class MedicineTab extends ConsumerWidget {
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        if (medicine.photoUrl != null) ...[
+                        if (medicine.photoUrl != null)
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                             child: Image.network(
                               medicine.photoUrl!,
-                              width: 68,
-                              height: 68,
+                              width: 56,
+                              height: 56,
                               fit: BoxFit.cover,
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                        ] else ...[
+                          )
+                        else
                           Container(
-                            width: 68,
-                            height: 68,
+                            width: 56,
+                            height: 56,
                             decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(12),
+                              color: colorScheme.primaryContainer.withValues(
+                                alpha: 0.5,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: Icon(
                               Icons.medication_rounded,
-                              color: Theme.of(context).colorScheme.primary,
+                              color: colorScheme.primary,
+                              size: 28,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                        ],
+                        const SizedBox(width: 16),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${AppStrings.medicineDetailTitlePrefix} ${medicine.name}',
-                                style: Theme.of(context).textTheme.titleLarge,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 6),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  _InfoPill(
-                                    icon: Icons.medication_outlined,
-                                    label:
-                                        medicine.dosage ??
-                                        AppStrings.dosageNotSet,
-                                  ),
-                                  _InfoPill(
-                                    icon: Icons.inventory_2_outlined,
-                                    label:
-                                        '${AppStrings.stockLabel} ${medicine.stockCurrent} ${medicine.stockUnit}',
-                                  ),
-                                  _InfoPill(
-                                    icon: medicine.isActive
-                                        ? Icons.check_circle_outline
-                                        : Icons.pause_circle_outline,
-                                    label: medicine.isActive
-                                        ? AppStrings.statusActiveLabel
-                                        : AppStrings.statusInactiveLabel,
-                                  ),
-                                ],
-                              ),
-                            ],
+                          child: Text(
+                            medicine.name,
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         IconButton(
-                          onPressed: () => Navigator.pop(context),
+                          style: IconButton.styleFrom(
+                            backgroundColor: colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.5),
+                          ),
                           icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 20),
+                    _MedicineStatsRow(medicine: medicine),
+                    const SizedBox(height: 24),
                     if (!medicine.isActive)
                       Container(
                         width: double.infinity,
@@ -363,7 +355,55 @@ class MedicineTab extends ConsumerWidget {
                         data: (bundles) {
                           if (bundles.isEmpty) {
                             return Center(
-                              child: Text(AppStrings.noScheduleForMedicine),
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: colorScheme.primary.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.event_busy_rounded,
+                                        size: 48,
+                                        color: colorScheme.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      AppStrings.tr(
+                                        'No Schedules Yet',
+                                        'Belum Ada Jadwal',
+                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      AppStrings.tr(
+                                        'Add medication time to get started.',
+                                        'Tambahkan waktu minum obat untuk memulai.',
+                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: colorScheme.onSurface
+                                                .withValues(alpha: 0.6),
+                                          ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             );
                           }
 
@@ -388,7 +428,7 @@ class MedicineTab extends ConsumerWidget {
                               );
                             },
                             separatorBuilder: (_, _) =>
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 12),
                             itemCount: bundles.length,
                           );
                         },
@@ -410,14 +450,14 @@ class MedicineTab extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: medicine.isActive
                           ? FilledButton.icon(
                               onPressed: () =>
                                   showAddScheduleSheet(context, ref, medicine),
-                              icon: const Icon(Icons.schedule),
+                              icon: const Icon(Icons.add_task_rounded),
                               label: Text(AppStrings.addMedicineTimeSchedule),
                             )
                           : OutlinedButton.icon(
@@ -448,7 +488,9 @@ class MedicineTab extends ConsumerWidget {
                                   }
                                 }
                               },
-                              icon: const Icon(Icons.play_circle_outline),
+                              icon: const Icon(
+                                Icons.play_circle_filled_rounded,
+                              ),
                               label: Text(AppStrings.reactivate),
                             ),
                     ),
@@ -557,7 +599,11 @@ class _MedicineTile extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: IconButton(
+          onPressed: onLongPress,
+          icon: const Icon(Icons.more_vert),
+          tooltip: AppStrings.tr('More options', 'Opsi lainnya'),
+        ),
       ),
     );
   }
@@ -580,42 +626,101 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _InfoPill extends StatelessWidget {
-  const _InfoPill({required this.icon, required this.label});
+class _MedicineStatsRow extends StatelessWidget {
+  const _MedicineStatsRow({required this.medicine});
 
-  final IconData icon;
-  final String label;
+  final Medicine medicine;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final maxPillWidth = MediaQuery.sizeOf(context).width * 0.62;
 
     return Container(
-      constraints: BoxConstraints(maxWidth: maxPillWidth),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(999),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.9),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.4),
         ),
       ),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildStatColumn(
+            context,
+            icon: Icons.medication_outlined,
+            label: AppStrings.tr('Dosage', 'Dosis'),
+            value: medicine.dosage ?? '-',
+            colorScheme: colorScheme,
+          ),
+          Container(
+            width: 1,
+            height: 32,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+          _buildStatColumn(
+            context,
+            icon: Icons.inventory_2_outlined,
+            label: AppStrings.tr('Stock', 'Stok'),
+            value: '${medicine.stockCurrent} ${medicine.stockUnit}',
+            colorScheme: colorScheme,
+          ),
+          Container(
+            width: 1,
+            height: 32,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+          _buildStatColumn(
+            context,
+            icon: medicine.isActive
+                ? Icons.check_circle_outline
+                : Icons.pause_circle_outline,
+            label: AppStrings.tr('Status', 'Status'),
+            value: medicine.isActive
+                ? AppStrings.statusActiveLabel
+                : AppStrings.statusInactiveLabel,
+            colorScheme: colorScheme,
+            valueColor: medicine.isActive ? Colors.green : Colors.orange,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatColumn(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required ColorScheme colorScheme,
+    Color? valueColor,
+  }) {
+    return Expanded(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: colorScheme.primary),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              style: Theme.of(
-                context,
-              ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              softWrap: false,
+          Icon(icon, size: 22, color: colorScheme.primary),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
+              fontWeight: FontWeight.w600,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: valueColor ?? colorScheme.onSurface,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

@@ -7,7 +7,6 @@ import '../../../data/repositories/medicine_repository_impl.dart';
 import '../../../domain/models/medicine.dart';
 import '../../../domain/models/medicine_schedule.dart';
 import '../../../domain/repositories/medicine_repository.dart';
-import '../../../services/alarm_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/permission_service.dart';
 import '../../home/home_controller.dart';
@@ -111,11 +110,13 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
 
     for (final bundle in bundles) {
       for (final slot in bundle.slots) {
-        final notificationId = stableNotificationId('medicine-slot:${slot.id}');
         await ref
             .read(notificationServiceProvider)
-            .cancelNotification(notificationId);
-        await ref.read(alarmServiceProvider).cancelAlarm(notificationId);
+            .cancelTaskNotification(
+              taskType: 'medicine',
+              referenceId: bundle.schedule.id,
+              timeOfDay: slot.timeOfDay,
+            );
       }
     }
 
@@ -195,11 +196,13 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     }
 
     for (final slot in current.slots) {
-      final notificationId = stableNotificationId('medicine-slot:${slot.id}');
       await ref
           .read(notificationServiceProvider)
-          .cancelNotification(notificationId);
-      await ref.read(alarmServiceProvider).cancelAlarm(notificationId);
+          .cancelTaskNotification(
+            taskType: 'medicine',
+            referenceId: current.schedule.id,
+            timeOfDay: slot.timeOfDay,
+          );
     }
 
     final updated = await ref
@@ -228,11 +231,13 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     required MedicineScheduleBundle bundle,
   }) async {
     for (final slot in bundle.slots) {
-      final notificationId = stableNotificationId('medicine-slot:${slot.id}');
       await ref
           .read(notificationServiceProvider)
-          .cancelNotification(notificationId);
-      await ref.read(alarmServiceProvider).cancelAlarm(notificationId);
+          .cancelTaskNotification(
+            taskType: 'medicine',
+            referenceId: bundle.schedule.id,
+            timeOfDay: slot.timeOfDay,
+          );
     }
 
     await ref
@@ -249,7 +254,6 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     required MedicineScheduleBundle bundle,
   }) async {
     final notificationService = ref.read(notificationServiceProvider);
-    final alarmService = ref.read(alarmServiceProvider);
     final now = DateTime.now();
 
     for (final slot in bundle.slots) {
@@ -269,20 +273,14 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
         scheduledAt = scheduledAt.add(const Duration(days: 1));
       }
 
-      final notificationId = stableNotificationId('medicine-slot:${slot.id}');
-
-      await notificationService.scheduleNotification(
-        id: notificationId,
+      await notificationService.scheduleTaskNotification(
+        taskType: 'medicine',
+        referenceId: bundle.schedule.id,
+        timeOfDay: slot.timeOfDay,
         channelId: 'medicine_reminders',
         title: 'Pengingat Obat',
         body: 'Waktunya minum obat Anda.',
         scheduledAt: scheduledAt,
-        payload: 'task|medicine|${bundle.schedule.id}|${slot.timeOfDay}',
-      );
-
-      await alarmService.scheduleExactAlarm(
-        id: notificationId,
-        dateTime: scheduledAt,
       );
     }
   }

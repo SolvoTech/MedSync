@@ -81,7 +81,7 @@ class TaskLogRemoteDataSource {
     final start = DateTime(now.year, now.month, now.day);
     final end = start.add(const Duration(days: 1));
 
-    final pendingRows = await client
+    var query = client
         .from('task_logs')
         .select('id')
         .eq('owner_id', user.id)
@@ -89,7 +89,16 @@ class TaskLogRemoteDataSource {
         .eq('reference_id', referenceId)
         .eq('status', 'pending')
         .gte('scheduled_at', start.toIso8601String())
-        .lt('scheduled_at', end.toIso8601String())
+        .lt('scheduled_at', end.toIso8601String());
+
+    // When timeOfDay is available, filter to the exact scheduled time
+    // so we mark the correct task (e.g. 22:46, not 22:41).
+    if (timeOfDay != null && timeOfDay.isNotEmpty) {
+      final exactTime = _scheduledAtForToday(now: now, timeOfDay: timeOfDay);
+      query = query.eq('scheduled_at', exactTime.toIso8601String());
+    }
+
+    final pendingRows = await query
         .order('scheduled_at', ascending: true)
         .limit(1);
 

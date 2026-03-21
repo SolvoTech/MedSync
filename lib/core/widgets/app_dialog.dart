@@ -39,130 +39,180 @@ class AppDialog {
       context: context,
       builder: (context) {
         final colorScheme = Theme.of(context).colorScheme;
-        final screenWidth = MediaQuery.sizeOf(context).width;
-        final dialogContentWidth = (screenWidth - 64).clamp(260.0, 420.0);
-        final actionButtonWidth = ((dialogContentWidth - 12) / 2).clamp(
-          108.0,
-          180.0,
-        );
         var dontAskAgain = false;
 
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              // Icon header for visual emphasis
-              icon: icon != null
-                  ? Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: isDestructive
-                            ? colorScheme.errorContainer
-                            : colorScheme.primaryContainer,
-                        shape: BoxShape.circle,
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              elevation: 0,
+              backgroundColor: colorScheme.surface,
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 24,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (icon != null) ...[
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: isDestructive
+                              ? colorScheme.errorContainer
+                              : colorScheme.primaryContainer,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          icon,
+                          color: isDestructive
+                              ? colorScheme.error
+                              : colorScheme.primary,
+                          size: 32,
+                        ),
                       ),
-                      child: Icon(
-                        icon,
-                        color: isDestructive
-                            ? colorScheme.error
-                            : colorScheme.primary,
-                        size: 28,
+                      const SizedBox(height: 20),
+                    ],
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
                       ),
-                    )
-                  : null,
-              title: Text(title, textAlign: TextAlign.center),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    message,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                      height: 1.5,
                     ),
-                  ),
-                  if (allowDontAskAgain && dontAskAgainKey != null) ...[
                     const SizedBox(height: 12),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: () {
-                        setState(() => dontAskAgain = !dontAskAgain);
-                      },
-                      child: Row(
-                        children: [
-                          Checkbox(
-                            value: dontAskAgain,
-                            onChanged: (value) {
-                              setState(() => dontAskAgain = value ?? false);
-                            },
-                          ),
-                          Expanded(
-                            child: Text(
-                              effectiveDontAskAgainLabel,
-                              style: Theme.of(context).textTheme.bodySmall,
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                    ),
+                    if (allowDontAskAgain && dontAskAgainKey != null) ...[
+                      const SizedBox(height: 20),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            setState(() => dontAskAgain = !dontAskAgain);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8.0,
+                              horizontal: 4.0,
+                            ),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: Checkbox(
+                                    value: dontAskAgain,
+                                    onChanged: (value) {
+                                      setState(
+                                        () => dontAskAgain = value ?? false,
+                                      );
+                                    },
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    effectiveDontAskAgainLabel,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
+                    ],
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(0, 48),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              side: BorderSide(
+                                color: colorScheme.outlineVariant,
+                              ),
+                              foregroundColor: colorScheme.onSurface,
+                            ),
+                            child: Text(
+                              effectiveCancelLabel,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () async {
+                              if (allowDontAskAgain &&
+                                  dontAskAgainKey != null &&
+                                  dontAskAgain) {
+                                try {
+                                  await AppPreferences.setBool(
+                                    dontAskAgainKey,
+                                    true,
+                                  );
+                                } catch (_) {
+                                  // Ignore preference write failure.
+                                }
+                              }
+                              if (context.mounted) {
+                                Navigator.of(context).pop(true);
+                              }
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: isDestructive
+                                  ? colorScheme.error
+                                  : colorScheme.primary,
+                              minimumSize: const Size(0, 48),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              effectiveConfirmLabel,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ],
+                ),
               ),
-              actionsAlignment: MainAxisAlignment.center,
-              actionsOverflowAlignment: OverflowBarAlignment.center,
-              actionsOverflowDirection: VerticalDirection.down,
-              actionsOverflowButtonSpacing: 8,
-              actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-              actions: [
-                SizedBox(
-                  width: actionButtonWidth,
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, 48),
-                    ),
-                    child: Text(
-                      effectiveCancelLabel,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: actionButtonWidth,
-                  child: FilledButton(
-                    onPressed: () async {
-                      if (allowDontAskAgain &&
-                          dontAskAgainKey != null &&
-                          dontAskAgain) {
-                        try {
-                          await AppPreferences.setBool(dontAskAgainKey, true);
-                        } catch (_) {
-                          // Ignore preference write failure.
-                        }
-                      }
-                      if (context.mounted) {
-                        Navigator.of(context).pop(true);
-                      }
-                    },
-                    style: isDestructive
-                        ? FilledButton.styleFrom(
-                            backgroundColor: colorScheme.error,
-                            minimumSize: const Size(0, 48),
-                          )
-                        : FilledButton.styleFrom(
-                            minimumSize: const Size(0, 48),
-                          ),
-                    child: Text(
-                      effectiveConfirmLabel,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                ),
-              ],
             );
           },
         );
