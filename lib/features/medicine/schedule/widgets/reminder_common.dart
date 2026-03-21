@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/extensions/context_ext.dart';
 import '../../../../core/validators/app_validators.dart';
+import '../../../../core/widgets/app_date_field.dart';
+import '../../../../core/widgets/app_dialog.dart';
+import '../../../../core/widgets/app_form_container.dart';
+import '../../../../core/widgets/app_time_field.dart';
 
 typedef ReminderSubmit =
     Future<void> Function({
@@ -10,12 +17,14 @@ typedef ReminderSubmit =
       required DateTime startDate,
     });
 
-enum ReminderAction { edit, deactivate, delete }
+enum ReminderAction { edit, markDone, deactivate, delete }
 
 ReminderAction? parseReminderAction(String value) {
   switch (value) {
     case 'edit':
       return ReminderAction.edit;
+    case 'mark_done':
+      return ReminderAction.markDone;
     case 'deactivate':
       return ReminderAction.deactivate;
     case 'delete':
@@ -29,9 +38,13 @@ Future<void> handleReminderAction({
   required BuildContext context,
   required String action,
   required Future<void> Function() onEdit,
+  Future<void> Function()? onMarkDone,
   required Future<void> Function() onDeactivate,
   required Future<void> Function() onDelete,
+  String? doneMessage,
   required String deactivatedMessage,
+  required String deactivateDialogContent,
+  String? deactivateDontAskAgainKey,
   required String deletedMessage,
   required String deleteDialogContent,
 }) async {
@@ -46,36 +59,62 @@ Future<void> handleReminderAction({
       return;
     }
 
-    if (parsed == ReminderAction.deactivate) {
-      await onDeactivate();
+    if (parsed == ReminderAction.markDone) {
+      if (onMarkDone == null) {
+        return;
+      }
+
+      await onMarkDone();
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(deactivatedMessage)));
+        context.showSuccessSnackBar(
+          doneMessage ?? AppStrings.tr('Marked as done.', 'Ditandai selesai.'),
+        );
       }
       return;
     }
 
-    final confirmed = await showDeleteReminderDialog(
-      context: context,
-      title: 'Hapus Reminder?',
-      content: deleteDialogContent,
+    if (parsed == ReminderAction.deactivate) {
+      final confirmed = await AppDialog.showConfirm(
+        context,
+        title: AppStrings.disableReminderTitle,
+        message: deactivateDialogContent,
+        confirmLabel: AppStrings.disableAction,
+        icon: Icons.pause_circle_outline,
+        allowDontAskAgain: deactivateDontAskAgainKey != null,
+        dontAskAgainKey: deactivateDontAskAgainKey,
+      );
+      if (confirmed != true) {
+        return;
+      }
+
+      await onDeactivate();
+      if (context.mounted) {
+        context.showInfoSnackBar(deactivatedMessage);
+      }
+      return;
+    }
+
+    final confirmed = await AppDialog.showConfirm(
+      context,
+      title: AppStrings.deleteReminderTitle,
+      message: deleteDialogContent,
+      confirmLabel: AppStrings.delete,
+      isDestructive: true,
+      icon: Icons.delete_outline,
     );
-    if (!confirmed) {
+    if (confirmed != true) {
       return;
     }
 
     await onDelete();
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(deletedMessage)));
+      context.showSuccessSnackBar(deletedMessage);
     }
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Aksi gagal: $error')));
+      context.showErrorSnackBar(
+        toUserErrorMessage(error, fallback: AppStrings.actionFailed),
+      );
     }
   }
 }
@@ -87,6 +126,7 @@ class ReminderListTile extends StatelessWidget {
     required this.timeOfDay,
     required this.onTap,
     required this.onActionSelected,
+    this.showMarkDoneAction = false,
     super.key,
   });
 
@@ -95,6 +135,7 @@ class ReminderListTile extends StatelessWidget {
   final String timeOfDay;
   final VoidCallback onTap;
   final ValueChanged<String> onActionSelected;
+  final bool showMarkDoneAction;
 
   @override
   Widget build(BuildContext context) {
@@ -102,47 +143,32 @@ class ReminderListTile extends StatelessWidget {
       child: ListTile(
         leading: Icon(icon),
         title: Text(title),
-        subtitle: Text('Jam ${timeOfDay.substring(0, 5)}'),
+        subtitle: Text(
+          '${AppStrings.reminderHourPrefix} ${timeOfDay.substring(0, 5)}',
+        ),
         onTap: onTap,
         trailing: PopupMenuButton<String>(
           onSelected: onActionSelected,
-          itemBuilder: (context) => const [
-            PopupMenuItem(value: 'edit', child: Text('Edit')),
-            PopupMenuItem(value: 'deactivate', child: Text('Nonaktifkan')),
-            PopupMenuItem(value: 'delete', child: Text('Hapus')),
+          itemBuilder: (context) => [
+            PopupMenuItem(value: 'edit', child: Text(AppStrings.reminderEdit)),
+            if (showMarkDoneAction)
+              PopupMenuItem(
+                value: 'mark_done',
+                child: Text(AppStrings.tr('Mark as Done', 'Tandai Selesai')),
+              ),
+            PopupMenuItem(
+              value: 'deactivate',
+              child: Text(AppStrings.reminderDeactivate),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Text(AppStrings.reminderDelete),
+            ),
           ],
         ),
       ),
     );
   }
-}
-
-Future<bool> showDeleteReminderDialog({
-  required BuildContext context,
-  required String title,
-  required String content,
-  String cancelText = 'Batal',
-  String confirmText = 'Hapus',
-}) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: Text(content),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(cancelText),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(confirmText),
-        ),
-      ],
-    ),
-  );
-
-  return confirmed == true;
 }
 
 Future<void> showReminderEditorSheet({
@@ -179,135 +205,155 @@ Future<void> showReminderEditorSheet({
     builder: (context) {
       return StatefulBuilder(
         builder: (context, setLocalState) {
-          return Padding(
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
             padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 16,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
-            child: Form(
-              key: formKey,
-              autovalidateMode: hasAttemptedSubmit
-                  ? AutovalidateMode.onUserInteraction
-                  : AutovalidateMode.disabled,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    initialValue: selectedType,
-                    decoration: InputDecoration(labelText: typeFieldLabel),
-                    items: availableTypes
-                        .map(
-                          (type) => DropdownMenuItem<String>(
-                            value: type,
-                            child: Text(typeLabelBuilder(type)),
+            child: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                child: AppFormContainer(
+                  title: isEditing
+                      ? AppStrings.reminderFormEditTitle
+                      : AppStrings.reminderFormAddTitle,
+                  subtitle: AppStrings.reminderFormSubtitle,
+                  icon: Icons.alarm_on_rounded,
+                  child: Form(
+                    key: formKey,
+                    autovalidateMode: hasAttemptedSubmit
+                        ? AutovalidateMode.onUserInteraction
+                        : AutovalidateMode.disabled,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DropdownButtonFormField<String>(
+                          initialValue: selectedType,
+                          decoration: InputDecoration(
+                            labelText: typeFieldLabel,
                           ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value == null) {
-                        return;
-                      }
-                      setLocalState(() {
-                        selectedType = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nama Kustom (Opsional)',
-                    ),
-                    validator: (value) => AppValidators.maxLengthOptional(
-                      value,
-                      60,
-                      label: 'Nama kustom',
-                    ),
-                  ),
-                  ListTile(
-                    title: const Text('Tanggal Mulai'),
-                    subtitle: Text(
-                      '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
-                    ),
-                    trailing: const Icon(Icons.calendar_month),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: selectedDate,
-                        firstDate: DateTime.now().subtract(
-                          const Duration(days: 365),
+                          items: availableTypes
+                              .map(
+                                (type) => DropdownMenuItem<String>(
+                                  value: type,
+                                  child: Text(typeLabelBuilder(type)),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            if (value == null) {
+                              return;
+                            }
+                            setLocalState(() {
+                              selectedType = value;
+                            });
+                          },
                         ),
-                        lastDate: DateTime.now().add(
-                          const Duration(days: 3650),
+                        const SizedBox(height: 10),
+                        TextFormField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            labelText: AppStrings.customNameOptional,
+                          ),
+                          validator: (value) => AppValidators.maxLengthOptional(
+                            value,
+                            60,
+                            label: AppStrings.tr('Custom name', 'Nama kustom'),
+                          ),
                         ),
-                      );
-                      if (picked != null) {
-                        setLocalState(() {
-                          selectedDate = picked;
-                        });
-                      }
-                    },
-                  ),
-                  ListTile(
-                    title: Text(timeFieldLabel),
-                    subtitle: Text(
-                      '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
-                    ),
-                    onTap: () async {
-                      final picked = await showTimePicker(
-                        context: context,
-                        initialTime: selectedTime,
-                      );
-                      if (picked != null) {
-                        setLocalState(() => selectedTime = picked);
-                      }
-                    },
-                  ),
-                  FilledButton(
-                    onPressed: () async {
-                      if (!formKey.currentState!.validate()) {
-                        setLocalState(() => hasAttemptedSubmit = true);
-                        return;
-                      }
-
-                      final timeString =
-                          '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}:00';
-
-                      try {
-                        await onSubmit(
-                          selectedType: selectedType,
-                          customName: nameController.text.trim().isEmpty
-                              ? null
-                              : nameController.text.trim(),
-                          timeOfDay: timeString,
-                          startDate: selectedDate,
-                        );
-
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isEditing
-                                    ? updateSuccessMessage
-                                    : createSuccessMessage,
+                        const SizedBox(height: 10),
+                        AppDateField(
+                          label: AppStrings.startDate,
+                          value: selectedDate,
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: selectedDate,
+                              firstDate: DateTime.now().subtract(
+                                const Duration(days: 365),
                               ),
+                              lastDate: DateTime.now().add(
+                                const Duration(days: 3650),
+                              ),
+                            );
+                            if (picked != null) {
+                              setLocalState(() {
+                                selectedDate = picked;
+                              });
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        AppTimeField(
+                          label: timeFieldLabel,
+                          value: selectedTime,
+                          onTap: () async {
+                            final picked = await showTimePicker(
+                              context: context,
+                              initialTime: selectedTime,
+                            );
+                            if (picked != null) {
+                              setLocalState(() => selectedTime = picked);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () async {
+                              if (!formKey.currentState!.validate()) {
+                                setLocalState(() => hasAttemptedSubmit = true);
+                                return;
+                              }
+
+                              final timeString =
+                                  '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}:00';
+
+                              try {
+                                await onSubmit(
+                                  selectedType: selectedType,
+                                  customName: nameController.text.trim().isEmpty
+                                      ? null
+                                      : nameController.text.trim(),
+                                  timeOfDay: timeString,
+                                  startDate: selectedDate,
+                                );
+
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  context.showSuccessSnackBar(
+                                    isEditing
+                                        ? updateSuccessMessage
+                                        : createSuccessMessage,
+                                  );
+                                }
+                              } catch (error) {
+                                if (context.mounted) {
+                                  context.showErrorSnackBar(
+                                    toUserErrorMessage(
+                                      error,
+                                      fallback: AppStrings.actionFailed,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: Text(
+                              isEditing
+                                  ? AppStrings.saveChanges
+                                  : AppStrings.save,
                             ),
-                          );
-                        }
-                      } catch (error) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Aksi gagal: $error')),
-                          );
-                        }
-                      }
-                    },
-                    child: Text(isEditing ? 'Simpan Perubahan' : 'Simpan'),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
+                ),
               ),
             ),
           );

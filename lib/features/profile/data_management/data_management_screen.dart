@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/errors/user_error_message.dart';
+import '../../../core/extensions/context_ext.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_dialog.dart';
@@ -26,7 +28,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
     try {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
-      if (user == null) throw Exception('Login terlebih dahulu');
+      if (user == null) throw Exception('Please sign in first');
 
       // Fetch all user-owned data
       final medicines = await client
@@ -42,20 +44,24 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
       final taskCount = (tasks as List).length;
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Data berhasil diekspor ($medicineCount obat, '
-              '$taskCount log).',
-            ),
+        context.showSuccessSnackBar(
+          AppStrings.tr(
+            'Data exported successfully ($medicineCount medicines, $taskCount logs).',
+            'Data berhasil diekspor ($medicineCount obat, $taskCount log).',
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal mengekspor: $e')));
+        context.showErrorSnackBar(
+          toUserErrorMessage(
+            e,
+            fallback: AppStrings.tr(
+              'Failed to export data. Please try again.',
+              'Gagal mengekspor data. Silakan coba lagi.',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isExporting = false);
@@ -65,12 +71,12 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
   Future<void> _deleteAccount() async {
     final confirmed = await AppDialog.showConfirm(
       context,
-      title: 'Hapus Akun Permanen',
-      message:
-          'Semua data Anda termasuk jadwal obat, riwayat, dan profil '
-          'akan dihapus secara permanen dan tidak dapat dikembalikan.\n\n'
-          'Apakah Anda yakin?',
-      confirmLabel: 'Hapus Akun',
+      title: AppStrings.tr('Delete Account Permanently', 'Hapus Akun Permanen'),
+      message: AppStrings.tr(
+        'All your data including medication schedules, history, and profile will be permanently deleted and cannot be restored.\n\nAre you sure?',
+        'Semua data Anda termasuk jadwal obat, riwayat, dan profil akan dihapus secara permanen dan tidak dapat dikembalikan.\n\nApakah Anda yakin?',
+      ),
+      confirmLabel: AppStrings.tr('Delete Account', 'Hapus Akun'),
       isDestructive: true,
     );
 
@@ -80,10 +86,12 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
     // Second confirmation
     final confirmed2 = await AppDialog.showConfirm(
       context,
-      title: 'Konfirmasi Akhir',
-      message:
-          'Tindakan ini tidak dapat dibatalkan. Ketuk "Hapus" untuk melanjutkan.',
-      confirmLabel: 'Hapus',
+      title: AppStrings.tr('Final Confirmation', 'Konfirmasi Akhir'),
+      message: AppStrings.tr(
+        'This action cannot be undone. Tap "Delete" to continue.',
+        'Tindakan ini tidak dapat dibatalkan. Ketuk "Hapus" untuk melanjutkan.',
+      ),
+      confirmLabel: AppStrings.delete,
       isDestructive: true,
     );
 
@@ -94,19 +102,40 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
     setState(() => _isDeleting = true);
 
     try {
-      // Sign out and let Supabase cascade delete handle the rest
-      await ref.read(authControllerProvider.notifier).signOut();
+      final client = Supabase.instance.client;
+      final user = client.auth.currentUser;
+      if (user == null) {
+        throw Exception('You must be signed in first.');
+      }
+
+      // Delete auth account first so the email can be reused for sign up.
+      // Related app data is removed via FK cascade from profiles -> auth.users.
+      await client.rpc('delete_my_account');
+
+      // End local session after deletion; ignore if token is already invalid.
+      try {
+        await ref.read(authControllerProvider.notifier).signOut();
+      } catch (_) {}
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Akun berhasil dihapus.')));
+        context.showSuccessSnackBar(
+          AppStrings.tr(
+            'Account data deleted permanently.',
+            'Data akun berhasil dihapus secara permanen.',
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal menghapus akun: $e')));
+        context.showErrorSnackBar(
+          toUserErrorMessage(
+            e,
+            fallback: AppStrings.tr(
+              'Failed to delete account. Please try again.',
+              'Gagal menghapus akun. Silakan coba lagi.',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isDeleting = false);
@@ -119,12 +148,12 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.dataManagement)),
+      appBar: AppBar(title: Text(AppStrings.dataManagement)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'EKSPOR DATA',
+            AppStrings.tr('EXPORT DATA', 'EKSPOR DATA'),
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
               letterSpacing: 1.2,
@@ -135,8 +164,15 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
             padding: EdgeInsets.zero,
             child: ListTile(
               leading: const Icon(Icons.download),
-              title: const Text('Ekspor Data JSON'),
-              subtitle: const Text('Unduh semua data Anda dalam format JSON'),
+              title: Text(
+                AppStrings.tr('Export Data JSON', 'Ekspor Data JSON'),
+              ),
+              subtitle: Text(
+                AppStrings.tr(
+                  'Download all your data in JSON format',
+                  'Unduh semua data Anda dalam format JSON',
+                ),
+              ),
               trailing: _isExporting
                   ? const SizedBox(
                       width: 20,
@@ -151,7 +187,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
           const SizedBox(height: 24),
 
           Text(
-            'ZONA BAHAYA',
+            AppStrings.tr('DANGER ZONE', 'ZONA BAHAYA'),
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.error,
               letterSpacing: 1.2,
@@ -172,7 +208,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Hapus Akun',
+                      AppStrings.tr('Delete Account', 'Hapus Akun'),
                       style: textTheme.titleSmall?.copyWith(
                         color: colorScheme.error,
                         fontWeight: FontWeight.w600,
@@ -182,9 +218,10 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Menghapus akun akan menghapus semua data Anda secara '
-                  'permanen, termasuk profil, jadwal obat, riwayat, '
-                  'dan semua data lainnya.',
+                  AppStrings.tr(
+                    'Deleting your account will permanently remove all your data, including profile, medication schedules, history, and all related records.',
+                    'Menghapus akun akan menghapus semua data Anda secara permanen, termasuk profil, jadwal obat, riwayat, dan semua data lainnya.',
+                  ),
                   style: textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurface.withValues(alpha: 0.6),
                   ),

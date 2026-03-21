@@ -13,7 +13,6 @@ class LocalMedicines extends Table {
   TextColumn get stockUnit => text().withDefault(const Constant('tablet'))();
   TextColumn get carePersonId => text().nullable()();
   TextColumn get photoUrl => text().nullable()();
-  TextColumn get prescriptionUrl => text().nullable()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get syncedAt => dateTime().nullable()();
 
@@ -45,13 +44,11 @@ class LocalTaskLogs extends Table {
   TextColumn get referenceId => text()();
   DateTimeColumn get scheduledAt => dateTime()();
   DateTimeColumn get completedAt => dateTime().nullable()();
-  TextColumn get status =>
-      text().withDefault(const Constant('pending'))();
+  TextColumn get status => text().withDefault(const Constant('pending'))();
   TextColumn get notes => text().nullable()();
   TextColumn get mood => text().nullable()();
   TextColumn get symptomNotes => text().nullable()();
-  BoolColumn get isSynced =>
-      boolean().withDefault(const Constant(false))();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get syncedAt => dateTime().nullable()();
 
   @override
@@ -66,8 +63,7 @@ class SyncQueue extends Table {
   TextColumn get recordId => text()();
   TextColumn get payload => text()(); // JSON string
   DateTimeColumn get createdAt => dateTime()();
-  BoolColumn get isSynced =>
-      boolean().withDefault(const Constant(false))();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
 }
 
 // ─── Database ──────────────────────────────────────

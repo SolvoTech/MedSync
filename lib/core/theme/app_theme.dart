@@ -96,15 +96,9 @@ class AppTheme {
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(
-              color: AppColors.primary,
-              size: 24,
-            );
+            return const IconThemeData(color: AppColors.primary, size: 24);
           }
-          return const IconThemeData(
-            color: AppColors.textTertiary,
-            size: 24,
-          );
+          return const IconThemeData(color: AppColors.textTertiary, size: 24);
         }),
       ),
 
@@ -155,21 +149,28 @@ class AppTheme {
       // ─── Input Decoration ────────────────────────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceVariant,
+        fillColor: AppColors.surfaceTint,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16, vertical: 16,
+          horizontal: 16,
+          vertical: 16,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(
+            color: AppColors.divider.withValues(alpha: 0.95),
+            width: 1.2,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(
+            color: AppColors.divider.withValues(alpha: 0.95),
+            width: 1.2,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2.2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
@@ -236,10 +237,14 @@ class AppTheme {
       // ─── Snackbar ────────────────────────────────
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusSm),
+        backgroundColor: AppColors.surface,
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w600,
         ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         elevation: 4,
+        insetPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       ),
 
       // ─── Chip ────────────────────────────────────
@@ -366,10 +371,7 @@ class AppTheme {
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(
-              color: AppColors.primaryLight,
-              size: 24,
-            );
+            return const IconThemeData(color: AppColors.primaryLight, size: 24);
           }
           return const IconThemeData(
             color: AppColors.darkTextTertiary,
@@ -428,22 +430,30 @@ class AppTheme {
       // ─── Input Decoration (Dark) ─────────────────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.darkSurfaceVariant,
+        fillColor: AppColors.darkSurfaceTint,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16, vertical: 16,
+          horizontal: 16,
+          vertical: 16,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(
+            color: AppColors.darkDivider.withValues(alpha: 0.9),
+            width: 1.2,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(
+            color: AppColors.darkDivider.withValues(alpha: 0.9),
+            width: 1.2,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
           borderSide: const BorderSide(
-            color: AppColors.primaryLight, width: 2,
+            color: AppColors.primaryLight,
+            width: 2.2,
           ),
         ),
         errorBorder: OutlineInputBorder(
@@ -511,10 +521,14 @@ class AppTheme {
       // ─── Snackbar (Dark) ─────────────────────────
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusSm),
+        backgroundColor: AppColors.darkSurface,
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.darkTextPrimary,
+          fontWeight: FontWeight.w600,
         ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         elevation: 4,
+        insetPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       ),
 
       // ─── Chip (Dark) ─────────────────────────────

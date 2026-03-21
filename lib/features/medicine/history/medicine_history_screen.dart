@@ -280,7 +280,7 @@ class MedicineHistoryScreen extends ConsumerWidget {
               loading: () =>
                   const AppListSkeleton(itemCount: 5, itemHeight: 60),
               error: (e, _) => AppErrorWidget(
-                message: 'Gagal memuat riwayat',
+                message: 'Gagal memuat riwayat. Silakan coba lagi.',
                 onRetry: () =>
                     ref.invalidate(medicineHistoryProvider(medicine.id)),
               ),

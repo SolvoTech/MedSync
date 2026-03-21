@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/constants/type_labels.dart';
+import '../../../../data/remote/datasources/task_log_remote_datasource.dart';
 import '../../../../domain/models/physical_activity_reminder.dart';
 import '../../../physical_activity/activity_controller.dart';
 import 'reminder_common.dart';
@@ -22,9 +25,16 @@ class ActivityTab extends ConsumerWidget {
           data: (items) {
             if (items.isEmpty) {
               return ListView(
-                children: const [
+                children: [
                   SizedBox(height: 120),
-                  Center(child: Text('Belum ada pengingat aktivitas.')),
+                  Center(
+                    child: Text(
+                      AppStrings.tr(
+                        'No activity reminders yet.',
+                        'Belum ada pengingat aktivitas.',
+                      ),
+                    ),
+                  ),
                 ],
               );
             }
@@ -39,6 +49,7 @@ class ActivityTab extends ConsumerWidget {
                   title:
                       item.customName ?? activityTypeLabel(item.activityType),
                   timeOfDay: item.timeOfDay,
+                  showMarkDoneAction: true,
                   onTap: () =>
                       _openActivityEditor(context, ref, existing: item),
                   onActionSelected: (value) =>
@@ -56,7 +67,17 @@ class ActivityTab extends ConsumerWidget {
           error: (error, _) => ListView(
             children: [
               const SizedBox(height: 120),
-              Center(child: Text('Gagal memuat aktivitas: $error')),
+              Center(
+                child: Text(
+                  toUserErrorMessage(
+                    error,
+                    fallback: AppStrings.tr(
+                      'Failed to load activities. Please try again.',
+                      'Gagal memuat aktivitas. Silakan coba lagi.',
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -64,7 +85,7 @@ class ActivityTab extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openActivityEditor(context, ref, existing: null),
         icon: const Icon(Icons.add),
-        label: const Text('Tambah Aktivitas'),
+        label: Text(AppStrings.addActivity),
       ),
     );
   }
@@ -79,15 +100,37 @@ class ActivityTab extends ConsumerWidget {
       context: context,
       action: action,
       onEdit: () => _openActivityEditor(context, ref, existing: item),
+      onMarkDone: () => TaskLogRemoteDataSource().markReminderDoneByReference(
+        taskType: 'physical_activity',
+        referenceId: item.id,
+        timeOfDay: item.timeOfDay,
+      ),
+      doneMessage: AppStrings.tr(
+        'Activity marked as done.',
+        'Aktivitas ditandai selesai.',
+      ),
       onDeactivate: () => ref
           .read(activityControllerProvider.notifier)
           .deactivateReminder(item.id),
       onDelete: () =>
           ref.read(activityControllerProvider.notifier).deleteReminder(item.id),
-      deactivatedMessage: 'Reminder aktivitas dinonaktifkan.',
-      deletedMessage: 'Reminder aktivitas dihapus.',
-      deleteDialogContent:
-          'Reminder aktivitas akan dihapus permanen dan notifikasinya dibatalkan.',
+      deactivatedMessage: AppStrings.tr(
+        'Activity reminder disabled.',
+        'Reminder aktivitas dinonaktifkan.',
+      ),
+      deactivateDialogContent: AppStrings.tr(
+        'Activity reminder will be disabled. Schedule remains saved, but notifications will pause until reactivated.',
+        'Reminder aktivitas akan dinonaktifkan. Jadwal tetap tersimpan, tetapi notifikasinya dihentikan sampai diaktifkan lagi.',
+      ),
+      deactivateDontAskAgainKey: 'confirm_skip_deactivate_activity_reminder',
+      deletedMessage: AppStrings.tr(
+        'Activity reminder deleted.',
+        'Reminder aktivitas dihapus.',
+      ),
+      deleteDialogContent: AppStrings.tr(
+        'Activity reminder will be permanently deleted and notifications canceled.',
+        'Reminder aktivitas akan dihapus permanen dan notifikasinya dibatalkan.',
+      ),
     );
   }
 
@@ -101,15 +144,21 @@ class ActivityTab extends ConsumerWidget {
       context: context,
       availableTypes: activityTypes,
       typeLabelBuilder: activityTypeLabel,
-      typeFieldLabel: 'Tipe Aktivitas',
-      timeFieldLabel: 'Waktu Aktivitas',
+      typeFieldLabel: AppStrings.activityType,
+      timeFieldLabel: AppStrings.tr('Activity Time', 'Waktu Aktivitas'),
       initialType: existing?.activityType ?? activityTypes.first,
       initialCustomName: existing?.customName,
       initialTimeOfDay: existing?.timeOfDay ?? '08:00:00',
       initialDate: existing?.startDate ?? DateTime.now(),
       isEditing: existing != null,
-      createSuccessMessage: 'Reminder aktivitas disimpan.',
-      updateSuccessMessage: 'Reminder aktivitas diperbarui.',
+      createSuccessMessage: AppStrings.tr(
+        'Activity reminder saved.',
+        'Reminder aktivitas disimpan.',
+      ),
+      updateSuccessMessage: AppStrings.tr(
+        'Activity reminder updated.',
+        'Reminder aktivitas diperbarui.',
+      ),
       onSubmit:
           ({
             required selectedType,

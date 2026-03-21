@@ -140,7 +140,9 @@ class HealthConnectScreen extends ConsumerWidget {
                               ),
                               loading: () =>
                                   const CircularProgressIndicator.adaptive(),
-                              error: (_, error) => const Text('Gagal memuat'),
+                              error: (_, error) => const Text(
+                                'Gagal memuat data. Silakan coba lagi.',
+                              ),
                             ),
                           ],
                         ),
@@ -187,7 +189,7 @@ class HealthConnectScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, error) => const AppEmptyState(
           icon: Icons.error_outline,
-          message: 'Gagal memeriksa Health Connect',
+          message: 'Gagal memeriksa Health Connect. Silakan coba lagi.',
         ),
       ),
     );

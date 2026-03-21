@@ -3,7 +3,7 @@ import '../../../domain/models/medicine_schedule.dart';
 import '../supabase_client.dart';
 
 class MedicineRemoteDataSource {
-  Future<List<Medicine>> getMedicines({String? carePersonId}) async {
+  Future<void> _ensureProfileExists() async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
       throw Exception(
@@ -16,11 +16,52 @@ class MedicineRemoteDataSource {
       throw Exception('Anda harus login terlebih dahulu.');
     }
 
-    var query = client
-        .from('medicines')
-        .select()
-        .eq('owner_id', user.id)
-        .eq('is_active', true);
+    final existing = await client
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (existing != null) {
+      return;
+    }
+
+    final metadataName = (user.userMetadata?['full_name'] as String?)?.trim();
+    final emailPrefix = user.email?.split('@').first.trim();
+    final fallbackName = (metadataName != null && metadataName.isNotEmpty)
+        ? metadataName
+        : (emailPrefix != null && emailPrefix.isNotEmpty)
+        ? emailPrefix
+        : 'User';
+
+    await client.from('profiles').upsert({
+      'id': user.id,
+      'full_name': fallbackName,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<List<Medicine>> getMedicines({
+    String? carePersonId,
+    bool includeInactive = false,
+  }) async {
+    final client = SupabaseClientRef.maybeClient;
+    if (client == null) {
+      throw Exception(
+        'Supabase belum diinisialisasi. Periksa konfigurasi .env.',
+      );
+    }
+
+    final user = client.auth.currentUser;
+    if (user == null) {
+      throw Exception('Anda harus login terlebih dahulu.');
+    }
+
+    var query = client.from('medicines').select().eq('owner_id', user.id);
+
+    if (!includeInactive) {
+      query = query.eq('is_active', true);
+    }
 
     query = carePersonId == null
         ? query.filter('care_person_id', 'is', 'null')
@@ -41,7 +82,6 @@ class MedicineRemoteDataSource {
     String medicineType = 'tablet',
     String? carePersonId,
     String? photoUrl,
-    String? prescriptionUrl,
   }) async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
@@ -55,19 +95,24 @@ class MedicineRemoteDataSource {
       throw Exception('Anda harus login terlebih dahulu.');
     }
 
-    final inserted = await client.from('medicines').insert({
-      'owner_id': user.id,
-      'care_person_id': carePersonId,
-      'name': name,
-      'dosage': dosage,
-      'medicine_type': medicineType,
-      'stock_current': stockCurrent,
-      'stock_unit': stockUnit,
-      'photo_url': photoUrl,
-      'prescription_url': prescriptionUrl,
-      'is_active': true,
-    }).select().single();
-    
+    await _ensureProfileExists();
+
+    final inserted = await client
+        .from('medicines')
+        .insert({
+          'owner_id': user.id,
+          'care_person_id': carePersonId,
+          'name': name,
+          'dosage': dosage,
+          'medicine_type': medicineType,
+          'stock_current': stockCurrent,
+          'stock_unit': stockUnit,
+          'photo_url': photoUrl,
+          'is_active': true,
+        })
+        .select()
+        .single();
+
     return Medicine.fromMap(inserted);
   }
 
@@ -87,6 +132,26 @@ class MedicineRemoteDataSource {
     await client
         .from('medicines')
         .update({'is_active': false})
+        .eq('id', medicineId)
+        .eq('owner_id', user.id);
+  }
+
+  Future<void> activateMedicine(String medicineId) async {
+    final client = SupabaseClientRef.maybeClient;
+    if (client == null) {
+      throw Exception(
+        'Supabase belum diinisialisasi. Periksa konfigurasi .env.',
+      );
+    }
+
+    final user = client.auth.currentUser;
+    if (user == null) {
+      throw Exception('Anda harus login terlebih dahulu.');
+    }
+
+    await client
+        .from('medicines')
+        .update({'is_active': true})
         .eq('id', medicineId)
         .eq('owner_id', user.id);
   }
@@ -219,34 +284,66 @@ class MedicineRemoteDataSource {
         .toList();
 
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final scheduleDate = DateTime(
       startDate.year,
       startDate.month,
       startDate.day,
     );
-    if (!scheduleDate.isAfter(DateTime(now.year, now.month, now.day))) {
-      final taskRows = timeSlots.map((time) {
+    final firstDay = scheduleDate.isAfter(today) ? scheduleDate : today;
+    const horizonDays = 30;
+    final lastDay = firstDay.add(const Duration(days: horizonDays - 1));
+
+    final occurrenceDays = <DateTime>[];
+    if (repeatType == 'weekly') {
+      for (
+        var day = firstDay;
+        !day.isAfter(lastDay);
+        day = day.add(const Duration(days: 1))
+      ) {
+        if (!day.isBefore(scheduleDate) &&
+            day.weekday == scheduleDate.weekday) {
+          occurrenceDays.add(day);
+        }
+      }
+    } else {
+      for (
+        var day = firstDay;
+        !day.isAfter(lastDay);
+        day = day.add(const Duration(days: 1))
+      ) {
+        if (!day.isBefore(scheduleDate)) {
+          occurrenceDays.add(day);
+        }
+      }
+    }
+
+    final taskRows = <Map<String, dynamic>>[];
+    for (final day in occurrenceDays) {
+      for (final time in timeSlots) {
         final parts = time.split(':');
         final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
         final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
-        
+
         final scheduledAt = DateTime(
-          now.year,
-          now.month,
-          now.day,
+          day.year,
+          day.month,
+          day.day,
           hour,
           minute,
         );
 
-        return {
+        taskRows.add({
           'owner_id': user.id,
           'task_type': 'medicine',
           'reference_id': scheduleId,
           'scheduled_at': scheduledAt.toIso8601String(),
           'status': 'pending',
-        };
-      }).toList();
+        });
+      }
+    }
 
+    if (taskRows.isNotEmpty) {
       await client.from('task_logs').insert(taskRows);
     }
 

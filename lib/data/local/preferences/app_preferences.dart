@@ -25,6 +25,12 @@ class AppPreferences {
   static Future<void> setThemeMode(String value) =>
       _prefs.setString(_keyThemeMode, value);
 
+  // ─── Language ───────────────────────────────────
+  static const _keyLanguageCode = 'language_code';
+  static String get languageCode => _prefs.getString(_keyLanguageCode) ?? 'en';
+  static Future<void> setLanguageCode(String value) =>
+      _prefs.setString(_keyLanguageCode, value);
+
   // ─── Onboarding ──────────────────────────────────
   static const _keyOnboardingDone = 'onboarding_done';
   static bool get isOnboardingDone =>
@@ -77,5 +83,11 @@ class AppPreferences {
       _prefs.setString(_keyLastSync, value.toIso8601String());
 
   // ─── General helpers ─────────────────────────────
+  static bool getBool(String key, {bool defaultValue = false}) =>
+      _prefs.getBool(key) ?? defaultValue;
+
+  static Future<void> setBool(String key, bool value) =>
+      _prefs.setBool(key, value);
+
   static Future<void> clear() => _prefs.clear();
 }

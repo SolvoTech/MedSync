@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_strings.dart';
+import '../../core/extensions/context_ext.dart';
 import '../../core/extensions/datetime_ext.dart';
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/app_error_widget.dart';
 import '../../core/widgets/app_loading_skeleton.dart';
@@ -10,8 +12,10 @@ import '../../data/remote/supabase_client.dart';
 import '../../domain/models/notification_item.dart';
 
 final notificationListProvider =
-    AutoDisposeAsyncNotifierProvider<NotificationListController,
-        List<NotificationItem>>(NotificationListController.new);
+    AutoDisposeAsyncNotifierProvider<
+      NotificationListController,
+      List<NotificationItem>
+    >(NotificationListController.new);
 
 class NotificationListController
     extends AutoDisposeAsyncNotifier<List<NotificationItem>> {
@@ -94,23 +98,22 @@ class NotificationScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.notificationTitle),
+        title: Text(AppStrings.notificationTitle),
         actions: [
           TextButton(
             onPressed: () =>
                 ref.read(notificationListProvider.notifier).markAllRead(),
-            child: const Text(AppStrings.markAllRead),
+            child: Text(AppStrings.markAllRead),
           ),
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () =>
-            ref.read(notificationListProvider.notifier).refresh(),
+        onRefresh: () => ref.read(notificationListProvider.notifier).refresh(),
         child: notifState.when(
           data: (notifications) {
             if (notifications.isEmpty) {
               return ListView(
-                children: const [
+                children: [
                   SizedBox(height: 100),
                   AppEmptyState(
                     message: AppStrings.noNotifications,
@@ -152,10 +155,9 @@ class NotificationScreen extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Text(
                             groupKey,
-                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface
                                       .withValues(alpha: 0.5),
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -169,10 +171,9 @@ class NotificationScreen extends ConsumerWidget {
               },
             );
           },
-          loading: () =>
-              const AppListSkeleton(itemCount: 5, itemHeight: 72),
+          loading: () => const AppListSkeleton(itemCount: 5, itemHeight: 72),
           error: (error, _) => AppErrorWidget(
-            message: 'Gagal memuat notifikasi',
+            message: AppStrings.notificationsLoadFailed,
             onRetry: () => ref.invalidate(notificationListProvider),
           ),
         ),
@@ -231,6 +232,17 @@ class _NotificationTile extends ConsumerWidget {
     return Dismissible(
       key: ValueKey(notif.id),
       direction: DismissDirection.endToStart,
+      confirmDismiss: (_) async {
+        final confirmed = await AppDialog.showConfirm(
+          context,
+          title: AppStrings.deleteNotificationTitle,
+          message: AppStrings.deleteNotificationMessage,
+          confirmLabel: AppStrings.delete,
+          isDestructive: true,
+          icon: Icons.delete_outline,
+        );
+        return confirmed == true;
+      },
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
@@ -241,19 +253,29 @@ class _NotificationTile extends ConsumerWidget {
         ),
         child: const Icon(Icons.delete_rounded, color: Colors.white),
       ),
-      onDismissed: (_) => ref
-          .read(notificationListProvider.notifier)
-          .deleteNotification(notif.id),
+      onDismissed: (_) async {
+        await ref
+            .read(notificationListProvider.notifier)
+            .deleteNotification(notif.id);
+        if (context.mounted) {
+          context.showSuccessSnackBar(AppStrings.notificationDeleted);
+        }
+      },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         decoration: BoxDecoration(
           color: notif.isRead
               ? Colors.transparent
-              : colorScheme.primaryContainer.withValues(alpha: isDark ? 0.15 : 0.3),
+              : colorScheme.primaryContainer.withValues(
+                  alpha: isDark ? 0.15 : 0.3,
+                ),
           borderRadius: BorderRadius.circular(16),
         ),
         child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
           leading: Container(
             width: 42,
             height: 42,
@@ -296,9 +318,7 @@ class _NotificationTile extends ConsumerWidget {
           ),
           onTap: () {
             if (!notif.isRead) {
-              ref
-                  .read(notificationListProvider.notifier)
-                  .markRead(notif.id);
+              ref.read(notificationListProvider.notifier).markRead(notif.id);
             }
           },
         ),

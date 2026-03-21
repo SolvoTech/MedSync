@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/extensions/context_ext.dart';
 import '../../../core/extensions/string_ext.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_dialog.dart';
@@ -17,8 +18,10 @@ final carePersonDataSourceProvider = Provider<CarePersonRemoteDataSource>(
 );
 
 final carePersonListProvider =
-    AutoDisposeAsyncNotifierProvider<CarePersonListController,
-        List<CarePerson>>(CarePersonListController.new);
+    AutoDisposeAsyncNotifierProvider<
+      CarePersonListController,
+      List<CarePerson>
+    >(CarePersonListController.new);
 
 class CarePersonListController
     extends AutoDisposeAsyncNotifier<List<CarePerson>> {
@@ -49,18 +52,19 @@ class CarePersonListScreen extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.carePersons)),
+      appBar: AppBar(title: Text(AppStrings.carePersons)),
       body: RefreshIndicator(
         onRefresh: () => ref.read(carePersonListProvider.notifier).refresh(),
         child: listState.when(
           data: (persons) {
             if (persons.isEmpty) {
               return ListView(
-                children: const [
+                children: [
                   SizedBox(height: 80),
                   AppEmptyState(
                     message: 'Belum ada anggota yang ditambahkan',
-                    subtitle: 'Tambahkan anggota keluarga\nuntuk membantu mengelola kesehatan mereka.',
+                    subtitle:
+                        'Tambahkan anggota keluarga\nuntuk membantu mengelola kesehatan mereka.',
                     icon: Icons.people_outline,
                     actionLabel: AppStrings.addCarePerson,
                   ),
@@ -75,7 +79,11 @@ class CarePersonListScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final person = persons[index];
                 final avatarColor = person.avatarColor != null
-                    ? Color(int.parse('0xFF${person.avatarColor!.replaceFirst('#', '')}'))
+                    ? Color(
+                        int.parse(
+                          '0xFF${person.avatarColor!.replaceFirst('#', '')}',
+                        ),
+                      )
                     : colorScheme.primaryContainer;
 
                 return AppCard(
@@ -106,8 +114,9 @@ class CarePersonListScreen extends ConsumerWidget {
                               Text(
                                 person.relationship!,
                                 style: textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                 ),
                               ),
                           ],
@@ -125,8 +134,10 @@ class CarePersonListScreen extends ConsumerWidget {
                           PopupMenuItem(value: 'edit', child: Text('Edit')),
                           PopupMenuItem(
                             value: 'delete',
-                            child: Text('Hapus',
-                                style: TextStyle(color: Colors.red)),
+                            child: Text(
+                              'Hapus',
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ),
                         ],
                       ),
@@ -136,10 +147,9 @@ class CarePersonListScreen extends ConsumerWidget {
               },
             );
           },
-          loading: () =>
-              const AppListSkeleton(itemCount: 3, itemHeight: 80),
+          loading: () => const AppListSkeleton(itemCount: 3, itemHeight: 80),
           error: (e, _) => AppErrorWidget(
-            message: 'Gagal memuat daftar anggota',
+            message: 'Gagal memuat daftar anggota. Silakan coba lagi.',
             onRetry: () => ref.invalidate(carePersonListProvider),
           ),
         ),
@@ -147,7 +157,7 @@ class CarePersonListScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openForm(context, ref),
         icon: const Icon(Icons.person_add),
-        label: const Text(AppStrings.addCarePerson),
+        label: Text(AppStrings.addCarePerson),
       ),
     );
   }
@@ -186,9 +196,7 @@ class CarePersonListScreen extends ConsumerWidget {
     if (confirmed == true) {
       await ref.read(carePersonListProvider.notifier).delete(person.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${person.displayName} dihapus.')),
-        );
+        context.showSuccessSnackBar('${person.displayName} dihapus.');
       }
     }
   }

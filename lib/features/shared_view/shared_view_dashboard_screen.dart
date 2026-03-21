@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/extensions/context_ext.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/status_chip.dart';
 
@@ -35,9 +36,7 @@ class SharedViewDashboardScreen extends StatelessWidget {
             icon: const Icon(Icons.refresh),
             onPressed: () {
               // Could re-invoke the edge function here
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Data sudah terbaru')),
-              );
+              context.showInfoSnackBar('Data sudah terbaru.');
             },
           ),
         ],
@@ -67,8 +66,9 @@ class SharedViewDashboardScreen extends StatelessWidget {
                     children: [
                       Text(
                         carePerson['display_name'] ?? 'Pengguna',
-                        style: textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       if (carePerson['relationship'] != null)
                         Text(
@@ -82,8 +82,10 @@ class SharedViewDashboardScreen extends StatelessWidget {
                 ),
                 if (streak > 0)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.orange.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
@@ -129,8 +131,8 @@ class SharedViewDashboardScreen extends StatelessWidget {
                             percent >= 80
                                 ? Colors.green
                                 : percent >= 50
-                                    ? Colors.orange
-                                    : Colors.red,
+                                ? Colors.orange
+                                : Colors.red,
                           ),
                         ),
                       ),
@@ -146,8 +148,9 @@ class SharedViewDashboardScreen extends StatelessWidget {
                           Text(
                             '$done/$total',
                             style: textTheme.labelSmall?.copyWith(
-                              color: colorScheme.onSurface
-                                  .withValues(alpha: 0.5),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
                             ),
                           ),
                         ],
@@ -194,8 +197,9 @@ class SharedViewDashboardScreen extends StatelessWidget {
           else
             ...tasks.map((task) {
               final t = task as Map<String, dynamic>;
-              final scheduledAt =
-                  DateTime.tryParse(t['scheduled_at'] as String? ?? '');
+              final scheduledAt = DateTime.tryParse(
+                t['scheduled_at'] as String? ?? '',
+              );
               final time = scheduledAt != null
                   ? '${scheduledAt.hour.toString().padLeft(2, '0')}:${scheduledAt.minute.toString().padLeft(2, '0')}'
                   : '--:--';
@@ -227,8 +231,7 @@ class SharedViewDashboardScreen extends StatelessWidget {
                         child: Text(
                           type.replaceAll('_', ' ').toUpperCase(),
                           style: textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onSurface
-                                .withValues(alpha: 0.5),
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                         ),
                       ),

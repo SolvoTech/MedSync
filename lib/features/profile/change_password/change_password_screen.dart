@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/errors/user_error_message.dart';
+import '../../../core/extensions/context_ext.dart';
 import '../../../core/validators/app_validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -44,10 +46,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   }
 
   String _strengthLabel(double strength) {
-    if (strength < 0.3) return 'Lemah';
-    if (strength < 0.6) return 'Sedang';
-    if (strength < 0.8) return 'Kuat';
-    return 'Sangat Kuat';
+    if (strength < 0.3) return AppStrings.tr('Weak', 'Lemah');
+    if (strength < 0.6) return AppStrings.tr('Medium', 'Sedang');
+    if (strength < 0.8) return AppStrings.tr('Strong', 'Kuat');
+    return AppStrings.tr('Very Strong', 'Sangat Kuat');
   }
 
   Color _strengthColor(double strength) {
@@ -73,15 +75,24 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kata sandi berhasil diperbarui.')),
+        context.showSuccessSnackBar(
+          AppStrings.tr(
+            'Password updated successfully.',
+            'Kata sandi berhasil diperbarui.',
+          ),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memperbarui kata sandi: $e')),
+        context.showErrorSnackBar(
+          toUserErrorMessage(
+            e,
+            fallback: AppStrings.tr(
+              'Failed to update password. Please try again.',
+              'Gagal memperbarui kata sandi. Silakan coba lagi.',
+            ),
+          ),
         );
       }
     } finally {
@@ -94,7 +105,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     final strength = _passwordStrength();
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.changePassword)),
+      appBar: AppBar(title: Text(AppStrings.changePassword)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -108,7 +119,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               // New password
               AppTextField(
                 controller: _newPasswordController,
-                label: 'Kata Sandi Baru',
+                label: AppStrings.tr('New Password', 'Kata Sandi Baru'),
                 isObscure: _obscureNew,
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
@@ -154,7 +165,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Min 8 karakter, huruf besar, angka',
+                  AppStrings.tr(
+                    'Min 8 characters, uppercase letter, and number',
+                    'Min 8 karakter, huruf besar, angka',
+                  ),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(
                       context,
@@ -187,7 +201,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               const SizedBox(height: 32),
 
               AppButton(
-                label: 'Perbarui Kata Sandi',
+                label: AppStrings.tr('Update Password', 'Perbarui Kata Sandi'),
                 onPressed: _submit,
                 isLoading: _isSaving,
               ),

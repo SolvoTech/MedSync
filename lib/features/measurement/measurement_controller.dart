@@ -74,7 +74,7 @@ class MeasurementController
           body:
               'Saatnya melakukan pengukuran ${measurementTypeLabel(measurementType)}.',
           scheduledAt: scheduleAt,
-          payload: 'measurement:${reminder.id}',
+          payload: 'task|measurement|${reminder.id}|$timeOfDay',
         );
     await ref
         .read(alarmServiceProvider)
@@ -122,7 +122,7 @@ class MeasurementController
           body:
               'Saatnya melakukan pengukuran ${measurementTypeLabel(measurementType)}.',
           scheduledAt: scheduleAt,
-          payload: 'measurement:$reminderId',
+          payload: 'task|measurement|$reminderId|$timeOfDay',
         );
     await ref
         .read(alarmServiceProvider)

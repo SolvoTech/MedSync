@@ -4,12 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../data/remote/datasources/task_log_remote_datasource.dart';
+
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService();
 });
 
 class NotificationService {
   NotificationService();
+
+  static const String markDoneActionId = 'mark_done';
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -20,7 +24,11 @@ class NotificationService {
     );
 
     const initSettings = InitializationSettings(android: androidSettings);
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: _onNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+    );
 
     tz.initializeTimeZones();
 
@@ -98,6 +106,15 @@ class NotificationService {
         channelDescription: _channelDescription(channelId),
         importance: Importance.high,
         priority: Priority.high,
+        actions: _supportsTaskDoneAction(channelId)
+            ? const <AndroidNotificationAction>[
+                AndroidNotificationAction(
+                  markDoneActionId,
+                  'Selesai',
+                  cancelNotification: true,
+                ),
+              ]
+            : null,
       ),
     );
 
@@ -158,6 +175,16 @@ class NotificationService {
         return 'Notifikasi MedSync';
     }
   }
+
+  bool _supportsTaskDoneAction(String channelId) {
+    return channelId == 'medicine_reminders' ||
+        channelId == 'measurement_reminders' ||
+        channelId == 'activity_reminders';
+  }
+
+  Future<void> _onNotificationResponse(NotificationResponse response) async {
+    await _handleNotificationResponse(response);
+  }
 }
 
 int stableNotificationId(String seed) {
@@ -165,8 +192,72 @@ int stableNotificationId(String seed) {
 }
 
 @pragma('vm:entry-point')
-void notificationTapBackground(NotificationResponse response) {
+Future<void> notificationTapBackground(NotificationResponse response) async {
+  await _handleNotificationResponse(response);
+
   if (kDebugMode) {
     debugPrint('Notification tapped: ${response.payload}');
   }
+}
+
+Future<void> _handleNotificationResponse(NotificationResponse response) async {
+  if (response.actionId != NotificationService.markDoneActionId) {
+    return;
+  }
+
+  final payload = response.payload;
+  if (payload == null || payload.isEmpty) {
+    return;
+  }
+
+  final parsed = _parseTaskPayload(payload);
+  if (parsed == null) {
+    return;
+  }
+
+  try {
+    await TaskLogRemoteDataSource().markReminderDoneByReference(
+      taskType: parsed.taskType,
+      referenceId: parsed.referenceId,
+      timeOfDay: parsed.timeOfDay,
+    );
+  } catch (error) {
+    if (kDebugMode) {
+      debugPrint('Failed to mark task from notification action: $error');
+    }
+  }
+}
+
+_TaskPayload? _parseTaskPayload(String payload) {
+  // Payload format: task|taskType|referenceId|HH:mm:ss
+  final parts = payload.split('|');
+  if (parts.length < 3 || parts.first != 'task') {
+    return null;
+  }
+
+  final taskType = parts[1].trim();
+  final referenceId = parts[2].trim();
+  final timeOfDay = parts.length > 3 ? parts[3].trim() : null;
+
+  if (taskType.isEmpty || referenceId.isEmpty) {
+    return null;
+  }
+
+  return _TaskPayload(
+    taskType: taskType,
+    referenceId: referenceId,
+    timeOfDay: timeOfDay,
+  );
+}
+
+class _TaskPayload {
+  const _TaskPayload({
+    required this.taskType,
+    required this.referenceId,
+    required this.timeOfDay,
+  });
+
+  final String taskType;
+  final String referenceId;
+  final String? timeOfDay;
 }

@@ -1,3 +1,5 @@
+import '../../../core/constants/app_strings.dart';
+
 /// Data model for a single onboarding page.
 class OnboardingPageModel {
   const OnboardingPageModel({
@@ -10,26 +12,20 @@ class OnboardingPageModel {
   final String description;
   final String icon; // asset path
 
-  static const List<OnboardingPageModel> pages = [
+  static List<OnboardingPageModel> get pages => [
     OnboardingPageModel(
-      title: 'Pengingat Obat Otomatis',
-      description:
-          'Atur jadwal minum obat dan dapatkan notifikasi tepat waktu. '
-          'Tidak ada lagi dosis yang terlewat.',
+      title: AppStrings.onboardingMedicationTitle,
+      description: AppStrings.onboardingMedicationDescription,
       icon: 'assets/images/onboarding_1.png',
     ),
     OnboardingPageModel(
-      title: 'Pantau Kesehatan Keluarga',
-      description:
-          'Kelola jadwal obat dan catatan kesehatan untuk seluruh '
-          'anggota keluarga dalam satu aplikasi praktis.',
+      title: AppStrings.onboardingFamilyTitle,
+      description: AppStrings.onboardingFamilyDescription,
       icon: 'assets/images/onboarding_2.png',
     ),
     OnboardingPageModel(
-      title: 'Laporan & Riwayat Lengkap',
-      description:
-          'Lihat statistik kepatuhan, pantau riwayat konsumsi obat, '
-          'dan ekspor laporan kesehatan kapan saja.',
+      title: AppStrings.onboardingReportTitle,
+      description: AppStrings.onboardingReportDescription,
       icon: 'assets/images/onboarding_3.png',
     ),
   ];

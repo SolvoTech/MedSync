@@ -5,60 +5,75 @@ import 'widgets/activity_tab.dart';
 import 'widgets/measurement_tab.dart';
 import 'widgets/medicine_tab.dart';
 
-class ScheduleListScreen extends StatelessWidget {
+enum ScheduleSection { medicine, measurement, activity }
+
+class ScheduleListScreen extends StatefulWidget {
   const ScheduleListScreen({super.key});
+
+  @override
+  State<ScheduleListScreen> createState() => _ScheduleListScreenState();
+}
+
+class _ScheduleListScreenState extends State<ScheduleListScreen> {
+  ScheduleSection _selected = ScheduleSection.medicine;
+
+  static const _pages = [MedicineTab(), MeasurementTab(), ActivityTab()];
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final appBarTitleStyle = textTheme.headlineMedium?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: colorScheme.onSurface,
+    );
 
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text(AppStrings.scheduleTitle),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(56),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: colorScheme.outlineVariant),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppStrings.scheduleTitle, style: appBarTitleStyle),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<ScheduleSection>(
+                showSelectedIcon: false,
+                style: ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  padding: const WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                  ),
+                  textStyle: const WidgetStatePropertyAll(
+                    TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
                 ),
-                child: TabBar(
-                  isScrollable: false,
-                  dividerColor: Colors.transparent,
-                  labelPadding: EdgeInsets.zero,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  indicator: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(12),
+                segments: [
+                  ButtonSegment(
+                    value: ScheduleSection.medicine,
+                    label: Text(AppStrings.scheduleTabMedicine, maxLines: 1),
                   ),
-                  labelColor: colorScheme.primary,
-                  unselectedLabelColor: colorScheme.onSurface,
-                  labelStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                  ButtonSegment(
+                    value: ScheduleSection.measurement,
+                    label: Text(AppStrings.scheduleTabMeasurement, maxLines: 1),
                   ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                  ButtonSegment(
+                    value: ScheduleSection.activity,
+                    label: Text(AppStrings.scheduleTabActivity, maxLines: 1),
                   ),
-                  tabs: const [
-                    Tab(text: 'Obat'),
-                    Tab(text: 'Pengukuran'),
-                    Tab(text: 'Aktivitas'),
-                  ],
-                ),
+                ],
+                selected: {_selected},
+                onSelectionChanged: (selected) {
+                  setState(() => _selected = selected.first);
+                },
               ),
             ),
           ),
-        ),
-        body: const TabBarView(
-          children: [MedicineTab(), MeasurementTab(), ActivityTab()],
-        ),
+          const SizedBox(height: 12),
+          Expanded(child: _pages[_selected.index]),
+        ],
       ),
     );
   }

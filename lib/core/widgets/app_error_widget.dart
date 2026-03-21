@@ -3,13 +3,9 @@ import 'package:flutter/material.dart';
 import '../constants/app_strings.dart';
 
 class AppErrorWidget extends StatelessWidget {
-  const AppErrorWidget({
-    super.key,
-    this.message = AppStrings.errorGeneral,
-    this.onRetry,
-  });
+  const AppErrorWidget({super.key, this.message, this.onRetry});
 
-  final String message;
+  final String? message;
   final VoidCallback? onRetry;
 
   @override
@@ -39,7 +35,7 @@ class AppErrorWidget extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              message,
+              message ?? AppStrings.errorGeneral,
               style: textTheme.titleSmall?.copyWith(
                 color: colorScheme.onSurface.withValues(alpha: 0.7),
                 fontWeight: FontWeight.w600,
@@ -52,10 +48,11 @@ class AppErrorWidget extends StatelessWidget {
                 onPressed: onRetry,
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24, vertical: 12,
+                    horizontal: 24,
+                    vertical: 12,
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.refresh_rounded, size: 18),

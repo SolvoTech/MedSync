@@ -13,8 +13,8 @@ import 'services/notification_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await initializeDateFormatting('en_US', null);
   await initializeDateFormatting('id_ID', null);
-  Intl.defaultLocale = 'id_ID';
 
   await dotenv.load(fileName: '.env');
 
@@ -26,6 +26,7 @@ Future<void> main() async {
   }
 
   await AppPreferences.init();
+  Intl.defaultLocale = AppPreferences.languageCode == 'id' ? 'id_ID' : 'en_US';
 
   final notificationService = NotificationService();
   await notificationService.initialize();

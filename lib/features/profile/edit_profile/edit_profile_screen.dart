@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/errors/user_error_message.dart';
+import '../../../core/extensions/context_ext.dart';
 import '../../../core/validators/app_validators.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_date_field.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../domain/models/user_profile.dart';
 import '../profile_screen.dart';
@@ -73,16 +76,25 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       ref.invalidate(currentProfileProvider);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profil berhasil diperbarui.')),
+        context.showSuccessSnackBar(
+          AppStrings.tr(
+            'Profile updated successfully.',
+            'Profil berhasil diperbarui.',
+          ),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal memperbarui profil: $e')));
+        context.showErrorSnackBar(
+          toUserErrorMessage(
+            e,
+            fallback: AppStrings.tr(
+              'Failed to update profile. Please try again.',
+              'Gagal memperbarui profil. Silakan coba lagi.',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -92,12 +104,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(currentProfileProvider);
-    final colorScheme = Theme.of(context).colorScheme;
 
     profileAsync.whenData(_initFromProfile);
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.editProfile)),
+      appBar: AppBar(title: Text(AppStrings.editProfile)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -118,19 +129,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               const SizedBox(height: 20),
 
               // Birth date
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  Icons.cake_outlined,
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-                title: const Text(AppStrings.birthDateLabel),
-                subtitle: Text(
-                  _birthDate != null
-                      ? '${_birthDate!.day.toString().padLeft(2, '0')}/${_birthDate!.month.toString().padLeft(2, '0')}/${_birthDate!.year}'
-                      : 'Belum diisi',
-                ),
-                trailing: const Icon(Icons.calendar_month),
+              AppDateField(
+                label: AppStrings.birthDateLabel,
+                value: _birthDate,
+                emptyText: AppStrings.tr('Not filled yet', 'Belum diisi'),
+                prefixIcon: Icons.cake_outlined,
                 onTap: _pickBirthDate,
               ),
               const SizedBox(height: 32),

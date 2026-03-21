@@ -10,6 +10,8 @@ import '../../../domain/repositories/medicine_repository.dart';
 import '../../../services/alarm_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/permission_service.dart';
+import '../../home/home_controller.dart';
+import '../../reports/report_screen.dart';
 
 final medicineRemoteDataSourceProvider = Provider<MedicineRemoteDataSource>((
   ref,
@@ -44,7 +46,9 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
   }
 
   Future<List<Medicine>> _fetch() {
-    return ref.read(medicineRepositoryProvider).getMedicines();
+    return ref
+        .read(medicineRepositoryProvider)
+        .getMedicines(includeInactive: true);
   }
 
   Future<void> refresh() async {
@@ -59,7 +63,6 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     String stockUnit = 'tablet',
     String medicineType = 'tablet',
     File? photoFile,
-    File? prescriptionFile,
   }) async {
     final previous = state.valueOrNull ?? const <Medicine>[];
     state = const AsyncLoading();
@@ -75,7 +78,6 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
       }
 
       String? photoUrl;
-      String? prescriptionUrl;
       final userId = currentUser.id;
       final uniqueId = DateTime.now().millisecondsSinceEpoch;
 
@@ -83,16 +85,6 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
         final path = '$userId/medicine_${uniqueId}_photo.jpg';
         await client.storage.from('medicine-photos').upload(path, photoFile);
         photoUrl = client.storage.from('medicine-photos').getPublicUrl(path);
-      }
-
-      if (prescriptionFile != null) {
-        final path = '$userId/medicine_${uniqueId}_prescription.jpg';
-        await client.storage
-            .from('medicine-photos')
-            .upload(path, prescriptionFile);
-        prescriptionUrl = client.storage
-            .from('medicine-photos')
-            .getPublicUrl(path);
       }
 
       await ref
@@ -104,7 +96,6 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
             stockUnit: stockUnit,
             medicineType: medicineType,
             photoUrl: photoUrl,
-            prescriptionUrl: prescriptionUrl,
           );
       state = AsyncData(await _fetch());
     } catch (error, stackTrace) {
@@ -114,7 +105,38 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
   }
 
   Future<void> deactivateMedicine(String medicineId) async {
+    final bundles = await ref
+        .read(medicineRemoteDataSourceProvider)
+        .getSchedulesForMedicine(medicineId);
+
+    for (final bundle in bundles) {
+      for (final slot in bundle.slots) {
+        final notificationId = stableNotificationId('medicine-slot:${slot.id}');
+        await ref
+            .read(notificationServiceProvider)
+            .cancelNotification(notificationId);
+        await ref.read(alarmServiceProvider).cancelAlarm(notificationId);
+      }
+    }
+
     await ref.read(medicineRepositoryProvider).deactivateMedicine(medicineId);
+    await refresh();
+  }
+
+  Future<void> activateMedicine(String medicineId) async {
+    await ref.read(medicineRepositoryProvider).activateMedicine(medicineId);
+
+    final bundles = await ref
+        .read(medicineRemoteDataSourceProvider)
+        .getSchedulesForMedicine(medicineId);
+
+    for (final bundle in bundles) {
+      await _scheduleMedicineBundleNotifications(
+        medicineId: medicineId,
+        bundle: bundle,
+      );
+    }
+
     await refresh();
   }
 
@@ -153,6 +175,8 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     );
 
     ref.invalidate(medicineSchedulesProvider(medicineId));
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(reportDataProvider);
   }
 
   Future<void> editSchedule({
@@ -195,6 +219,8 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     );
 
     ref.invalidate(medicineSchedulesProvider(medicineId));
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(reportDataProvider);
   }
 
   Future<void> deleteSchedule({
@@ -214,6 +240,8 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
         .deleteScheduleWithSlots(bundle.schedule.id);
 
     ref.invalidate(medicineSchedulesProvider(medicineId));
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(reportDataProvider);
   }
 
   Future<void> _scheduleMedicineBundleNotifications({
@@ -249,7 +277,7 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
         title: 'Pengingat Obat',
         body: 'Waktunya minum obat Anda.',
         scheduledAt: scheduledAt,
-        payload: 'medicine:$medicineId',
+        payload: 'task|medicine|${bundle.schedule.id}|${slot.timeOfDay}',
       );
 
       await alarmService.scheduleExactAlarm(

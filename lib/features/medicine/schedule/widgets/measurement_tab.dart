@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/constants/type_labels.dart';
+import '../../../../data/remote/datasources/task_log_remote_datasource.dart';
 import '../../../../domain/models/measurement_reminder.dart';
 import '../../../measurement/measurement_controller.dart';
 import 'reminder_common.dart';
@@ -22,9 +25,16 @@ class MeasurementTab extends ConsumerWidget {
           data: (items) {
             if (items.isEmpty) {
               return ListView(
-                children: const [
+                children: [
                   SizedBox(height: 120),
-                  Center(child: Text('Belum ada pengingat pengukuran.')),
+                  Center(
+                    child: Text(
+                      AppStrings.tr(
+                        'No measurement reminders yet.',
+                        'Belum ada pengingat pengukuran.',
+                      ),
+                    ),
+                  ),
                 ],
               );
             }
@@ -40,6 +50,7 @@ class MeasurementTab extends ConsumerWidget {
                       item.customName ??
                       measurementTypeLabel(item.measurementType),
                   timeOfDay: item.timeOfDay,
+                  showMarkDoneAction: true,
                   onTap: () =>
                       _openMeasurementEditor(context, ref, existing: item),
                   onActionSelected: (value) =>
@@ -57,7 +68,17 @@ class MeasurementTab extends ConsumerWidget {
           error: (error, _) => ListView(
             children: [
               const SizedBox(height: 120),
-              Center(child: Text('Gagal memuat pengukuran: $error')),
+              Center(
+                child: Text(
+                  toUserErrorMessage(
+                    error,
+                    fallback: AppStrings.tr(
+                      'Failed to load measurements. Please try again.',
+                      'Gagal memuat pengukuran. Silakan coba lagi.',
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -65,7 +86,7 @@ class MeasurementTab extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openMeasurementEditor(context, ref, existing: null),
         icon: const Icon(Icons.add),
-        label: const Text('Tambah Pengukuran'),
+        label: Text(AppStrings.addMeasurement),
       ),
     );
   }
@@ -80,16 +101,38 @@ class MeasurementTab extends ConsumerWidget {
       context: context,
       action: action,
       onEdit: () => _openMeasurementEditor(context, ref, existing: item),
+      onMarkDone: () => TaskLogRemoteDataSource().markReminderDoneByReference(
+        taskType: 'measurement',
+        referenceId: item.id,
+        timeOfDay: item.timeOfDay,
+      ),
+      doneMessage: AppStrings.tr(
+        'Measurement marked as done.',
+        'Pengukuran ditandai selesai.',
+      ),
       onDeactivate: () => ref
           .read(measurementControllerProvider.notifier)
           .deactivateReminder(item.id),
       onDelete: () => ref
           .read(measurementControllerProvider.notifier)
           .deleteReminder(item.id),
-      deactivatedMessage: 'Reminder pengukuran dinonaktifkan.',
-      deletedMessage: 'Reminder pengukuran dihapus.',
-      deleteDialogContent:
-          'Reminder pengukuran akan dihapus permanen dan notifikasinya dibatalkan.',
+      deactivatedMessage: AppStrings.tr(
+        'Measurement reminder disabled.',
+        'Reminder pengukuran dinonaktifkan.',
+      ),
+      deactivateDialogContent: AppStrings.tr(
+        'Measurement reminder will be disabled. Schedule remains saved, but notifications will pause until reactivated.',
+        'Reminder pengukuran akan dinonaktifkan. Jadwal tetap tersimpan, tetapi notifikasinya dihentikan sampai diaktifkan lagi.',
+      ),
+      deactivateDontAskAgainKey: 'confirm_skip_deactivate_measurement_reminder',
+      deletedMessage: AppStrings.tr(
+        'Measurement reminder deleted.',
+        'Reminder pengukuran dihapus.',
+      ),
+      deleteDialogContent: AppStrings.tr(
+        'Measurement reminder will be permanently deleted and notifications canceled.',
+        'Reminder pengukuran akan dihapus permanen dan notifikasinya dibatalkan.',
+      ),
     );
   }
 
@@ -103,15 +146,21 @@ class MeasurementTab extends ConsumerWidget {
       context: context,
       availableTypes: measurementTypes,
       typeLabelBuilder: measurementTypeLabel,
-      typeFieldLabel: 'Tipe Pengukuran',
-      timeFieldLabel: 'Waktu Pengukuran',
+      typeFieldLabel: AppStrings.measurementType,
+      timeFieldLabel: AppStrings.tr('Measurement Time', 'Waktu Pengukuran'),
       initialType: existing?.measurementType ?? measurementTypes.first,
       initialCustomName: existing?.customName,
       initialTimeOfDay: existing?.timeOfDay ?? '08:00:00',
       initialDate: existing?.startDate ?? DateTime.now(),
       isEditing: existing != null,
-      createSuccessMessage: 'Reminder pengukuran disimpan.',
-      updateSuccessMessage: 'Reminder pengukuran diperbarui.',
+      createSuccessMessage: AppStrings.tr(
+        'Measurement reminder saved.',
+        'Reminder pengukuran disimpan.',
+      ),
+      updateSuccessMessage: AppStrings.tr(
+        'Measurement reminder updated.',
+        'Reminder pengukuran diperbarui.',
+      ),
       onSubmit:
           ({
             required selectedType,

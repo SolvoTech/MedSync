@@ -28,12 +28,22 @@ class AppBottomSheet extends StatelessWidget {
       context: context,
       isScrollControlled: isScrollControlled,
       backgroundColor: Colors.transparent,
-      builder: (context) => FractionallySizedBox(
-        heightFactor: isScrollControlled ? heightFactor : null,
-        child: AppBottomSheet(
-          title: title,
-          trailing: trailing,
-          child: child,
+      builder: (context) => AnimatedPadding(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: SafeArea(
+          top: false,
+          child: FractionallySizedBox(
+            heightFactor: isScrollControlled ? heightFactor : null,
+            child: AppBottomSheet(
+              title: title,
+              trailing: trailing,
+              child: child,
+            ),
+          ),
         ),
       ),
     );

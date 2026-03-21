@@ -30,7 +30,10 @@ class AppValidators {
       return AppStrings.nameRequired;
     }
     if (raw.length < minLength) {
-      return 'Nama minimal $minLength karakter';
+      return AppStrings.tr(
+        'Name must be at least $minLength characters',
+        'Nama minimal $minLength karakter',
+      );
     }
     return null;
   }
@@ -50,7 +53,10 @@ class AppValidators {
       return min8Error;
     }
     if (!RegExp(r'[A-Z]').hasMatch(raw) || !RegExp(r'[0-9]').hasMatch(raw)) {
-      return 'Wajib mengandung huruf besar dan angka';
+      return AppStrings.tr(
+        'Must include an uppercase letter and a number',
+        'Wajib mengandung huruf besar dan angka',
+      );
     }
     return null;
   }
@@ -67,20 +73,29 @@ class AppValidators {
 
   static String? nonNegativeInt(
     String? value, {
-    String requiredMessage = 'Bidang ini wajib diisi',
-    String invalidMessage = 'Nilai harus berupa angka',
-    String negativeMessage = 'Nilai tidak boleh negatif',
+    String? requiredMessage,
+    String? invalidMessage,
+    String? negativeMessage,
   }) {
     final raw = value?.trim() ?? '';
+    final effectiveRequiredMessage =
+        requiredMessage ?? AppStrings.fieldRequired;
+    final effectiveInvalidMessage =
+        invalidMessage ??
+        AppStrings.tr('Value must be a number', 'Nilai harus berupa angka');
+    final effectiveNegativeMessage =
+        negativeMessage ??
+        AppStrings.tr('Value cannot be negative', 'Nilai tidak boleh negatif');
+
     if (raw.isEmpty) {
-      return requiredMessage;
+      return effectiveRequiredMessage;
     }
     final parsed = int.tryParse(raw);
     if (parsed == null) {
-      return invalidMessage;
+      return effectiveInvalidMessage;
     }
     if (parsed < 0) {
-      return negativeMessage;
+      return effectiveNegativeMessage;
     }
     return null;
   }
@@ -92,7 +107,10 @@ class AppValidators {
   }) {
     final raw = value?.trim() ?? '';
     if (raw.length > maxLength) {
-      return '$label maksimal $maxLength karakter';
+      return AppStrings.tr(
+        '$label must be at most $maxLength characters',
+        '$label maksimal $maxLength karakter',
+      );
     }
     return null;
   }
@@ -100,10 +118,13 @@ class AppValidators {
   static String? accessToken(String? value) {
     final raw = value?.trim() ?? '';
     if (raw.isEmpty) {
-      return 'Masukkan kode akses';
+      return AppStrings.tr('Enter access code', 'Masukkan kode akses');
     }
     if (!_accessTokenRegex.hasMatch(raw)) {
-      return 'Format kode akses tidak valid';
+      return AppStrings.tr(
+        'Invalid access code format',
+        'Format kode akses tidak valid',
+      );
     }
     return null;
   }

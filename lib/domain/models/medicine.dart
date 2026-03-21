@@ -14,7 +14,6 @@ class Medicine {
     this.color,
     this.icon,
     this.photoUrl,
-    this.prescriptionUrl,
     this.isActive = true,
   });
 
@@ -32,7 +31,6 @@ class Medicine {
   final String? color;
   final String? icon;
   final String? photoUrl;
-  final String? prescriptionUrl;
   final bool isActive;
 
   bool get isStockLow => stockCurrent <= stockLowThreshold;
@@ -54,7 +52,6 @@ class Medicine {
       color: map['color'] as String?,
       icon: map['icon'] as String?,
       photoUrl: map['photo_url'] as String?,
-      prescriptionUrl: map['prescription_url'] as String?,
       isActive: (map['is_active'] as bool?) ?? true,
     );
   }
@@ -74,7 +71,6 @@ class Medicine {
       'color': color,
       'icon': icon,
       'photo_url': photoUrl,
-      'prescription_url': prescriptionUrl,
       'is_active': isActive,
     };
   }

@@ -38,7 +38,6 @@ create table if not exists medicines (
   color text,
   icon text,
   photo_url text,
-  prescription_url text,
   is_active boolean default true,
   created_at timestamptz default now(),
   updated_at timestamptz default now()

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/errors/user_error_message.dart';
+import '../../core/extensions/context_ext.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/app_error_widget.dart';
@@ -22,9 +24,18 @@ final reportDateProvider = StateProvider<DateTime>((ref) => DateTime.now());
 
 final reportDataProvider = FutureProvider.autoDispose<_ReportData>((ref) async {
   final client = SupabaseClientRef.maybeClient;
-  if (client == null) throw Exception('Supabase belum diinisialisasi.');
+  if (client == null)
+    throw Exception(
+      AppStrings.tr(
+        'Supabase is not initialized.',
+        'Supabase belum diinisialisasi.',
+      ),
+    );
   final user = client.auth.currentUser;
-  if (user == null) throw Exception('Login terlebih dahulu.');
+  if (user == null)
+    throw Exception(
+      AppStrings.tr('Please sign in first.', 'Login terlebih dahulu.'),
+    );
 
   final period = ref.watch(reportPeriodProvider);
   final refDate = ref.watch(reportDateProvider);
@@ -133,24 +144,29 @@ class ReportScreen extends ConsumerWidget {
     final reportState = ref.watch(reportDataProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final appBarTitleStyle = textTheme.headlineMedium?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: colorScheme.onSurface,
+    );
 
     final streakState = ref.watch(streakProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.reportTitle),
+        title: Text(AppStrings.reportTitle, style: appBarTitleStyle),
         actions: [
           reportState.maybeWhen(
             data: (data) {
               if (data.total == 0) return const SizedBox.shrink();
               return IconButton(
                 icon: const Icon(Icons.picture_as_pdf_outlined),
-                tooltip: 'Simpan sebagai PDF',
+                tooltip: AppStrings.saveAsPdf,
                 onPressed: () async {
                   final client = SupabaseClientRef.maybeClient;
                   final user = client?.auth.currentUser;
                   final userName =
-                      user?.userMetadata?['full_name'] as String? ?? 'Pengguna';
+                      user?.userMetadata?['full_name'] as String? ??
+                      AppStrings.userFallback;
                   final currentStreak =
                       streakState.valueOrNull?.currentStreak ?? 0;
 
@@ -165,8 +181,11 @@ class ReportScreen extends ConsumerWidget {
                     );
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Gagal mengekspor PDF: $e')),
+                      context.showErrorSnackBar(
+                        toUserErrorMessage(
+                          e,
+                          fallback: AppStrings.exportPdfFailed,
+                        ),
                       );
                     }
                   }
@@ -196,18 +215,18 @@ class ReportScreen extends ConsumerWidget {
                     TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                 ),
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: ReportPeriod.daily,
-                    label: Text('Harian', maxLines: 1),
+                    label: Text(AppStrings.dailyLabel, maxLines: 1),
                   ),
                   ButtonSegment(
                     value: ReportPeriod.weekly,
-                    label: Text('Mingguan', maxLines: 1),
+                    label: Text(AppStrings.weeklyLabel, maxLines: 1),
                   ),
                   ButtonSegment(
                     value: ReportPeriod.monthly,
-                    label: Text('Bulanan', maxLines: 1),
+                    label: Text(AppStrings.monthlyLabel, maxLines: 1),
                   ),
                 ],
                 selected: {period},
@@ -225,11 +244,10 @@ class ReportScreen extends ConsumerWidget {
             child: reportState.when(
               data: (data) {
                 if (data.total == 0) {
-                  return const AppEmptyState(
-                    message: 'Belum ada data untuk periode ini',
+                  return AppEmptyState(
+                    message: AppStrings.noReportDataForPeriod,
                     icon: Icons.bar_chart_outlined,
-                    subtitle:
-                        'Mulai catat tugas kesehatan\nuntuk melihat laporan Anda.',
+                    subtitle: AppStrings.reportEmptySubtitle,
                   );
                 }
 
@@ -243,7 +261,7 @@ class ReportScreen extends ConsumerWidget {
                         child: Column(
                           children: [
                             Text(
-                              'Kepatuhan Keseluruhan',
+                              AppStrings.overallAdherence,
                               style: textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -278,7 +296,7 @@ class ReportScreen extends ConsumerWidget {
                                               ),
                                         ),
                                         Text(
-                                          'kepatuhan',
+                                          AppStrings.adherenceLabel,
                                           style: textTheme.labelSmall?.copyWith(
                                             color: colorScheme.onSurface
                                                 .withValues(alpha: 0.5),
@@ -295,17 +313,17 @@ class ReportScreen extends ConsumerWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 _StatPill(
-                                  label: 'Selesai',
+                                  label: AppStrings.completedLabel,
                                   value: '${data.done}',
                                   color: AppColors.success,
                                 ),
                                 _StatPill(
-                                  label: 'Lewati',
+                                  label: AppStrings.skippedLabel,
                                   value: '${data.skipped}',
                                   color: AppColors.warning,
                                 ),
                                 _StatPill(
-                                  label: 'Terlewat',
+                                  label: AppStrings.missedLabel,
                                   value: '${data.missed}',
                                   color: AppColors.error,
                                 ),
@@ -319,7 +337,7 @@ class ReportScreen extends ConsumerWidget {
                       // Category breakdown
                       _CategoryCard(
                         icon: Icons.medication_rounded,
-                        label: 'Obat',
+                        label: AppStrings.medicineLabel,
                         done: data.medicineDone,
                         total: data.medicineCount,
                         color: AppColors.medicineAccent,
@@ -327,7 +345,7 @@ class ReportScreen extends ConsumerWidget {
                       const SizedBox(height: 10),
                       _CategoryCard(
                         icon: Icons.monitor_heart_rounded,
-                        label: 'Pengukuran',
+                        label: AppStrings.measurementLabel,
                         done: data.measurementDone,
                         total: data.measurementCount,
                         color: AppColors.measurementAccent,
@@ -335,7 +353,7 @@ class ReportScreen extends ConsumerWidget {
                       const SizedBox(height: 10),
                       _CategoryCard(
                         icon: Icons.directions_run_rounded,
-                        label: 'Aktivitas Fisik',
+                        label: AppStrings.physicalActivityLabel,
                         done: data.activityDone,
                         total: data.activityCount,
                         color: AppColors.activityAccent,
@@ -361,7 +379,7 @@ class ReportScreen extends ConsumerWidget {
                 ),
               ),
               error: (e, _) => AppErrorWidget(
-                message: 'Gagal memuat laporan',
+                message: AppStrings.reportLoadFailed,
                 onRetry: () => ref.invalidate(reportDataProvider),
               ),
             ),

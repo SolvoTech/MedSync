@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_gradients.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/extensions/datetime_ext.dart';
+import '../../core/extensions/context_ext.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/app_error_widget.dart';
@@ -133,7 +134,12 @@ class HomeScreen extends ConsumerWidget {
                                   if (showDate) ...[
                                     const SizedBox(height: 2),
                                     Text(
-                                      DateTime.now().toFullIndonesianDate(),
+                                      DateFormat(
+                                        'EEEE, d MMMM yyyy',
+                                        AppStrings.languageCode == 'id'
+                                            ? 'id_ID'
+                                            : 'en_US',
+                                      ).format(DateTime.now()),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: textTheme.bodyMedium?.copyWith(
@@ -195,7 +201,7 @@ class HomeScreen extends ConsumerWidget {
                         children: [
                           Expanded(
                             child: _StatItem(
-                              label: 'Selesai',
+                              label: AppStrings.completedLabel,
                               value: '$completed/$total',
                               icon: Icons.check_circle_outline,
                               color: AppColors.success,
@@ -211,7 +217,7 @@ class HomeScreen extends ConsumerWidget {
                           ),
                           Expanded(
                             child: _StatItem(
-                              label: 'Progres',
+                              label: AppStrings.progressLabel,
                               value: '$percent%',
                               icon: Icons.trending_up,
                               color: AppColors.info,
@@ -262,12 +268,14 @@ class HomeScreen extends ConsumerWidget {
             tasksState.when(
               data: (tasks) {
                 if (tasks.isEmpty) {
-                  return const SliverFillRemaining(
+                  return SliverFillRemaining(
                     child: AppEmptyState(
                       message: AppStrings.noTasksToday,
                       icon: Icons.task_alt,
-                      subtitle:
-                          'Tambahkan jadwal obat atau aktivitas\nuntuk mulai melacak kesehatan Anda.',
+                      subtitle: AppStrings.tr(
+                        'Add medication or activity schedules\nto start tracking your health.',
+                        'Tambahkan jadwal obat atau aktivitas\nuntuk mulai melacak kesehatan Anda.',
+                      ),
                     ),
                   );
                 }
@@ -285,11 +293,7 @@ class HomeScreen extends ConsumerWidget {
                               .read(todayTasksProvider.notifier)
                               .markDone(task.id);
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(AppStrings.taskDone),
-                              ),
-                            );
+                            context.showSuccessSnackBar(AppStrings.taskDone);
                           }
                         },
                         onSkip: () async {
@@ -297,11 +301,7 @@ class HomeScreen extends ConsumerWidget {
                               .read(todayTasksProvider.notifier)
                               .markSkipped(task.id);
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(AppStrings.taskSkipped),
-                              ),
-                            );
+                            context.showInfoSnackBar(AppStrings.taskSkipped);
                           }
                         },
                       );
@@ -329,7 +329,7 @@ class HomeScreen extends ConsumerWidget {
               ),
               error: (error, _) => SliverFillRemaining(
                 child: AppErrorWidget(
-                  message: 'Gagal memuat tugas hari ini',
+                  message: AppStrings.tasksLoadFailed,
                   onRetry: () => ref.invalidate(todayTasksProvider),
                 ),
               ),
@@ -353,8 +353,7 @@ class _StreakCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final currentStreak = streak?.currentStreak ?? 0;
-    final message =
-        streak?.motivationMessage ?? 'Mulai hari pertamamu hari ini!';
+    final message = streak?.motivationMessage ?? AppStrings.firstDayMotivation;
     final isHot = currentStreak >= 7;
 
     return AppCard(

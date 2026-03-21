@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/errors/user_error_message.dart';
+import '../../../core/extensions/context_ext.dart';
 import '../../../core/validators/app_validators.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_date_field.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../domain/models/care_person.dart';
 import 'care_person_list_screen.dart';
@@ -97,22 +100,30 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isEditing
-                  ? 'Anggota berhasil diperbarui.'
-                  : 'Anggota berhasil ditambahkan.',
-            ),
-          ),
+        context.showSuccessSnackBar(
+          _isEditing
+              ? AppStrings.tr(
+                  'Member updated successfully.',
+                  'Anggota berhasil diperbarui.',
+                )
+              : AppStrings.tr(
+                  'Member added successfully.',
+                  'Anggota berhasil ditambahkan.',
+                ),
         );
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
+        context.showErrorSnackBar(
+          toUserErrorMessage(
+            e,
+            fallback: AppStrings.tr(
+              'Failed to save data. Please try again.',
+              'Gagal menyimpan data. Silakan coba lagi.',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -134,11 +145,14 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Anggota' : AppStrings.addCarePerson),
+        title: Text(
+          _isEditing
+              ? AppStrings.tr('Edit Member', 'Edit Anggota')
+              : AppStrings.addCarePerson,
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -153,7 +167,7 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
               // Name
               AppTextField(
                 controller: _nameController,
-                label: 'Nama Panggilan',
+                label: AppStrings.tr('Display Name', 'Nama Panggilan'),
                 hint: 'e.g. Ayah, Ibu, Nenek',
                 prefixIcon: const Icon(Icons.person_outline),
                 validator: AppValidators.name,
@@ -161,7 +175,10 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
               const SizedBox(height: 16),
 
               // Relationship — chip selector
-              Text('Hubungan', style: textTheme.labelLarge),
+              Text(
+                AppStrings.tr('Relationship', 'Hubungan'),
+                style: textTheme.labelLarge,
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -182,19 +199,11 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
               const SizedBox(height: 16),
 
               // Birth date
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  Icons.cake_outlined,
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-                title: const Text('Tanggal Lahir'),
-                subtitle: Text(
-                  _birthDate != null
-                      ? '${_birthDate!.day.toString().padLeft(2, '0')}/${_birthDate!.month.toString().padLeft(2, '0')}/${_birthDate!.year}'
-                      : 'Belum diisi',
-                ),
-                trailing: const Icon(Icons.calendar_month),
+              AppDateField(
+                label: AppStrings.tr('Birth Date', 'Tanggal Lahir'),
+                value: _birthDate,
+                emptyText: AppStrings.tr('Not filled yet', 'Belum diisi'),
+                prefixIcon: Icons.cake_outlined,
                 onTap: _pickBirthDate,
               ),
               const SizedBox(height: 16),
@@ -202,12 +211,18 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
               // Notes
               AppTextField(
                 controller: _notesController,
-                label: 'Catatan (Opsional)',
-                hint: 'Kondisi kesehatan, alergi, dll.',
+                label: AppStrings.tr('Notes (Optional)', 'Catatan (Opsional)'),
+                hint: AppStrings.tr(
+                  'Health condition, allergies, etc.',
+                  'Kondisi kesehatan, alergi, dll.',
+                ),
                 maxLines: 3,
                 prefixIcon: const Icon(Icons.notes),
-                validator: (v) =>
-                    AppValidators.maxLengthOptional(v, 250, label: 'Catatan'),
+                validator: (v) => AppValidators.maxLengthOptional(
+                  v,
+                  250,
+                  label: AppStrings.tr('Notes', 'Catatan'),
+                ),
               ),
               const SizedBox(height: 32),
 

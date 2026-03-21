@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_gradients.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/widgets/app_button.dart';
@@ -109,7 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     padding: const EdgeInsets.only(right: 4, top: 4),
                     child: TextButton(
                       onPressed: _onGetStarted,
-                      child: const Text('Lewati'),
+                      child: Text(AppStrings.skip),
                     ),
                   ),
                 ),
@@ -181,7 +182,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       const SizedBox(height: 32),
                       AppButton(
-                        label: isLastPage ? 'Mulai Sekarang' : 'Lanjut',
+                        label: isLastPage
+                            ? AppStrings.startNow
+                            : AppStrings.next,
                         onPressed: _onNext,
                         isFullWidth: true,
                         useGradient: true,

@@ -8,8 +8,14 @@ class MedicineRepositoryImpl implements MedicineRepository {
   final MedicineRemoteDataSource _remote;
 
   @override
-  Future<List<Medicine>> getMedicines({String? carePersonId}) {
-    return _remote.getMedicines(carePersonId: carePersonId);
+  Future<List<Medicine>> getMedicines({
+    String? carePersonId,
+    bool includeInactive = false,
+  }) {
+    return _remote.getMedicines(
+      carePersonId: carePersonId,
+      includeInactive: includeInactive,
+    );
   }
 
   @override
@@ -21,7 +27,6 @@ class MedicineRepositoryImpl implements MedicineRepository {
     String medicineType = 'tablet',
     String? carePersonId,
     String? photoUrl,
-    String? prescriptionUrl,
   }) {
     return _remote.createMedicine(
       name: name,
@@ -31,13 +36,17 @@ class MedicineRepositoryImpl implements MedicineRepository {
       medicineType: medicineType,
       carePersonId: carePersonId,
       photoUrl: photoUrl,
-      prescriptionUrl: prescriptionUrl,
     );
   }
 
   @override
   Future<void> deactivateMedicine(String medicineId) {
     return _remote.deactivateMedicine(medicineId);
+  }
+
+  @override
+  Future<void> activateMedicine(String medicineId) {
+    return _remote.activateMedicine(medicineId);
   }
 
   @override

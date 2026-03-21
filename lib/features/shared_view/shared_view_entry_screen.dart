@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/constants/app_strings.dart';
 import '../../../core/validators/app_validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -53,7 +54,10 @@ class _SharedViewEntryScreenState extends State<SharedViewEntryScreen> {
         final data = response.data is String
             ? jsonDecode(response.data as String)
             : response.data;
-        throw Exception(data['error'] ?? 'Terjadi kesalahan');
+        throw Exception(
+          data['error'] ??
+              AppStrings.tr('Something went wrong', 'Terjadi kesalahan'),
+        );
       }
 
       final data = response.data is String
@@ -86,7 +90,7 @@ class _SharedViewEntryScreenState extends State<SharedViewEntryScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Lihat Status')),
+      appBar: AppBar(title: Text(AppStrings.tr('View Status', 'Lihat Status'))),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -105,14 +109,17 @@ class _SharedViewEntryScreenState extends State<SharedViewEntryScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Masukkan Kode Akses',
+                AppStrings.tr('Enter Access Code', 'Masukkan Kode Akses'),
                 style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Caregiver Anda telah membagikan kode akses agar Anda bisa memantau status kesehatan mereka.',
+                AppStrings.tr(
+                  'Your caregiver shared an access code so you can monitor their health status.',
+                  'Caregiver Anda telah membagikan kode akses agar Anda bisa memantau status kesehatan mereka.',
+                ),
                 textAlign: TextAlign.center,
                 style: textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -121,8 +128,8 @@ class _SharedViewEntryScreenState extends State<SharedViewEntryScreen> {
               const SizedBox(height: 32),
               AppTextField(
                 controller: _tokenController,
-                label: 'Kode Akses',
-                hint: 'Contoh: MED-4X7K',
+                label: AppStrings.tr('Access Code', 'Kode Akses'),
+                hint: AppStrings.tr('Example: MED-4X7K', 'Contoh: MED-4X7K'),
                 errorText: _error,
                 keyboardType: TextInputType.text,
                 prefixIcon: Icon(Icons.vpn_key_outlined),
@@ -130,7 +137,7 @@ class _SharedViewEntryScreenState extends State<SharedViewEntryScreen> {
               ),
               const SizedBox(height: 20),
               AppButton(
-                label: 'Lihat Status',
+                label: AppStrings.tr('View Status', 'Lihat Status'),
                 onPressed: _verifyToken,
                 isLoading: _isLoading,
                 isFullWidth: true,

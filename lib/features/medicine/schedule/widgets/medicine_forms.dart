@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/errors/user_error_message.dart';
+import '../../../../core/extensions/context_ext.dart';
 import '../../../../core/utils/image_helper.dart';
 import '../../../../core/validators/app_validators.dart';
+import '../../../../core/widgets/app_date_field.dart';
+import '../../../../core/widgets/app_form_container.dart';
 
 import '../../../../domain/models/medicine.dart';
 import '../../../../domain/models/medicine_schedule.dart';
@@ -17,7 +22,33 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
   final formKey = GlobalKey<FormState>();
 
   File? photoFile;
-  File? prescriptionFile;
+
+  Future<ImageSource?> chooseImageSource() {
+    return showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(
+                  AppStrings.tr('Choose from Gallery', 'Pilih dari Galeri'),
+                ),
+                onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: Text(AppStrings.tr('Take a Photo', 'Ambil Foto')),
+                onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   await showModalBottomSheet<void>(
     context: context,
@@ -25,62 +56,66 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
     builder: (context) {
       return StatefulBuilder(
         builder: (context, setState) {
-          return Padding(
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
             padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 16,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
-            child: Form(
-              key: formKey,
+            child: SafeArea(
+              top: false,
               child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Tambah Obat',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: nameController,
-                      decoration: const InputDecoration(labelText: 'Nama Obat'),
-                      validator: AppValidators.name,
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: dosageController,
-                      decoration: const InputDecoration(
-                        labelText: 'Dosis (opsional)',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: stockController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Stok Saat Ini',
-                      ),
-                      validator: (value) => AppValidators.nonNegativeInt(
-                        value,
-                        requiredMessage: 'Stok harus diisi',
-                        invalidMessage: 'Stok harus berupa angka',
-                        negativeMessage: 'Stok tidak boleh negatif',
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                child: AppFormContainer(
+                  title: AppStrings.addMedicineSheetTitle,
+                  subtitle: AppStrings.addMedicineSheetSubtitle,
+                  icon: Icons.medication_rounded,
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Expanded(
+                        TextFormField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            labelText: AppStrings.medicineName,
+                          ),
+                          validator: AppValidators.name,
+                        ),
+                        const SizedBox(height: 10),
+                        TextFormField(
+                          controller: dosageController,
+                          decoration: InputDecoration(
+                            labelText: AppStrings.tr(
+                              'Dosage (optional)',
+                              'Dosis (opsional)',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        TextFormField(
+                          controller: stockController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: AppStrings.medicineStock,
+                          ),
+                          validator: AppValidators.nonNegativeInt,
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
                           child: InkWell(
                             onTap: () async {
+                              final source = await chooseImageSource();
+                              if (source == null) {
+                                return;
+                              }
                               final file =
                                   await ImagePickerHelper.pickAndCompressImage(
-                                    ImageSource.camera,
+                                    source,
                                   );
                               if (file != null) {
                                 setState(() {
@@ -89,20 +124,31 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                               }
                             },
                             child: Container(
-                              height: 100,
+                              width: double.infinity,
+                              height: 110,
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest
+                                    .withValues(alpha: 0.24),
                               ),
                               child: photoFile != null
                                   ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(14),
                                       child: Image.file(
                                         photoFile!,
+                                        width: double.infinity,
+                                        height: double.infinity,
                                         fit: BoxFit.cover,
                                       ),
                                     )
-                                  : const Column(
+                                  : Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
@@ -112,7 +158,7 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                                         ),
                                         SizedBox(height: 4),
                                         Text(
-                                          'Foto Kemasan\n(Opsional)',
+                                          AppStrings.medicinePhotoOptional,
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             fontSize: 12,
@@ -124,105 +170,52 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () async {
-                              final file =
-                                  await ImagePickerHelper.pickAndCompressImage(
-                                    ImageSource.gallery,
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () async {
+                              if (!formKey.currentState!.validate()) {
+                                return;
+                              }
+
+                              try {
+                                await ref
+                                    .read(scheduleControllerProvider.notifier)
+                                    .addMedicine(
+                                      name: nameController.text.trim(),
+                                      dosage:
+                                          dosageController.text.trim().isEmpty
+                                          ? null
+                                          : dosageController.text.trim(),
+                                      stockCurrent: int.parse(
+                                        stockController.text.trim(),
+                                      ),
+                                      photoFile: photoFile,
+                                    );
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  context.showSuccessSnackBar(
+                                    AppStrings.medicineAdded,
                                   );
-                              if (file != null) {
-                                setState(() {
-                                  prescriptionFile = file;
-                                });
+                                }
+                              } catch (error) {
+                                if (context.mounted) {
+                                  context.showErrorSnackBar(
+                                    toUserErrorMessage(
+                                      error,
+                                      fallback: AppStrings.medicineAddFailed,
+                                    ),
+                                  );
+                                }
                               }
                             },
-                            child: Container(
-                              height: 100,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: prescriptionFile != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.file(
-                                        prescriptionFile!,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    )
-                                  : const Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.description_outlined,
-                                          color: Colors.grey,
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          'Foto Resep\n(Opsional)',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                            ),
+                            child: Text(AppStrings.save),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () async {
-                          if (!formKey.currentState!.validate()) {
-                            return;
-                          }
-
-                          try {
-                            await ref
-                                .read(scheduleControllerProvider.notifier)
-                                .addMedicine(
-                                  name: nameController.text.trim(),
-                                  dosage: dosageController.text.trim().isEmpty
-                                      ? null
-                                      : dosageController.text.trim(),
-                                  stockCurrent: int.parse(
-                                    stockController.text.trim(),
-                                  ),
-                                  photoFile: photoFile,
-                                  prescriptionFile: prescriptionFile,
-                                );
-                            if (context.mounted) {
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Obat berhasil ditambahkan.'),
-                                ),
-                              );
-                            }
-                          } catch (error) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Gagal menambahkan obat: $error',
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                        child: const Text('Simpan'),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -242,9 +235,9 @@ Future<void> showAddScheduleSheet(
     context: context,
     ref: ref,
     medicine: medicine,
-    title: 'Tambah Jadwal ${medicine.name}',
-    submitLabel: 'Simpan Jadwal',
-    successMessage: 'Jadwal berhasil ditambahkan.',
+    title: '${AppStrings.tr('Add Schedule', 'Tambah Jadwal')} ${medicine.name}',
+    submitLabel: AppStrings.tr('Save Schedule', 'Simpan Jadwal'),
+    successMessage: AppStrings.scheduleAdded,
     onSubmit: (startDate, times, scheduleName, repeatType) async {
       await ref
           .read(scheduleControllerProvider.notifier)
@@ -274,9 +267,12 @@ Future<void> showEditScheduleSheet(
     context: context,
     ref: ref,
     medicine: medicine,
-    title: 'Edit Jadwal ${medicine.name}',
-    submitLabel: 'Simpan Perubahan',
-    successMessage: 'Jadwal berhasil diperbarui.',
+    title: '${AppStrings.tr('Edit Schedule', 'Edit Jadwal')} ${medicine.name}',
+    submitLabel: AppStrings.saveChanges,
+    successMessage: AppStrings.tr(
+      'Schedule updated successfully.',
+      'Jadwal berhasil diperbarui.',
+    ),
     initialScheduleName: bundle.schedule.scheduleName,
     initialStartDate: bundle.schedule.startDate,
     initialTimes: initialTimes,
@@ -342,11 +338,7 @@ Future<void> _showScheduleSheet({
               );
               if (isDuplicate) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Waktu tersebut sudah ada di jadwal.'),
-                    ),
-                  );
+                  context.showWarningSnackBar(AppStrings.duplicateTimeWarning);
                 }
                 return;
               }
@@ -372,148 +364,152 @@ Future<void> _showScheduleSheet({
             }
           }
 
-          return Padding(
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
             padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 16,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nama Jadwal (Opsional)',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    initialValue: repeatType,
-                    decoration: const InputDecoration(
-                      labelText: 'Pola Pengulangan',
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'daily', child: Text('Harian')),
-                      DropdownMenuItem(
-                        value: 'weekly',
-                        child: Text('Mingguan'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value == null) {
-                        return;
-                      }
-                      setLocalState(() {
-                        repeatType = value;
-                      });
-                    },
-                  ),
-                  if (repeatType == 'weekly')
-                    const Padding(
-                      padding: EdgeInsets.only(top: 6),
-                      child: Text(
-                        'Jadwal akan berulang setiap minggu di jam yang sama.',
-                        style: TextStyle(fontSize: 12, color: Colors.black54),
-                      ),
-                    ),
-                  const SizedBox(height: 8),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Tanggal Mulai'),
-                    subtitle: Text(
-                      '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}',
-                    ),
-                    trailing: const Icon(Icons.calendar_month),
-                    onTap: pickDate,
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (var i = 0; i < times.length; i++)
-                        InputChip(
-                          label: Text(
-                            '${times[i].hour.toString().padLeft(2, '0')}:${times[i].minute.toString().padLeft(2, '0')}',
+            child: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                child: AppFormContainer(
+                  title: title,
+                  subtitle: AppStrings.scheduleSheetSubtitle,
+                  icon: Icons.schedule_rounded,
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextFormField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            labelText: AppStrings.scheduleNameOptional,
                           ),
-                          onDeleted: () {
+                        ),
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<String>(
+                          initialValue: repeatType,
+                          decoration: InputDecoration(
+                            labelText: AppStrings.repeatPattern,
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: 'daily',
+                              child: Text(AppStrings.daily),
+                            ),
+                            DropdownMenuItem(
+                              value: 'weekly',
+                              child: Text(AppStrings.weekly),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value == null) {
+                              return;
+                            }
                             setLocalState(() {
-                              times.removeAt(i);
+                              repeatType = value;
                             });
                           },
                         ),
-                      ActionChip(
-                        label: const Text('Tambah Waktu'),
-                        avatar: const Icon(Icons.add_alarm, size: 18),
-                        onPressed: pickTime,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () async {
-                        if (!formKey.currentState!.validate()) {
-                          return;
-                        }
-                        if (times.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Tambahkan minimal 1 waktu minum obat.',
-                              ),
+                        if (repeatType == 'weekly')
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              AppStrings.weeklyHint,
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
-                          );
-                          return;
-                        }
-
-                        try {
-                          final formattedTimes = times
-                              .map(
-                                (t) =>
-                                    '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00',
-                              )
-                              .toList();
-
-                          await onSubmit(
-                            startDate,
-                            formattedTimes,
-                            nameController.text.trim().isEmpty
-                                ? null
-                                : nameController.text.trim(),
-                            repeatType,
-                          );
-                          ref.invalidate(
-                            medicineSchedulesProvider(medicine.id),
-                          );
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(successMessage)),
-                            );
-                          }
-                        } catch (error) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Gagal menambah jadwal: $error'),
+                          ),
+                        const SizedBox(height: 8),
+                        AppDateField(
+                          label: AppStrings.startDate,
+                          value: startDate,
+                          onTap: pickDate,
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (var i = 0; i < times.length; i++)
+                              InputChip(
+                                label: Text(
+                                  '${times[i].hour.toString().padLeft(2, '0')}:${times[i].minute.toString().padLeft(2, '0')}',
+                                ),
+                                onDeleted: () {
+                                  setLocalState(() {
+                                    times.removeAt(i);
+                                  });
+                                },
                               ),
-                            );
-                          }
-                        }
-                      },
-                      child: Text(submitLabel),
+                            ActionChip(
+                              label: Text(AppStrings.addTime),
+                              avatar: const Icon(Icons.add_alarm, size: 18),
+                              onPressed: pickTime,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () async {
+                              if (!formKey.currentState!.validate()) {
+                                return;
+                              }
+                              if (times.isEmpty) {
+                                context.showWarningSnackBar(
+                                  AppStrings.minimumOneTimeWarning,
+                                );
+                                return;
+                              }
+
+                              try {
+                                final formattedTimes = times
+                                    .map(
+                                      (t) =>
+                                          '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00',
+                                    )
+                                    .toList();
+
+                                await onSubmit(
+                                  startDate,
+                                  formattedTimes,
+                                  nameController.text.trim().isEmpty
+                                      ? null
+                                      : nameController.text.trim(),
+                                  repeatType,
+                                );
+                                ref.invalidate(
+                                  medicineSchedulesProvider(medicine.id),
+                                );
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  context.showSuccessSnackBar(successMessage);
+                                }
+                              } catch (error) {
+                                if (context.mounted) {
+                                  context.showErrorSnackBar(
+                                    toUserErrorMessage(
+                                      error,
+                                      fallback: AppStrings.saveScheduleFailed,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: Text(submitLabel),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           );

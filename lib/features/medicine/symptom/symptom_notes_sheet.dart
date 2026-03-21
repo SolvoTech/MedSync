@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/constants/app_strings.dart';
+import '../../../core/errors/user_error_message.dart';
+import '../../../core/extensions/context_ext.dart';
 import '../../../core/widgets/app_button.dart';
 
 /// Bottom sheet shown after marking a medicine task as done.
@@ -28,13 +31,22 @@ class SymptomNotesSheet extends ConsumerStatefulWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Padding(
+      builder: (sheetContext) => AnimatedPadding(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
         padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
         ),
-        child: SymptomNotesSheet(
-          taskLogId: taskLogId,
-          medicineName: medicineName,
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 12),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: SymptomNotesSheet(
+              taskLogId: taskLogId,
+              medicineName: medicineName,
+            ),
+          ),
         ),
       ),
     );
@@ -75,8 +87,14 @@ class _SymptomNotesSheetState extends ConsumerState<SymptomNotesSheet> {
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menyimpan: $e')),
+        context.showErrorSnackBar(
+          toUserErrorMessage(
+            e,
+            fallback: AppStrings.tr(
+              'Failed to save notes. Please try again.',
+              'Gagal menyimpan catatan. Silakan coba lagi.',
+            ),
+          ),
         );
       }
     } finally {
@@ -115,7 +133,10 @@ class _SymptomNotesSheetState extends ConsumerState<SymptomNotesSheet> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '${widget.medicineName} berhasil dicatat',
+                  AppStrings.tr(
+                    '${widget.medicineName} marked successfully',
+                    '${widget.medicineName} berhasil dicatat',
+                  ),
                   style: textTheme.titleSmall,
                 ),
               ),
@@ -125,10 +146,11 @@ class _SymptomNotesSheetState extends ConsumerState<SymptomNotesSheet> {
 
           // Mood section
           Text(
-            'Bagaimana kondisimu sekarang?',
-            style: textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w500,
+            AppStrings.tr(
+              'How are you feeling right now?',
+              'Bagaimana kondisimu sekarang?',
             ),
+            style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 10),
           Row(
@@ -136,27 +158,28 @@ class _SymptomNotesSheetState extends ConsumerState<SymptomNotesSheet> {
             children: [
               _MoodChip(
                 emoji: '😊',
-                label: 'Baik',
+                label: AppStrings.tr('Good', 'Baik'),
                 value: 'good',
                 selected: _mood == 'good',
-                onTap: () => setState(() =>
-                    _mood = _mood == 'good' ? null : 'good'),
+                onTap: () =>
+                    setState(() => _mood = _mood == 'good' ? null : 'good'),
               ),
               _MoodChip(
                 emoji: '😐',
-                label: 'Biasa',
+                label: AppStrings.tr('Neutral', 'Biasa'),
                 value: 'neutral',
                 selected: _mood == 'neutral',
-                onTap: () => setState(() =>
-                    _mood = _mood == 'neutral' ? null : 'neutral'),
+                onTap: () => setState(
+                  () => _mood = _mood == 'neutral' ? null : 'neutral',
+                ),
               ),
               _MoodChip(
                 emoji: '😔',
-                label: 'Kurang',
+                label: AppStrings.tr('Not Well', 'Kurang'),
                 value: 'bad',
                 selected: _mood == 'bad',
-                onTap: () => setState(() =>
-                    _mood = _mood == 'bad' ? null : 'bad'),
+                onTap: () =>
+                    setState(() => _mood = _mood == 'bad' ? null : 'bad'),
               ),
             ],
           ),
@@ -167,7 +190,10 @@ class _SymptomNotesSheetState extends ConsumerState<SymptomNotesSheet> {
             controller: _notesController,
             maxLines: 2,
             decoration: InputDecoration(
-              hintText: 'Catatan singkat (opsional), e.g. sedikit pusing, mual...',
+              hintText: AppStrings.tr(
+                'Short notes (optional), e.g. slight headache, nausea...',
+                'Catatan singkat (opsional), e.g. sedikit pusing, mual...',
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -182,13 +208,13 @@ class _SymptomNotesSheetState extends ConsumerState<SymptomNotesSheet> {
               Expanded(
                 child: TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Lewati'),
+                  child: Text(AppStrings.skip),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: AppButton(
-                  label: 'Simpan',
+                  label: AppStrings.save,
                   onPressed: _save,
                   isLoading: _isSaving,
                 ),
@@ -238,9 +264,8 @@ class _MoodChip extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontWeight:
-                        selected ? FontWeight.bold : FontWeight.normal,
-                  ),
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
           ],
         ),

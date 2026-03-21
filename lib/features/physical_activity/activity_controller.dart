@@ -74,7 +74,7 @@ class ActivityController
           body:
               'Saatnya melakukan aktivitas ${activityTypeLabel(activityType)}.',
           scheduledAt: scheduleAt,
-          payload: 'activity:${reminder.id}',
+          payload: 'task|physical_activity|${reminder.id}|$timeOfDay',
         );
     await ref
         .read(alarmServiceProvider)
@@ -122,7 +122,7 @@ class ActivityController
           body:
               'Saatnya melakukan aktivitas ${activityTypeLabel(activityType)}.',
           scheduledAt: scheduleAt,
-          payload: 'activity:$reminderId',
+          payload: 'task|physical_activity|$reminderId|$timeOfDay',
         );
     await ref
         .read(alarmServiceProvider)

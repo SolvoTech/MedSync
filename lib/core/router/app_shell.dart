@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../constants/app_strings.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/medicine/schedule/schedule_list_screen.dart';
 import '../../features/notifications/notification_screen.dart';
@@ -34,31 +35,31 @@ class AppShell extends StatelessWidget {
         child: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
           onDestinationSelected: navigationShell.goBranch,
-          destinations: const [
+          destinations: [
             NavigationDestination(
               icon: Icon(Icons.home_outlined),
               selectedIcon: Icon(Icons.home_rounded),
-              label: 'Beranda',
+              label: AppStrings.homeTitle,
             ),
             NavigationDestination(
               icon: Icon(Icons.medication_outlined),
               selectedIcon: Icon(Icons.medication_rounded),
-              label: 'Jadwal',
+              label: AppStrings.scheduleTitle,
             ),
             NavigationDestination(
               icon: Icon(Icons.bar_chart_outlined),
               selectedIcon: Icon(Icons.bar_chart_rounded),
-              label: 'Laporan',
+              label: AppStrings.reportTitle,
             ),
             NavigationDestination(
               icon: Icon(Icons.notifications_outlined),
               selectedIcon: Icon(Icons.notifications_rounded),
-              label: 'Notifikasi',
+              label: AppStrings.notificationTitle,
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline),
               selectedIcon: Icon(Icons.person_rounded),
-              label: 'Profil',
+              label: AppStrings.profileTitle,
             ),
           ],
         ),

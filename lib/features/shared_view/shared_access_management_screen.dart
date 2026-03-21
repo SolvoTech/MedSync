@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/constants/app_strings.dart';
+import '../../../core/errors/user_error_message.dart';
+import '../../../core/extensions/context_ext.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_error_widget.dart';
@@ -35,19 +38,27 @@ class SharedAccessManagementScreen extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Akses Dibagikan')),
+      appBar: AppBar(
+        title: Text(AppStrings.tr('Shared Access', 'Akses Dibagikan')),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
-        label: const Text('Buat Akses'),
+        label: Text(AppStrings.tr('Create Access', 'Buat Akses')),
         onPressed: () => _createToken(context, ref),
       ),
       body: tokensState.when(
         data: (tokens) {
           if (tokens.isEmpty) {
-            return const AppEmptyState(
+            return AppEmptyState(
               icon: Icons.share_outlined,
-              message: 'Belum ada akses dibagikan',
-              subtitle: 'Buat akses agar keluarga bisa memantau status.',
+              message: AppStrings.tr(
+                'No shared access yet',
+                'Belum ada akses dibagikan',
+              ),
+              subtitle: AppStrings.tr(
+                'Create access so family can monitor status.',
+                'Buat akses agar keluarga bisa memantau status.',
+              ),
             );
           }
 
@@ -59,7 +70,8 @@ class SharedAccessManagementScreen extends ConsumerWidget {
               final carePerson =
                   token['care_persons'] as Map<String, dynamic>? ?? {};
               final displayName =
-                  carePerson['display_name'] as String? ?? 'Tidak diketahui';
+                  carePerson['display_name'] as String? ??
+                  AppStrings.tr('Unknown', 'Tidak diketahui');
               final tokenDisplay =
                   token['token_display'] as String? ?? token['token'] ?? '';
               final isActive = token['is_active'] as bool? ?? true;
@@ -73,25 +85,33 @@ class SharedAccessManagementScreen extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.visibility_outlined,
-                              size: 20, color: colorScheme.primary),
+                          Icon(
+                            Icons.visibility_outlined,
+                            size: 20,
+                            color: colorScheme.primary,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             displayName,
-                            style: textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                            style: textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           const Spacer(),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: (isActive ? Colors.green : Colors.grey)
                                   .withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              isActive ? 'Aktif' : 'Nonaktif',
+                              isActive
+                                  ? AppStrings.statusActive
+                                  : AppStrings.statusInactive,
                               style: textTheme.labelSmall?.copyWith(
                                 color: isActive ? Colors.green : Colors.grey,
                                 fontWeight: FontWeight.w600,
@@ -112,10 +132,9 @@ class SharedAccessManagementScreen extends ConsumerWidget {
                       if (lastAccessed != null) ...[
                         const SizedBox(height: 4),
                         Text(
-                          'Terakhir dilihat: ${_formatRelative(lastAccessed)}',
+                          '${AppStrings.tr('Last viewed', 'Terakhir dilihat')}: ${_formatRelative(lastAccessed)}',
                           style: textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onSurface
-                                .withValues(alpha: 0.4),
+                            color: colorScheme.onSurface.withValues(alpha: 0.4),
                           ),
                         ),
                       ],
@@ -125,13 +144,16 @@ class SharedAccessManagementScreen extends ConsumerWidget {
                           Expanded(
                             child: OutlinedButton.icon(
                               icon: const Icon(Icons.copy, size: 16),
-                              label: const Text('Salin'),
+                              label: Text(AppStrings.tr('Copy', 'Salin')),
                               onPressed: () {
                                 Clipboard.setData(
-                                    ClipboardData(text: tokenDisplay));
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Kode disalin')),
+                                  ClipboardData(text: tokenDisplay),
+                                );
+                                context.showInfoSnackBar(
+                                  AppStrings.tr(
+                                    'Code copied.',
+                                    'Kode disalin.',
+                                  ),
                                 );
                               },
                             ),
@@ -146,10 +168,16 @@ class SharedAccessManagementScreen extends ConsumerWidget {
                                 size: 16,
                               ),
                               label: Text(
-                                  isActive ? 'Nonaktifkan' : 'Aktifkan'),
+                                isActive
+                                    ? AppStrings.disableAction
+                                    : AppStrings.reactivate,
+                              ),
                               onPressed: () => _toggleActive(
-                                  context, ref, token['id'] as String,
-                                  isActive),
+                                context,
+                                ref,
+                                token['id'] as String,
+                                isActive,
+                              ),
                             ),
                           ),
                         ],
@@ -161,10 +189,12 @@ class SharedAccessManagementScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () =>
-            const AppListSkeleton(itemCount: 3, itemHeight: 120),
+        loading: () => const AppListSkeleton(itemCount: 3, itemHeight: 120),
         error: (e, _) => AppErrorWidget(
-          message: 'Gagal memuat data akses',
+          message: AppStrings.tr(
+            'Failed to load access data',
+            'Gagal memuat data akses',
+          ),
           onRetry: () => ref.invalidate(sharedTokensProvider),
         ),
       ),
@@ -175,8 +205,10 @@ class SharedAccessManagementScreen extends ConsumerWidget {
     // For simplicity, generate a random token
     final random = Random.secure();
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final rawToken = List.generate(6, (_) => chars[random.nextInt(chars.length)])
-        .join();
+    final rawToken = List.generate(
+      6,
+      (_) => chars[random.nextInt(chars.length)],
+    ).join();
     final displayToken = 'MED-$rawToken';
 
     try {
@@ -193,9 +225,11 @@ class SharedAccessManagementScreen extends ConsumerWidget {
 
       if ((carePersons as List).isEmpty) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Tambahkan anggota terlebih dahulu.')),
+          context.showWarningSnackBar(
+            AppStrings.tr(
+              'Add a member first.',
+              'Tambahkan anggota terlebih dahulu.',
+            ),
           );
         }
         return;
@@ -211,14 +245,23 @@ class SharedAccessManagementScreen extends ConsumerWidget {
       ref.invalidate(sharedTokensProvider);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Token $displayToken berhasil dibuat')),
+        context.showSuccessSnackBar(
+          AppStrings.tr(
+            'Token $displayToken created successfully.',
+            'Token $displayToken berhasil dibuat.',
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal membuat token: $e')),
+        context.showErrorSnackBar(
+          toUserErrorMessage(
+            e,
+            fallback: AppStrings.tr(
+              'Failed to create access token. Please try again.',
+              'Gagal membuat token akses. Silakan coba lagi.',
+            ),
+          ),
         );
       }
     }
@@ -233,13 +276,20 @@ class SharedAccessManagementScreen extends ConsumerWidget {
     try {
       await Supabase.instance.client
           .from('shared_access_tokens')
-          .update({'is_active': !currentlyActive}).eq('id', tokenId);
+          .update({'is_active': !currentlyActive})
+          .eq('id', tokenId);
 
       ref.invalidate(sharedTokensProvider);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memperbarui: $e')),
+        context.showErrorSnackBar(
+          toUserErrorMessage(
+            e,
+            fallback: AppStrings.tr(
+              'Failed to update access data. Please try again.',
+              'Gagal memperbarui data akses. Silakan coba lagi.',
+            ),
+          ),
         );
       }
     }
@@ -249,9 +299,24 @@ class SharedAccessManagementScreen extends ConsumerWidget {
     try {
       final dt = DateTime.parse(isoDate);
       final diff = DateTime.now().difference(dt);
-      if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
-      if (diff.inHours < 24) return '${diff.inHours} jam lalu';
-      if (diff.inDays < 7) return '${diff.inDays} hari lalu';
+      if (diff.inMinutes < 60) {
+        return AppStrings.tr(
+          '${diff.inMinutes} min ago',
+          '${diff.inMinutes} menit lalu',
+        );
+      }
+      if (diff.inHours < 24) {
+        return AppStrings.tr(
+          '${diff.inHours} hours ago',
+          '${diff.inHours} jam lalu',
+        );
+      }
+      if (diff.inDays < 7) {
+        return AppStrings.tr(
+          '${diff.inDays} days ago',
+          '${diff.inDays} hari lalu',
+        );
+      }
       return '${dt.day}/${dt.month}/${dt.year}';
     } catch (_) {
       return isoDate;

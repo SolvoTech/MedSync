@@ -7,6 +7,7 @@ import '../../core/constants/app_gradients.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/widgets/app_avatar.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_dialog.dart';
 import '../../data/remote/datasources/profile_remote_datasource.dart';
 import '../../domain/models/user_profile.dart';
 import '../auth/auth_controller.dart';
@@ -16,7 +17,6 @@ import '../static_pages/privacy_policy_screen.dart';
 import '../static_pages/terms_screen.dart';
 import 'appearance/appearance_screen.dart';
 import 'care_persons/care_person_list_screen.dart';
-import 'change_email/change_email_screen.dart';
 import 'change_password/change_password_screen.dart';
 import 'data_management/data_management_screen.dart';
 import 'edit_avatar/edit_avatar_screen.dart';
@@ -246,18 +246,6 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       _MenuDivider(),
                       _MenuItem(
-                        icon: Icons.email_outlined,
-                        label: AppStrings.changeEmail,
-                        color: const Color(0xFF38A169),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ChangeEmailScreen(),
-                          ),
-                        ),
-                      ),
-                      _MenuDivider(),
-                      _MenuItem(
                         icon: Icons.photo_camera_outlined,
                         label: 'Foto Profil',
                         color: const Color(0xFFED8936),
@@ -422,6 +410,21 @@ class ProfileScreen extends ConsumerWidget {
                         color: colorScheme.error,
                         isDestructive: true,
                         onTap: () async {
+                          final shouldLogout = await AppDialog.showConfirm(
+                            context,
+                            title: 'Keluar dari akun?',
+                            message:
+                                'Anda perlu masuk kembali untuk mengakses data Anda.',
+                            confirmLabel: AppStrings.logout,
+                            cancelLabel: AppStrings.cancel,
+                            isDestructive: true,
+                            icon: Icons.logout,
+                          );
+
+                          if (shouldLogout != true) {
+                            return;
+                          }
+
                           await ref
                               .read(authControllerProvider.notifier)
                               .signOut();

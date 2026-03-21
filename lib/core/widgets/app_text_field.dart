@@ -17,6 +17,7 @@ class AppTextField extends StatelessWidget {
     this.textInputAction,
     this.readOnly = false,
     this.onTap,
+    this.useAuthSubtleStyle = false,
   });
 
   final TextEditingController controller;
@@ -33,9 +34,46 @@ class AppTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final bool readOnly;
   final VoidCallback? onTap;
+  final bool useAuthSubtleStyle;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final decoration = InputDecoration(
+      labelText: label,
+      hintText: hint,
+      errorText: errorText,
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+    );
+
+    final effectiveDecoration = useAuthSubtleStyle
+        ? decoration.copyWith(
+            filled: true,
+            fillColor: isDark
+                ? Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.28)
+                : Theme.of(context).colorScheme.surfaceVariant,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
+            ),
+          )
+        : decoration;
+
     return TextFormField(
       controller: controller,
       obscureText: isObscure,
@@ -46,14 +84,7 @@ class AppTextField extends StatelessWidget {
       textInputAction: textInputAction,
       readOnly: readOnly,
       onTap: onTap,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        errorText: errorText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        // All styling now comes from InputDecorationTheme in AppTheme
-      ),
+      decoration: effectiveDecoration,
     );
   }
 }

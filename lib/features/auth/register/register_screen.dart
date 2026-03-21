@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_gradients.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/errors/user_error_message.dart';
+import '../../../core/extensions/context_ext.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/validators/app_validators.dart';
 import '../../../core/widgets/app_button.dart';
@@ -57,18 +59,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!mounted) return;
 
     authState.whenOrNull(
-      data: (_) => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pendaftaran berhasil. Silakan cek email verifikasi.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      ),
-      error: (error, _) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal mendaftar: $error'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
+      data: (_) => context.showSuccessSnackBar(AppStrings.registerSuccess),
+      error: (error, _) => context.showErrorSnackBar(
+        toUserErrorMessage(error, fallback: AppStrings.registerFailed),
       ),
     );
   }
@@ -199,6 +192,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         textAlign: TextAlign.center,
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        AppStrings.registerGreeting,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.78),
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
 
                       const SizedBox(height: 36),
 
@@ -238,6 +240,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               textInputAction: TextInputAction.next,
                               prefixIcon: const Icon(Icons.person_outline),
                               validator: AppValidators.name,
+                              useAuthSubtleStyle: true,
                             ),
                             const SizedBox(height: 16),
 
@@ -249,6 +252,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               textInputAction: TextInputAction.next,
                               prefixIcon: const Icon(Icons.email_outlined),
                               validator: AppValidators.email,
+                              useAuthSubtleStyle: true,
                             ),
                             const SizedBox(height: 16),
 
@@ -272,6 +276,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 },
                               ),
                               validator: AppValidators.passwordMin8,
+                              useAuthSubtleStyle: true,
                             ),
                             const SizedBox(height: 16),
 
@@ -299,6 +304,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     value,
                                     _passwordController.text,
                                   ),
+                              useAuthSubtleStyle: true,
                             ),
                             const SizedBox(height: 24),
 
@@ -328,7 +334,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                           TextButton(
                             onPressed: () => context.go(AppRoutes.login),
-                            child: const Text(AppStrings.loginLink),
+                            child: Text(AppStrings.loginLink),
                           ),
                         ],
                       ),

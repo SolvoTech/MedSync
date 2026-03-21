@@ -18,12 +18,19 @@ class ImagePickerHelper {
       if (pickedFile == null) return null;
 
       final file = File(pickedFile.path);
-      
-      // Get target path for compressed file (append _compressed to filename)
-      final lastIndex = file.absolute.path.lastIndexOf(RegExp(r'.jp|.png'));
-      final splitted = file.absolute.path.substring(0, (lastIndex >= 0 ? lastIndex : file.absolute.path.length));
-      final extension = lastIndex >= 0 ? file.absolute.path.substring(lastIndex) : '.jpeg';
-      final targetPath = '${splitted}_compressed$extension';
+
+      // Keep compression output in the same directory with a stable extension.
+      final absolutePath = file.absolute.path;
+      final separatorIndex = absolutePath.lastIndexOf(Platform.pathSeparator);
+      final dotIndex = absolutePath.lastIndexOf('.');
+      final hasExtension = dotIndex > separatorIndex;
+      final basePath = hasExtension
+          ? absolutePath.substring(0, dotIndex)
+          : absolutePath;
+      final extension = hasExtension
+          ? absolutePath.substring(dotIndex).toLowerCase()
+          : '.jpg';
+      final targetPath = '${basePath}_compressed$extension';
 
       final compressedFile = await FlutterImageCompress.compressAndGetFile(
         file.absolute.path,
@@ -33,8 +40,11 @@ class ImagePickerHelper {
         minHeight: minHeight,
       );
 
-      if (compressedFile == null) return file; // Fallback to original if compression fails
-      
+      if (compressedFile == null) {
+        // Fallback to original if compression fails.
+        return file;
+      }
+
       return File(compressedFile.path);
     } catch (e) {
       return null;

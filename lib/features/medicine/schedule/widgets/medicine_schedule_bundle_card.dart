@@ -7,12 +7,14 @@ class MedicineScheduleBundleCard extends StatelessWidget {
     required this.bundle,
     required this.onEdit,
     required this.onDelete,
+    this.isReadOnly = false,
     super.key,
   });
 
   final MedicineScheduleBundle bundle;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final bool isReadOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -29,23 +31,32 @@ class MedicineScheduleBundleCard extends StatelessWidget {
               schedule.scheduleName ?? 'Jadwal Harian',
               style: Theme.of(context).textTheme.titleSmall,
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    onEdit();
-                  }
-                  if (value == 'delete') {
-                    onDelete();
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Edit Jadwal')),
-                  PopupMenuItem(value: 'delete', child: Text('Hapus Jadwal')),
-                ],
+            if (!isReadOnly)
+              Align(
+                alignment: Alignment.centerRight,
+                child: PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      onEdit();
+                    }
+                    if (value == 'delete') {
+                      onDelete();
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: 'edit', child: Text('Edit Jadwal')),
+                    PopupMenuItem(value: 'delete', child: Text('Hapus Jadwal')),
+                  ],
+                ),
+              )
+            else
+              const Padding(
+                padding: EdgeInsets.only(top: 4, bottom: 8),
+                child: Text(
+                  'Mode nonaktif: jadwal hanya bisa dilihat',
+                  style: TextStyle(fontSize: 12, color: Colors.orange),
+                ),
               ),
-            ),
             const SizedBox(height: 4),
             Text(
               'Mulai: ${schedule.startDate.day.toString().padLeft(2, '0')}/${schedule.startDate.month.toString().padLeft(2, '0')}/${schedule.startDate.year}',

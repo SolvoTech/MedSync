@@ -3,8 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/constants/app_strings.dart';
+import '../../../core/errors/user_error_message.dart';
+import '../../../core/extensions/context_ext.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/validators/app_validators.dart';
+import '../../../core/widgets/app_date_field.dart';
+import '../../../core/widgets/app_form_container.dart';
 import 'onboarding_profile_controller.dart';
 
 class OnboardingProfileScreen extends ConsumerStatefulWidget {
@@ -74,9 +79,9 @@ class _OnboardingProfileScreenState
     final state = ref.read(onboardingProfileControllerProvider);
     state.whenOrNull(
       data: (_) => context.go(AppRoutes.home),
-      error: (error, _) => ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Gagal menyimpan profil: $error'))),
+      error: (error, _) => context.showErrorSnackBar(
+        toUserErrorMessage(error, fallback: AppStrings.saveProfileFailed),
+      ),
     );
   }
 
@@ -86,7 +91,7 @@ class _OnboardingProfileScreenState
     final isLoading = saveState.isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Lengkapi Profil')),
+      appBar: AppBar(title: Text(AppStrings.completeProfileTitle)),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -96,27 +101,36 @@ class _OnboardingProfileScreenState
               : AutovalidateMode.disabled,
           child: ListView(
             children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nama Lengkap'),
-                validator: AppValidators.name,
-              ),
-              const SizedBox(height: 12),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Tanggal Lahir (Opsional)'),
-                subtitle: Text(
-                  _birthDate == null
-                      ? 'Belum dipilih'
-                      : '${_birthDate!.day.toString().padLeft(2, '0')}/${_birthDate!.month.toString().padLeft(2, '0')}/${_birthDate!.year}',
+              AppFormContainer(
+                title: AppStrings.basicProfileTitle,
+                subtitle: AppStrings.basicProfileSubtitle,
+                icon: Icons.person_outline_rounded,
+                showHandle: false,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: AppStrings.fullNameLabel,
+                      ),
+                      validator: AppValidators.name,
+                    ),
+                    const SizedBox(height: 12),
+                    AppDateField(
+                      label: AppStrings.birthDateOptional,
+                      value: _birthDate,
+                      emptyText: AppStrings.notSelected,
+                      onTap: _pickBirthDate,
+                    ),
+                  ],
                 ),
-                trailing: const Icon(Icons.calendar_month),
-                onTap: _pickBirthDate,
               ),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: isLoading ? null : _submit,
-                child: Text(isLoading ? 'Menyimpan...' : 'Simpan Profil'),
+                child: Text(
+                  isLoading ? AppStrings.saving : AppStrings.saveProfile,
+                ),
               ),
             ],
           ),

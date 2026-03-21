@@ -28,12 +28,12 @@ class _NotificationSettingsScreenState
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.notificationSettings)),
+      appBar: AppBar(title: Text(AppStrings.notificationSettings)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'PENGINGAT',
+            AppStrings.remindersSection,
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
               letterSpacing: 1.2,
@@ -45,35 +45,36 @@ class _NotificationSettingsScreenState
             child: Column(
               children: [
                 SwitchListTile(
-                  secondary: Icon(Icons.medication,
-                      color: const Color(0xFF0077B6)),
-                  title: const Text('Pengingat Obat'),
-                  subtitle: const Text('Notifikasi jadwal minum obat'),
+                  secondary: Icon(
+                    Icons.medication,
+                    color: const Color(0xFF0077B6),
+                  ),
+                  title: Text(AppStrings.medicineReminderTitle),
+                  subtitle: Text(AppStrings.medicineReminderSubtitle),
                   value: _medicineEnabled,
-                  onChanged: (v) =>
-                      setState(() => _medicineEnabled = v),
+                  onChanged: (v) => setState(() => _medicineEnabled = v),
                 ),
                 const Divider(height: 1, indent: 56),
                 SwitchListTile(
-                  secondary: Icon(Icons.monitor_heart,
-                      color: const Color(0xFF16A34A)),
-                  title: const Text('Pengingat Pengukuran'),
-                  subtitle:
-                      const Text('Notifikasi jadwal pengukuran kesehatan'),
+                  secondary: Icon(
+                    Icons.monitor_heart,
+                    color: const Color(0xFF16A34A),
+                  ),
+                  title: Text(AppStrings.measurementReminderTitle),
+                  subtitle: Text(AppStrings.measurementReminderSubtitle),
                   value: _measurementEnabled,
-                  onChanged: (v) =>
-                      setState(() => _measurementEnabled = v),
+                  onChanged: (v) => setState(() => _measurementEnabled = v),
                 ),
                 const Divider(height: 1, indent: 56),
                 SwitchListTile(
-                  secondary: Icon(Icons.directions_run,
-                      color: const Color(0xFFEA580C)),
-                  title: const Text('Pengingat Aktivitas'),
-                  subtitle:
-                      const Text('Notifikasi jadwal aktivitas fisik'),
+                  secondary: Icon(
+                    Icons.directions_run,
+                    color: const Color(0xFFEA580C),
+                  ),
+                  title: Text(AppStrings.activityReminderTitle),
+                  subtitle: Text(AppStrings.activityReminderSubtitle),
                   value: _activityEnabled,
-                  onChanged: (v) =>
-                      setState(() => _activityEnabled = v),
+                  onChanged: (v) => setState(() => _activityEnabled = v),
                 ),
               ],
             ),
@@ -81,7 +82,7 @@ class _NotificationSettingsScreenState
           const SizedBox(height: 20),
 
           Text(
-            'PERINGATAN',
+            AppStrings.alertsSection,
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
               letterSpacing: 1.2,
@@ -93,14 +94,14 @@ class _NotificationSettingsScreenState
             child: Column(
               children: [
                 SwitchListTile(
-                  secondary: Icon(Icons.inventory_2_outlined,
-                      color: Colors.orange),
-                  title: const Text('Peringatan Stok Rendah'),
-                  subtitle:
-                      const Text('Notifikasi saat stok obat hampir habis'),
+                  secondary: Icon(
+                    Icons.inventory_2_outlined,
+                    color: Colors.orange,
+                  ),
+                  title: Text(AppStrings.lowStockAlertTitle),
+                  subtitle: Text(AppStrings.lowStockAlertSubtitle),
                   value: _stockWarningEnabled,
-                  onChanged: (v) =>
-                      setState(() => _stockWarningEnabled = v),
+                  onChanged: (v) => setState(() => _stockWarningEnabled = v),
                 ),
               ],
             ),
@@ -108,7 +109,7 @@ class _NotificationSettingsScreenState
           const SizedBox(height: 20),
 
           Text(
-            'LAPORAN',
+            AppStrings.reportsSection,
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
               letterSpacing: 1.2,
@@ -120,24 +121,25 @@ class _NotificationSettingsScreenState
             child: Column(
               children: [
                 SwitchListTile(
-                  secondary: const Icon(Icons.local_fire_department,
-                      color: Colors.deepOrange),
-                  title: const Text('Notifikasi Streak'),
-                  subtitle: const Text('Pemberitahuan pencapaian streak'),
+                  secondary: const Icon(
+                    Icons.local_fire_department,
+                    color: Colors.deepOrange,
+                  ),
+                  title: Text(AppStrings.streakNotificationTitle),
+                  subtitle: Text(AppStrings.streakNotificationSubtitle),
                   value: _streakEnabled,
-                  onChanged: (v) =>
-                      setState(() => _streakEnabled = v),
+                  onChanged: (v) => setState(() => _streakEnabled = v),
                 ),
                 const Divider(height: 1, indent: 56),
                 SwitchListTile(
-                  secondary: Icon(Icons.summarize_outlined,
-                      color: colorScheme.primary),
-                  title: const Text('Ringkasan Harian'),
-                  subtitle:
-                      const Text('Laporan progress harian setiap malam'),
+                  secondary: Icon(
+                    Icons.summarize_outlined,
+                    color: colorScheme.primary,
+                  ),
+                  title: Text(AppStrings.dailySummaryTitle),
+                  subtitle: Text(AppStrings.dailySummarySubtitle),
                   value: _dailySummaryEnabled,
-                  onChanged: (v) =>
-                      setState(() => _dailySummaryEnabled = v),
+                  onChanged: (v) => setState(() => _dailySummaryEnabled = v),
                 ),
               ],
             ),
