@@ -240,11 +240,8 @@ class NotificationService {
           m,
         );
 
-        // If the base time for today hasn't passed, tomorrow is +1 day.
-        // If it has passed, we add +1 day from now.
-        if (!nextTime.isAfter(now)) {
-          nextTime = nextTime.add(const Duration(days: 1));
-        }
+        // Unconditionally add 1 day from today to permanently silence today's triggers
+        nextTime = nextTime.add(const Duration(days: 1));
 
         // Add the snooze offset minutes
         nextTime = nextTime.add(Duration(minutes: 5 * snoozeIndex));
