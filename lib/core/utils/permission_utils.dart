@@ -35,8 +35,7 @@ class PermissionUtils {
   }
 
   /// Check if notification permission is granted.
-  static Future<bool> hasNotification() =>
-      Permission.notification.isGranted;
+  static Future<bool> hasNotification() => Permission.notification.isGranted;
 
   /// Check if exact alarm is granted.
   static Future<bool> hasExactAlarm() =>

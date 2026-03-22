@@ -49,8 +49,7 @@ class ScheduleTimeSlot {
       time: time ?? this.time,
       dosageAmount: dosageAmount ?? this.dosageAmount,
       followupEnabled: followupEnabled ?? this.followupEnabled,
-      followupAfterMinutes:
-          followupAfterMinutes ?? this.followupAfterMinutes,
+      followupAfterMinutes: followupAfterMinutes ?? this.followupAfterMinutes,
     );
   }
 }

@@ -36,20 +36,16 @@ class WarningBanner extends StatelessWidget {
               color: colorScheme.error.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: colorScheme.onErrorContainer,
-              size: 18,
-            ),
+            child: Icon(icon, color: colorScheme.onErrorContainer, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               message,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onErrorContainer,
-                    fontWeight: FontWeight.w500,
-                  ),
+                color: colorScheme.onErrorContainer,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           TextButton(

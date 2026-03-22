@@ -22,8 +22,9 @@ class HomeWidgetService {
         'current_streak': currentStreak,
         'next_medicine_name': nextMedicineName ?? '',
         'next_medicine_time': nextMedicineTime ?? '',
-        'progress_percent':
-            todayTotal > 0 ? (todayDone / todayTotal * 100).round() : 0,
+        'progress_percent': todayTotal > 0
+            ? (todayDone / todayTotal * 100).round()
+            : 0,
       });
     } on PlatformException catch (_) {
       // Widget not available on this device, silently fail
@@ -33,8 +34,7 @@ class HomeWidgetService {
   /// Request the OS to pin the widget to home screen.
   static Future<bool> requestPinWidget() async {
     try {
-      final result =
-          await _channel.invokeMethod<bool>('requestPinWidget');
+      final result = await _channel.invokeMethod<bool>('requestPinWidget');
       return result ?? false;
     } on PlatformException catch (_) {
       return false;
@@ -44,8 +44,7 @@ class HomeWidgetService {
   /// Check if home screen widget feature is supported.
   static Future<bool> isSupported() async {
     try {
-      final result =
-          await _channel.invokeMethod<bool>('isSupported');
+      final result = await _channel.invokeMethod<bool>('isSupported');
       return result ?? false;
     } on PlatformException catch (_) {
       return false;

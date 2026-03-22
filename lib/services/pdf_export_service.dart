@@ -26,10 +26,10 @@ class PdfExportService {
 
     // Group logs by type
     final medicine = logs.where((l) => l.taskType == 'medicine').toList();
-    final measurement =
-        logs.where((l) => l.taskType == 'measurement').toList();
-    final activity =
-        logs.where((l) => l.taskType == 'physical_activity').toList();
+    final measurement = logs.where((l) => l.taskType == 'measurement').toList();
+    final activity = logs
+        .where((l) => l.taskType == 'physical_activity')
+        .toList();
 
     pdf.addPage(
       pw.MultiPage(
@@ -59,12 +59,14 @@ class PdfExportService {
               headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               data: [
                 ['Tanggal', 'Waktu', 'Status', 'Catatan'],
-                ...medicine.map((l) => [
-                      _formatDate(l.scheduledAt),
-                      _formatTime(l.scheduledAt),
-                      _statusLabel(l.status),
-                      l.symptomNotes ?? l.notes ?? '-',
-                    ]),
+                ...medicine.map(
+                  (l) => [
+                    _formatDate(l.scheduledAt),
+                    _formatTime(l.scheduledAt),
+                    _statusLabel(l.status),
+                    l.symptomNotes ?? l.notes ?? '-',
+                  ],
+                ),
               ],
             ),
             pw.SizedBox(height: 16),
@@ -77,12 +79,14 @@ class PdfExportService {
               headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               data: [
                 ['Tanggal', 'Waktu', 'Status', 'Catatan'],
-                ...measurement.map((l) => [
-                      _formatDate(l.scheduledAt),
-                      _formatTime(l.scheduledAt),
-                      _statusLabel(l.status),
-                      l.notes ?? '-',
-                    ]),
+                ...measurement.map(
+                  (l) => [
+                    _formatDate(l.scheduledAt),
+                    _formatTime(l.scheduledAt),
+                    _statusLabel(l.status),
+                    l.notes ?? '-',
+                  ],
+                ),
               ],
             ),
             pw.SizedBox(height: 16),
@@ -95,12 +99,14 @@ class PdfExportService {
               headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               data: [
                 ['Tanggal', 'Waktu', 'Status', 'Catatan'],
-                ...activity.map((l) => [
-                      _formatDate(l.scheduledAt),
-                      _formatTime(l.scheduledAt),
-                      _statusLabel(l.status),
-                      l.notes ?? '-',
-                    ]),
+                ...activity.map(
+                  (l) => [
+                    _formatDate(l.scheduledAt),
+                    _formatTime(l.scheduledAt),
+                    _statusLabel(l.status),
+                    l.notes ?? '-',
+                  ],
+                ),
               ],
             ),
           ],
@@ -113,13 +119,13 @@ class PdfExportService {
     if (context.mounted) {
       await Printing.sharePdf(
         bytes: Uint8List.fromList(bytes),
-        filename: 'MedSync_Laporan_${_formatDateShort(startDate)}_${_formatDateShort(endDate)}.pdf',
+        filename:
+            'MedSync_Laporan_${_formatDateShort(startDate)}_${_formatDateShort(endDate)}.pdf',
       );
     }
   }
 
-  static pw.Widget _buildHeader(
-      String userName, DateTime start, DateTime end) {
+  static pw.Widget _buildHeader(String userName, DateTime start, DateTime end) {
     return pw.Container(
       margin: const pw.EdgeInsets.only(bottom: 16),
       child: pw.Row(
@@ -128,18 +134,26 @@ class PdfExportService {
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('MedSync',
-                  style: pw.TextStyle(
-                      fontSize: 20, fontWeight: pw.FontWeight.bold)),
-              pw.Text('Laporan Kesehatan',
-                  style: const pw.TextStyle(fontSize: 12)),
+              pw.Text(
+                'MedSync',
+                style: pw.TextStyle(
+                  fontSize: 20,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.Text(
+                'Laporan Kesehatan',
+                style: const pw.TextStyle(fontSize: 12),
+              ),
             ],
           ),
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.end,
             children: [
-              pw.Text(userName,
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+              pw.Text(
+                userName,
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+              ),
               pw.Text(
                 '${_formatDate(start)} – ${_formatDate(end)}',
                 style: const pw.TextStyle(fontSize: 10),
@@ -172,8 +186,19 @@ class PdfExportService {
 
   static String _formatDate(DateTime dt) {
     final months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${dt.day} ${months[dt.month]} ${dt.year}';
   }
@@ -185,9 +210,9 @@ class PdfExportService {
       '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 
   static String _statusLabel(String status) => switch (status) {
-        'done' => 'Selesai',
-        'skipped' => 'Dilewati',
-        'missed' => 'Terlewat',
-        _ => 'Menunggu',
-      };
+    'done' => 'Selesai',
+    'skipped' => 'Dilewati',
+    'missed' => 'Terlewat',
+    _ => 'Menunggu',
+  };
 }

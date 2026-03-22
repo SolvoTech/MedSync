@@ -6,7 +6,8 @@ abstract class PhysicalActivityRepository {
   Future<List<PhysicalActivityReminder>> getReminders();
 
   Future<PhysicalActivityReminder> createReminder(
-      PhysicalActivityReminder reminder);
+    PhysicalActivityReminder reminder,
+  );
 
   Future<void> updateReminder(PhysicalActivityReminder reminder);
 

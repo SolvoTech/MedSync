@@ -15,7 +15,11 @@ class StatusChip extends StatelessWidget {
       'done' => ('Selesai', AppColors.success, Icons.check_circle_outline),
       'skipped' => ('Dilewati', AppColors.warning, Icons.skip_next_outlined),
       'missed' => ('Terlewat', AppColors.error, Icons.cancel_outlined),
-      _ => ('Menunggu', isDark ? const Color(0xFF8899A6) : const Color(0xFF718096), Icons.schedule_outlined),
+      _ => (
+        'Menunggu',
+        isDark ? const Color(0xFF8899A6) : const Color(0xFF718096),
+        Icons.schedule_outlined,
+      ),
     };
 
     return Container(

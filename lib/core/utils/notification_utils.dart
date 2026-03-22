@@ -17,15 +17,17 @@ class NotificationUtils {
 
   /// Initialize the notification plugin.
   static Future<void> init() async {
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const initSettings = InitializationSettings(android: androidSettings);
     await _plugin.initialize(initSettings);
 
     // Create notification channels
-    final androidPlugin =
-        _plugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(
@@ -108,6 +110,5 @@ class NotificationUtils {
   static Future<void> cancelAll() => _plugin.cancelAll();
 
   /// Generate a unique notification ID from a string hash.
-  static int generateId(String source) =>
-      source.hashCode.abs() % 2147483647;
+  static int generateId(String source) => source.hashCode.abs() % 2147483647;
 }

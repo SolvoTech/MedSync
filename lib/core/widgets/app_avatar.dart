@@ -84,10 +84,7 @@ class AppAvatar extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.gradientStart,
-            AppColors.gradientEnd,
-          ],
+          colors: [AppColors.gradientStart, AppColors.gradientEnd],
         ),
         boxShadow: [
           BoxShadow(

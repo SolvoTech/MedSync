@@ -28,10 +28,8 @@ class AppBadge extends StatelessWidget {
             tween: Tween(begin: 0.0, end: 1.0),
             duration: const Duration(milliseconds: 300),
             curve: Curves.elasticOut,
-            builder: (context, value, badge) => Transform.scale(
-              scale: value,
-              child: badge,
-            ),
+            builder: (context, value, badge) =>
+                Transform.scale(scale: value, child: badge),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
@@ -40,10 +38,9 @@ class AppBadge extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .error
-                        .withValues(alpha: 0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.error.withValues(alpha: 0.3),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),

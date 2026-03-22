@@ -67,7 +67,8 @@ class AppEmptyState extends StatelessWidget {
                 onPressed: onAction,
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24, vertical: 12,
+                    horizontal: 24,
+                    vertical: 12,
                   ),
                 ),
                 child: Text(actionLabel!),

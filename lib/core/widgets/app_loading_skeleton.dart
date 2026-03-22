@@ -38,11 +38,7 @@ class AppLoadingSkeleton extends StatelessWidget {
 
 /// Skeleton for a list of cards (e.g. medicine list, task list)
 class AppListSkeleton extends StatelessWidget {
-  const AppListSkeleton({
-    super.key,
-    this.itemCount = 4,
-    this.itemHeight = 80,
-  });
+  const AppListSkeleton({super.key, this.itemCount = 4, this.itemHeight = 80});
 
   final int itemCount;
   final double itemHeight;

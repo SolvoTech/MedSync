@@ -24,10 +24,11 @@ class HealthConnectService {
   /// Request authorization for health data.
   static Future<bool> requestAuthorization() async {
     try {
-      final permissions =
-          _types.map((_) => HealthDataAccess.READ).toList();
-      return await _health.requestAuthorization(_types,
-          permissions: permissions);
+      final permissions = _types.map((_) => HealthDataAccess.READ).toList();
+      return await _health.requestAuthorization(
+        _types,
+        permissions: permissions,
+      );
     } catch (e) {
       debugPrint('HealthConnect auth error: $e');
       return false;
@@ -72,11 +73,13 @@ class HealthConnectService {
       types: [HealthDataType.STEPS],
     );
     return data.fold<int>(
-        0,
-        (sum, dp) =>
-            sum + (dp.value is NumericHealthValue
-                ? (dp.value as NumericHealthValue).numericValue.toInt()
-                : 0));
+      0,
+      (sum, dp) =>
+          sum +
+          (dp.value is NumericHealthValue
+              ? (dp.value as NumericHealthValue).numericValue.toInt()
+              : 0),
+    );
   }
 
   /// Fetch recent heart rate readings.

@@ -8,9 +8,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bodyStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-          height: 1.6,
-        );
+      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+      height: 1.6,
+    );
 
     return StaticPageScaffold(
       title: 'Kebijakan Privasi',
@@ -93,9 +93,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

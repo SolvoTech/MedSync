@@ -47,15 +47,15 @@ class AppButton extends StatelessWidget {
             ),
           )
         : icon != null
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, size: 18),
-                  const SizedBox(width: 8),
-                  Text(label),
-                ],
-              )
-            : Text(label);
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18),
+              const SizedBox(width: 8),
+              Text(label),
+            ],
+          )
+        : Text(label);
 
     final destructiveColor = isDestructive ? colorScheme.error : null;
 
@@ -75,9 +75,7 @@ class AppButton extends StatelessWidget {
         } else {
           button = FilledButton(
             onPressed: effectiveOnPressed,
-            style: FilledButton.styleFrom(
-              backgroundColor: destructiveColor,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: destructiveColor),
             child: child,
           );
         }
@@ -95,9 +93,7 @@ class AppButton extends StatelessWidget {
       case AppButtonType.text:
         button = TextButton(
           onPressed: effectiveOnPressed,
-          style: TextButton.styleFrom(
-            foregroundColor: destructiveColor,
-          ),
+          style: TextButton.styleFrom(foregroundColor: destructiveColor),
           child: child,
         );
     }

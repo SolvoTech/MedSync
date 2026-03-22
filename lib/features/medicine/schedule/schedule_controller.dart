@@ -269,8 +269,19 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
         minute,
       );
 
+      // Fast-forward to today if it's already in the past
       if (scheduledAt.isBefore(now)) {
-        scheduledAt = scheduledAt.add(const Duration(days: 1));
+        scheduledAt = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          hour,
+          minute,
+        );
+        // If today's time block has also already passed, push it to tomorrow
+        if (scheduledAt.isBefore(now)) {
+          scheduledAt = scheduledAt.add(const Duration(days: 1));
+        }
       }
 
       await notificationService.scheduleTaskNotification(

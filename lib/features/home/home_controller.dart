@@ -51,10 +51,10 @@ class HomeController extends AutoDisposeAsyncNotifier<List<TaskLog>> {
     try {
       final task = taskList.firstWhere((t) => t.id == taskLogId);
       final notificationService = ref.read(notificationServiceProvider);
-      
+
       final h = task.scheduledAt.hour.toString().padLeft(2, '0');
       final m = task.scheduledAt.minute.toString().padLeft(2, '0');
-      
+
       await notificationService.advanceScheduleToTomorrow(
         taskType: task.taskType,
         referenceId: task.referenceId,
