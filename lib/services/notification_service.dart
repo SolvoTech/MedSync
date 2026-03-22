@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -196,7 +199,7 @@ class NotificationService {
         id: stableNotificationId('${basePayload}_snooze_$i'),
         channelId: channelId,
         title: title,
-        body: body,
+        body: '$body (Peringatan ke-$i)',
         scheduledAt: snoozeTime,
         payload: '$basePayload|$i',
         repeatDaily: true,
@@ -228,8 +231,15 @@ class NotificationService {
         final h = int.tryParse(timeParts[0]) ?? 0;
         final m = int.tryParse(timeParts[1]) ?? 0;
 
-        var nextTime = tz.TZDateTime(tz.local, now.year, now.month, now.day, h, m);
-        
+        var nextTime = tz.TZDateTime(
+          tz.local,
+          now.year,
+          now.month,
+          now.day,
+          h,
+          m,
+        );
+
         // If the base time for today hasn't passed, tomorrow is +1 day.
         // If it has passed, we add +1 day from now.
         if (!nextTime.isAfter(now)) {
@@ -239,7 +249,10 @@ class NotificationService {
         // Add the snooze offset minutes
         nextTime = nextTime.add(Duration(minutes: 5 * snoozeIndex));
 
-        // Re-schedule it to overwrite the current pending intent for today
+        // Cancel the old intent natively first to guarantee a clean overwrite
+        await _plugin.cancel(pending.id);
+
+        // Re-schedule it for tomorrow to silence the remaining trigger today
         await scheduleNotification(
           id: pending.id,
           channelId: channelId,
@@ -261,7 +274,9 @@ class NotificationService {
     final basePayload = 'task|$taskType|$referenceId|$timeOfDay';
     await cancelNotification(stableNotificationId(basePayload));
     for (int i = 1; i <= 6; i++) {
-      await cancelNotification(stableNotificationId('${basePayload}_snooze_$i'));
+      await cancelNotification(
+        stableNotificationId('${basePayload}_snooze_$i'),
+      );
     }
   }
 
@@ -320,10 +335,29 @@ int stableNotificationId(String seed) {
 
 @pragma('vm:entry-point')
 Future<void> notificationTapBackground(NotificationResponse response) async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize timezone for background isolate
+  tz.initializeTimeZones();
+  try {
+    final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
+  } catch (_) {}
+
+  // Initialize Supabase for background isolate
+  try {
+    await dotenv.load(fileName: '.env');
+    final url = dotenv.env['SUPABASE_URL'] ?? '';
+    final anonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+    if (url.isNotEmpty && anonKey.isNotEmpty) {
+      await Supabase.initialize(url: url, anonKey: anonKey);
+    }
+  } catch (_) {}
+
   await _handleNotificationResponse(response);
 
   if (kDebugMode) {
-    debugPrint('Notification tapped: ${response.payload}');
+    debugPrint('Notification tapped background: ${response.payload}');
   }
 }
 
@@ -348,14 +382,13 @@ Future<void> _handleNotificationResponse(NotificationResponse response) async {
       referenceId: parsed.referenceId,
       timeOfDay: parsed.timeOfDay,
     );
-    
+
     final notificationService = NotificationService();
     await notificationService.advanceScheduleToTomorrow(
       taskType: parsed.taskType,
       referenceId: parsed.referenceId,
       timeOfDay: parsed.timeOfDay ?? '',
     );
-    
   } catch (error) {
     if (kDebugMode) {
       debugPrint('Failed to mark task from notification action: $error');
