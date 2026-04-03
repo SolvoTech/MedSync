@@ -118,7 +118,15 @@ class NotificationService {
       }
     }
 
-    await _migrateMedicineNotificationsToRingtoneChannel();
+    try {
+      await _migrateMedicineNotificationsToRingtoneChannel();
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint(
+          '[NotificationService] Skip migration to ringtone channel: $error',
+        );
+      }
+    }
   }
 
   Future<void> requestPermission() async {

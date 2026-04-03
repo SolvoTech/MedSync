@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,9 +29,27 @@ Future<void> main() async {
   await AppPreferences.init();
   Intl.defaultLocale = AppPreferences.languageCode == 'id' ? 'id_ID' : 'en_US';
 
-  final notificationService = NotificationService();
-  await notificationService.initialize();
-  await notificationService.requestPermission();
-
   runApp(const ProviderScope(child: MedSyncApp()));
+
+  // Keep first frame fast: notification bootstrap runs after app is rendered.
+  unawaited(_initializeNotificationsSafely());
+}
+
+Future<void> _initializeNotificationsSafely() async {
+  final notificationService = NotificationService();
+
+  try {
+    await notificationService.initialize().timeout(const Duration(seconds: 12));
+  } catch (error) {
+    debugPrint('[main] Notification initialization skipped: $error');
+    return;
+  }
+
+  try {
+    await notificationService.requestPermission().timeout(
+      const Duration(seconds: 8),
+    );
+  } catch (error) {
+    debugPrint('[main] Notification permission request skipped: $error');
+  }
 }
