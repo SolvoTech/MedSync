@@ -42,6 +42,7 @@ class ProfileScreen extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final user = Supabase.instance.client.auth.currentUser;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isAdmin = profileAsync.asData?.value?.role == 'admin';
 
     return Scaffold(
       body: ListView(
@@ -349,43 +350,6 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 20),
 
-                // Admin control center
-                profileAsync.when(
-                  data: (profile) {
-                    if (profile?.role != 'admin') {
-                      return const SizedBox.shrink();
-                    }
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _SectionHeader(
-                          title: AppStrings.tr(
-                            'CONTROL CENTER',
-                            'PUSAT KONTROL',
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        AppCard(
-                          padding: EdgeInsets.zero,
-                          child: _MenuItem(
-                            icon: Icons.admin_panel_settings_outlined,
-                            label: AppStrings.tr(
-                              'Admin Control Center',
-                              'Pusat Kontrol Admin',
-                            ),
-                            color: const Color(0xFF2B6CB0),
-                            onTap: () => context.push(AppRoutes.adminControl),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-                    );
-                  },
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, _) => const SizedBox.shrink(),
-                ),
-
                 // Info section
                 _SectionHeader(
                   title: AppStrings.tr('INFORMATION', 'INFORMASI'),
@@ -395,16 +359,18 @@ class ProfileScreen extends ConsumerWidget {
                   padding: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      _MenuItem(
-                        icon: Icons.menu_book_outlined,
-                        label: AppStrings.tr(
-                          'Health Articles',
-                          'Edukasi Kesehatan',
+                      if (isAdmin != true) ...[
+                        _MenuItem(
+                          icon: Icons.menu_book_outlined,
+                          label: AppStrings.tr(
+                            'Health Articles',
+                            'Edukasi Kesehatan',
+                          ),
+                          color: const Color(0xFF2B6CB0),
+                          onTap: () => context.go(AppRoutes.education),
                         ),
-                        color: const Color(0xFF2B6CB0),
-                        onTap: () => context.go(AppRoutes.education),
-                      ),
-                      _MenuDivider(),
+                        _MenuDivider(),
+                      ],
                       _MenuItem(
                         icon: Icons.notifications_none_rounded,
                         label: AppStrings.notificationTitle,

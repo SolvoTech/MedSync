@@ -34,6 +34,34 @@ void main() {
       expect(result, AppRoutes.home);
     });
 
+    test('redirects admin user away from user feature routes', () {
+      final locations = [
+        AppRoutes.schedule,
+        AppRoutes.report,
+        AppRoutes.education,
+        '${AppRoutes.education}/:articleId',
+      ];
+
+      for (final location in locations) {
+        final result = resolveAppRedirect(
+          matchedLocation: location,
+          isAuthenticated: true,
+          isAdmin: true,
+        );
+        expect(result, AppRoutes.home);
+      }
+    });
+
+    test('allows non-admin user on user feature route', () {
+      final result = resolveAppRedirect(
+        matchedLocation: AppRoutes.schedule,
+        isAuthenticated: true,
+        isAdmin: false,
+      );
+
+      expect(result, isNull);
+    });
+
     test('defers decision while admin role is loading', () {
       final result = resolveAppRedirect(
         matchedLocation: AppRoutes.adminControl,

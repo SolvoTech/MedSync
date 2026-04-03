@@ -74,17 +74,17 @@ class AdminEducationScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.tr('Manage Articles', 'Kelola Edukasi')),
+        title: Text(AppStrings.adminManageArticlesTitle),
         actions: [
           IconButton(
-            tooltip: AppStrings.tr('Add Article', 'Tambah Artikel'),
+            tooltip: AppStrings.adminAddArticleTooltip,
             icon: const Icon(Icons.add),
             onPressed: actionState.isLoading
                 ? null
                 : () => _openEditor(context, ref),
           ),
           IconButton(
-            tooltip: AppStrings.tr('Refresh', 'Muat Ulang'),
+            tooltip: AppStrings.adminRefreshTooltip,
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.invalidate(adminEducationArticlesProvider),
           ),
@@ -101,7 +101,7 @@ class AdminEducationScreen extends ConsumerWidget {
             ? null
             : () => _openEditor(context, ref),
         icon: const Icon(Icons.post_add),
-        label: Text(AppStrings.tr('New Article', 'Artikel Baru')),
+        label: Text(AppStrings.adminNewArticleButton),
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -115,22 +115,13 @@ class AdminEducationScreen extends ConsumerWidget {
             children: [
               AdminIntroCard(
                 icon: Icons.menu_book_outlined,
-                title: AppStrings.tr(
-                  'Content Workspace',
-                  'Ruang Kelola Konten',
-                ),
-                subtitle: AppStrings.tr(
-                  'Draft, publish, and update educational content shown to users.',
-                  'Buat draf, publikasikan, dan perbarui konten edukasi untuk pengguna.',
-                ),
+                title: AppStrings.adminContentWorkspaceTitle,
+                subtitle: AppStrings.adminEducationWorkspaceDraftSubtitle,
               ),
               const SizedBox(height: 14),
               AdminSectionTitle(
-                title: AppStrings.tr('Article Collection', 'Koleksi Artikel'),
-                subtitle: AppStrings.tr(
-                  'Loading article records...',
-                  'Memuat data artikel...',
-                ),
+                title: AppStrings.adminArticleCollectionTitle,
+                subtitle: AppStrings.adminArticleCollectionLoadingSubtitle,
                 icon: Icons.article_outlined,
               ),
               const SizedBox(height: 8),
@@ -159,26 +150,14 @@ class AdminEducationScreen extends ConsumerWidget {
                 children: [
                   AdminIntroCard(
                     icon: Icons.menu_book_outlined,
-                    title: AppStrings.tr(
-                      'Content Workspace',
-                      'Ruang Kelola Konten',
-                    ),
-                    subtitle: AppStrings.tr(
-                      'Draft, publish, and update educational content shown to users.',
-                      'Buat draf, publikasikan, dan perbarui konten edukasi untuk pengguna.',
-                    ),
+                    title: AppStrings.adminContentWorkspaceTitle,
+                    subtitle: AppStrings.adminEducationWorkspaceDraftSubtitle,
                     badge: '0',
                   ),
                   const SizedBox(height: 28),
                   AppEmptyState(
-                    message: AppStrings.tr(
-                      'No educational articles yet.',
-                      'Belum ada artikel edukasi.',
-                    ),
-                    subtitle: AppStrings.tr(
-                      'Create your first article for users.',
-                      'Buat artikel pertama untuk pengguna.',
-                    ),
+                    message: AppStrings.adminNoEducationArticleMessage,
+                    subtitle: AppStrings.adminNoEducationArticleSubtitle,
                     icon: Icons.menu_book_outlined,
                   ),
                 ],
@@ -191,23 +170,14 @@ class AdminEducationScreen extends ConsumerWidget {
               children: [
                 AdminIntroCard(
                   icon: Icons.menu_book_outlined,
-                  title: AppStrings.tr(
-                    'Content Workspace',
-                    'Ruang Kelola Konten',
-                  ),
-                  subtitle: AppStrings.tr(
-                    'Review and publish educational articles with one tap.',
-                    'Tinjau dan publikasikan artikel edukasi dalam satu sentuhan.',
-                  ),
+                  title: AppStrings.adminContentWorkspaceTitle,
+                  subtitle: AppStrings.adminEducationWorkspaceReviewSubtitle,
                   badge: '${articles.length}',
                 ),
                 const SizedBox(height: 14),
                 AdminSectionTitle(
-                  title: AppStrings.tr('Article Collection', 'Koleksi Artikel'),
-                  subtitle: AppStrings.tr(
-                    'Manage draft and published content.',
-                    'Kelola konten draf dan yang sudah terbit.',
-                  ),
+                  title: AppStrings.adminArticleCollectionTitle,
+                  subtitle: AppStrings.adminArticleCollectionManageSubtitle,
                   icon: Icons.article_outlined,
                 ),
                 const SizedBox(height: 8),
@@ -250,8 +220,8 @@ class AdminEducationScreen extends ConsumerWidget {
                                   ),
                                   child: Text(
                                     article.isPublished
-                                        ? AppStrings.tr('PUBLISHED', 'TERBIT')
-                                        : AppStrings.tr('DRAFT', 'DRAF'),
+                                        ? AppStrings.adminArticlePublishedChip
+                                        : AppStrings.adminArticleDraftChip,
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelSmall
@@ -265,9 +235,12 @@ class AdminEducationScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              AppStrings.tr(
-                                'Slug: ${article.slug} | Updated: ${DateFormat('dd MMM yyyy', locale).format(dateLabel.toLocal())}',
-                                'Slug: ${article.slug} | Update: ${DateFormat('dd MMM yyyy', locale).format(dateLabel.toLocal())}',
+                              AppStrings.adminArticleMetaLabel(
+                                slug: article.slug,
+                                updatedDate: DateFormat(
+                                  'dd MMM yyyy',
+                                  locale,
+                                ).format(dateLabel.toLocal()),
                               ),
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
@@ -323,14 +296,8 @@ class AdminEducationScreen extends ConsumerWidget {
                                     ),
                                     label: Text(
                                       article.isPublished
-                                          ? AppStrings.tr(
-                                              'Unpublish',
-                                              'Batalkan Publikasi',
-                                            )
-                                          : AppStrings.tr(
-                                              'Publish',
-                                              'Publikasikan',
-                                            ),
+                                          ? AppStrings.adminUnpublishAction
+                                          : AppStrings.adminPublishAction,
                                     ),
                                   ),
                                 ),
@@ -401,8 +368,8 @@ class AdminEducationScreen extends ConsumerWidget {
               children: [
                 Text(
                   article == null
-                      ? AppStrings.tr('Create Article', 'Buat Artikel')
-                      : AppStrings.tr('Edit Article', 'Edit Artikel'),
+                      ? AppStrings.adminCreateArticleTitle
+                      : AppStrings.adminEditArticleTitle,
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
@@ -412,7 +379,7 @@ class AdminEducationScreen extends ConsumerWidget {
                   controller: titleController,
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
-                    labelText: AppStrings.tr('Title', 'Judul'),
+                    labelText: AppStrings.adminArticleFieldTitleLabel,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -421,10 +388,7 @@ class AdminEducationScreen extends ConsumerWidget {
                   controller: slugController,
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
-                    labelText: AppStrings.tr(
-                      'Slug (optional)',
-                      'Slug (opsional)',
-                    ),
+                    labelText: AppStrings.adminArticleFieldSlugOptionalLabel,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -433,10 +397,8 @@ class AdminEducationScreen extends ConsumerWidget {
                   controller: categoryController,
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
-                    labelText: AppStrings.tr(
-                      'Category (optional)',
-                      'Kategori (opsional)',
-                    ),
+                    labelText:
+                        AppStrings.adminArticleFieldCategoryOptionalLabel,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -445,10 +407,8 @@ class AdminEducationScreen extends ConsumerWidget {
                   controller: coverController,
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
-                    labelText: AppStrings.tr(
-                      'Cover URL (optional)',
-                      'Cover URL (opsional)',
-                    ),
+                    labelText:
+                        AppStrings.adminArticleFieldCoverUrlOptionalLabel,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -458,10 +418,7 @@ class AdminEducationScreen extends ConsumerWidget {
                   textInputAction: TextInputAction.next,
                   maxLines: 3,
                   decoration: InputDecoration(
-                    labelText: AppStrings.tr(
-                      'Summary (optional)',
-                      'Ringkasan (opsional)',
-                    ),
+                    labelText: AppStrings.adminArticleFieldSummaryOptionalLabel,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -470,7 +427,7 @@ class AdminEducationScreen extends ConsumerWidget {
                   controller: contentController,
                   maxLines: 8,
                   decoration: InputDecoration(
-                    labelText: AppStrings.tr('Content', 'Konten'),
+                    labelText: AppStrings.adminArticleFieldContentLabel,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -492,10 +449,7 @@ class AdminEducationScreen extends ConsumerWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  AppStrings.tr(
-                                    'Title and content are required.',
-                                    'Judul dan konten wajib diisi.',
-                                  ),
+                                  AppStrings.adminArticleTitleRequiredMessage,
                                 ),
                               ),
                             );
@@ -557,8 +511,8 @@ class AdminEducationScreen extends ConsumerWidget {
 
     context.showSuccessSnackBar(
       article == null
-          ? AppStrings.tr('Article created.', 'Artikel berhasil dibuat.')
-          : AppStrings.tr('Article updated.', 'Artikel berhasil diperbarui.'),
+          ? AppStrings.adminArticleCreatedSuccess
+          : AppStrings.adminArticleUpdatedSuccess,
     );
     ref.invalidate(adminEducationArticlesProvider);
   }
@@ -572,20 +526,14 @@ class AdminEducationScreen extends ConsumerWidget {
     final confirmed = await AppDialog.showConfirm(
       context,
       title: article.isPublished
-          ? AppStrings.tr('Unpublish article?', 'Unpublish artikel?')
-          : AppStrings.tr('Publish article?', 'Publish artikel?'),
+          ? AppStrings.adminUnpublishArticleTitle
+          : AppStrings.adminPublishArticleTitle,
       message: article.isPublished
-          ? AppStrings.tr(
-              'This article will no longer be visible to users.',
-              'Artikel tidak akan terlihat oleh user.',
-            )
-          : AppStrings.tr(
-              'This article will be visible to users immediately.',
-              'Artikel akan langsung terlihat oleh user.',
-            ),
+          ? AppStrings.adminUnpublishArticleMessage
+          : AppStrings.adminPublishArticleMessage,
       confirmLabel: article.isPublished
-          ? AppStrings.tr('Unpublish', 'Batalkan Publikasi')
-          : AppStrings.tr('Publish', 'Publikasikan'),
+          ? AppStrings.adminUnpublishAction
+          : AppStrings.adminPublishAction,
       cancelLabel: AppStrings.cancel,
       isDestructive: article.isPublished,
       icon: article.isPublished ? Icons.unpublished_outlined : Icons.publish,
@@ -611,14 +559,8 @@ class AdminEducationScreen extends ConsumerWidget {
 
     context.showSuccessSnackBar(
       article.isPublished
-          ? AppStrings.tr(
-              'Article unpublished successfully.',
-              'Artikel berhasil di-unpublish.',
-            )
-          : AppStrings.tr(
-              'Article published successfully.',
-              'Artikel berhasil dipublish.',
-            ),
+          ? AppStrings.adminArticleUnpublishedSuccess
+          : AppStrings.adminArticlePublishedSuccess,
     );
     ref.invalidate(adminEducationArticlesProvider);
   }
@@ -630,11 +572,8 @@ class AdminEducationScreen extends ConsumerWidget {
   ) async {
     final confirmed = await AppDialog.showConfirm(
       context,
-      title: AppStrings.tr('Delete article?', 'Hapus artikel?'),
-      message: AppStrings.tr(
-        'Deleted articles cannot be restored.',
-        'Artikel yang dihapus tidak dapat dikembalikan.',
-      ),
+      title: AppStrings.adminDeleteArticleTitle,
+      message: AppStrings.adminDeleteArticleMessage,
       confirmLabel: AppStrings.delete,
       cancelLabel: AppStrings.cancel,
       isDestructive: true,
@@ -659,9 +598,7 @@ class AdminEducationScreen extends ConsumerWidget {
       return;
     }
 
-    context.showSuccessSnackBar(
-      AppStrings.tr('Article deleted.', 'Artikel berhasil dihapus.'),
-    );
+    context.showSuccessSnackBar(AppStrings.adminArticleDeletedSuccess);
     ref.invalidate(adminEducationArticlesProvider);
   }
 

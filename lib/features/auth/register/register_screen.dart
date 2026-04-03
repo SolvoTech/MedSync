@@ -58,12 +58,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final authState = ref.read(authControllerProvider);
     if (!mounted) return;
 
-    authState.whenOrNull(
-      data: (_) => context.showSuccessSnackBar(AppStrings.registerSuccess),
-      error: (error, _) => context.showErrorSnackBar(
-        toUserErrorMessage(error, fallback: AppStrings.registerFailed),
-      ),
-    );
+    if (authState.hasError) {
+      context.showErrorSnackBar(
+        toUserErrorMessage(
+          authState.error!,
+          fallback: AppStrings.registerFailed,
+        ),
+      );
+      return;
+    }
+
+    context.showSuccessSnackBar(AppStrings.registerSuccess);
+    context.go(AppRoutes.login);
   }
 
   @override

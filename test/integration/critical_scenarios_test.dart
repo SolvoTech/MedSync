@@ -37,6 +37,22 @@ void main() {
       expect(adminResult, isNull);
     });
 
+    test('admin is blocked from user schedule and report routes', () {
+      final scheduleResult = resolveAppRedirect(
+        matchedLocation: AppRoutes.schedule,
+        isAuthenticated: true,
+        isAdmin: true,
+      );
+      final reportResult = resolveAppRedirect(
+        matchedLocation: AppRoutes.report,
+        isAuthenticated: true,
+        isAdmin: true,
+      );
+
+      expect(scheduleResult, AppRoutes.home);
+      expect(reportResult, AppRoutes.home);
+    });
+
     test('publishing from admin flow exposes article in user feed', () async {
       final repository = _InMemoryEducationRepository(
         initialArticles: [

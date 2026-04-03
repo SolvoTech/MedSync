@@ -148,6 +148,222 @@ class AppStrings {
   static String get notificationTitle => _t('Notifications', 'Notifikasi');
   static String get profileTitle => _t('Profile', 'Profil');
 
+  // Admin
+  static String get adminHomeTitle => _t('Admin Home', 'Beranda Admin');
+  static String get adminUsersTitle => _t('Users', 'Pengguna');
+  static String get adminContentTitle => _t('Content', 'Konten');
+  static String get adminControlCenterTitle =>
+      _t('Admin Control Center', 'Pusat Kontrol Admin');
+  static String get adminRefreshTooltip => _t('Refresh', 'Muat Ulang');
+  static String get adminBadge => _t('ADMIN', 'ADMIN');
+  static String get adminControlHubTitle => _t('Control Hub', 'Pusat Kendali');
+  static String get adminControlHubSubtitle => _t(
+    'Admin workspace to monitor users and maintain educational content.',
+    'Ruang kerja admin untuk memantau pengguna dan mengelola konten edukasi.',
+  );
+  static String get adminQuickAccessTitle => _t('Quick Access', 'Akses Cepat');
+  static String get adminQuickAccessSubtitle => _t(
+    'Open control modules directly from dashboard.',
+    'Buka modul kontrol langsung dari dashboard.',
+  );
+  static String get adminUserManagementTitle =>
+      _t('User Management', 'Manajemen Pengguna');
+  static String get adminUserManagementHint => _t(
+    'Suspend, activate, and reset user account access.',
+    'Nonaktifkan, aktifkan, dan reset akses akun pengguna.',
+  );
+  static String get adminUserManagementSubtitle => _t(
+    'Activate, suspend, or reset user access securely.',
+    'Aktifkan, nonaktifkan, atau reset akses pengguna dengan aman.',
+  );
+  static String get adminContentManagementTitle =>
+      _t('Content Management', 'Manajemen Konten');
+  static String get adminContentManagementHint => _t(
+    'Draft and publish educational content for users.',
+    'Buat draf dan publikasikan konten edukasi untuk pengguna.',
+  );
+  static String get adminSystemSnapshotTitle =>
+      _t('System Snapshot', 'Ringkasan Sistem');
+  static String get adminSystemOverviewSubtitle => _t(
+    'Daily platform overview for admin decisions.',
+    'Gambaran harian platform untuk keputusan admin.',
+  );
+  static String get adminSystemSnapshotSubtitle => _t(
+    'Quick metrics for users and daily adherence.',
+    'Metrik cepat pengguna dan kepatuhan harian.',
+  );
+  static String get adminMetricTotalUsers =>
+      _t('Total Users', 'Total Pengguna');
+  static String get adminMetricActiveUsers =>
+      _t('Active Users', 'Pengguna Aktif');
+  static String get adminMetricSuspendedUsers =>
+      _t('Suspended Users', 'Pengguna Dinonaktifkan');
+  static String get adminMetricAdminAccounts =>
+      _t('Admin Accounts', 'Akun Admin');
+  static String get adminMetricAdherenceToday =>
+      _t('Adherence Today', 'Kepatuhan Hari Ini');
+  static String get adminManageLabel => _t('Manage', 'Kelola');
+  static String get adminManageEducationHint => _t(
+    'Manage educational articles for users.',
+    'Kelola artikel edukasi untuk pengguna.',
+  );
+  static String get adminContentWorkspaceTitle =>
+      _t('Content Workspace', 'Ruang Kelola Konten');
+  static String get adminArticleCollectionTitle =>
+      _t('Article Collection', 'Koleksi Artikel');
+  static String get adminManageArticlesTitle =>
+      _t('Manage Articles', 'Kelola Artikel');
+  static String get adminAddArticleTooltip =>
+      _t('Add Article', 'Tambah Artikel');
+  static String get adminNewArticleButton => _t('New Article', 'Artikel Baru');
+  static String get adminNoAccessMessage => _t(
+    'You do not have access to this admin page.',
+    'Anda tidak memiliki akses ke halaman admin.',
+  );
+  static String get adminNoAccessSubtitle => _t(
+    'Contact your administrator if this is unexpected.',
+    'Hubungi administrator jika ini tidak sesuai.',
+  );
+  static String get adminControlCenterIntroSubtitle => _t(
+    'Monitor account access, user status, and today\'s adherence from one dashboard.',
+    'Pantau akses akun, status pengguna, dan kepatuhan hari ini dari satu dashboard.',
+  );
+  static String get adminNoUserDataMessage =>
+      _t('No user data available yet.', 'Belum ada data pengguna.');
+  static String get adminNoUserDataSubtitle =>
+      _t('User data will appear here.', 'Data pengguna akan tampil di sini.');
+  static String get adminSuspendAccountTitle =>
+      _t('Suspend account?', 'Nonaktifkan akun?');
+  static String get adminActivateAccountTitle =>
+      _t('Activate account?', 'Aktifkan akun?');
+  static String get adminSuspendAccountMessage => _t(
+    'The user will not be able to sign in while suspended.',
+    'Pengguna tidak bisa masuk selama status dinonaktifkan.',
+  );
+  static String get adminActivateAccountMessage => _t(
+    'The user will be able to sign in again.',
+    'Pengguna akan bisa masuk kembali.',
+  );
+  static String get adminSuspendAction => _t('Suspend', 'Nonaktifkan');
+  static String get adminActivateAction => _t('Activate', 'Aktifkan');
+  static String get adminUserSuspendedSuccess =>
+      _t('User account suspended.', 'Akun pengguna dinonaktifkan.');
+  static String get adminUserActivatedSuccess =>
+      _t('User account reactivated.', 'Akun pengguna diaktifkan kembali.');
+  static String get adminResetUserAccessTitle =>
+      _t('Reset user access?', 'Reset akses pengguna?');
+  static String get adminResetUserAccessMessage => _t(
+    'Reset instructions will be sent via the registered internal account channel.',
+    'Instruksi reset akan dikirim melalui kanal akun internal yang terdaftar.',
+  );
+  static String get adminSendResetAction => _t('Send Reset', 'Kirim Reset');
+  static String get adminResetAccessSuccess => _t(
+    'Reset access instructions sent successfully.',
+    'Instruksi reset akses berhasil dikirim.',
+  );
+  static String get adminUnknownName => _t('No Name', 'Tanpa Nama');
+  static String get adminStatusSuspended => _t('SUSPENDED', 'DINONAKTIFKAN');
+  static String get adminStatusActive => _t('ACTIVE', 'AKTIF');
+  static String get adminResetAccessButton => _t('Reset Access', 'Reset Akses');
+  static String get adminSelfAccountHint => _t(
+    'This account is your own account.',
+    'Akun ini adalah akun Anda sendiri.',
+  );
+  static String get adminOtherAdminHint => _t(
+    'Other admin accounts cannot be managed from this screen.',
+    'Akun admin lain tidak bisa dikelola dari layar ini.',
+  );
+  static String get adminEducationWorkspaceDraftSubtitle => _t(
+    'Draft, publish, and update educational content shown to users.',
+    'Buat draf, publikasikan, dan perbarui konten edukasi untuk pengguna.',
+  );
+  static String get adminEducationWorkspaceReviewSubtitle => _t(
+    'Review and publish educational articles with one tap.',
+    'Tinjau dan publikasikan artikel edukasi dalam satu sentuhan.',
+  );
+  static String get adminArticleCollectionLoadingSubtitle =>
+      _t('Loading article records...', 'Memuat data artikel...');
+  static String get adminArticleCollectionManageSubtitle => _t(
+    'Manage draft and published content.',
+    'Kelola konten draf dan yang sudah terbit.',
+  );
+  static String get adminNoEducationArticleMessage =>
+      _t('No educational articles yet.', 'Belum ada artikel edukasi.');
+  static String get adminNoEducationArticleSubtitle => _t(
+    'Create your first article for users.',
+    'Buat artikel pertama untuk pengguna.',
+  );
+  static String get adminArticlePublishedChip => _t('PUBLISHED', 'TERBIT');
+  static String get adminArticleDraftChip => _t('DRAFT', 'DRAF');
+  static String get adminCreateArticleTitle =>
+      _t('Create Article', 'Buat Artikel');
+  static String get adminEditArticleTitle => _t('Edit Article', 'Edit Artikel');
+  static String get adminArticleTitleRequiredMessage =>
+      _t('Title and content are required.', 'Judul dan konten wajib diisi.');
+  static String get adminArticleCreatedSuccess =>
+      _t('Article created.', 'Artikel berhasil dibuat.');
+  static String get adminArticleUpdatedSuccess =>
+      _t('Article updated.', 'Artikel berhasil diperbarui.');
+  static String get adminUnpublishArticleTitle =>
+      _t('Unpublish article?', 'Batalkan publikasi artikel?');
+  static String get adminPublishArticleTitle =>
+      _t('Publish article?', 'Publikasikan artikel?');
+  static String get adminUnpublishArticleMessage => _t(
+    'This article will no longer be visible to users.',
+    'Artikel tidak akan terlihat oleh pengguna.',
+  );
+  static String get adminPublishArticleMessage => _t(
+    'This article will be visible to users immediately.',
+    'Artikel akan langsung terlihat oleh pengguna.',
+  );
+  static String get adminUnpublishAction =>
+      _t('Unpublish', 'Batalkan Publikasi');
+  static String get adminPublishAction => _t('Publish', 'Publikasikan');
+  static String get adminArticleUnpublishedSuccess => _t(
+    'Article unpublished successfully.',
+    'Publikasi artikel berhasil dibatalkan.',
+  );
+  static String get adminArticlePublishedSuccess =>
+      _t('Article published successfully.', 'Artikel berhasil dipublikasikan.');
+  static String get adminDeleteArticleTitle =>
+      _t('Delete article?', 'Hapus artikel?');
+  static String get adminDeleteArticleMessage => _t(
+    'Deleted articles cannot be restored.',
+    'Artikel yang dihapus tidak dapat dikembalikan.',
+  );
+  static String get adminArticleDeletedSuccess =>
+      _t('Article deleted.', 'Artikel berhasil dihapus.');
+  static String get adminArticleFieldTitleLabel => _t('Title', 'Judul');
+  static String get adminArticleFieldSlugOptionalLabel =>
+      _t('Slug (optional)', 'Slug (opsional)');
+  static String get adminArticleFieldCategoryOptionalLabel =>
+      _t('Category (optional)', 'Kategori (opsional)');
+  static String get adminArticleFieldCoverUrlOptionalLabel =>
+      _t('Cover URL (optional)', 'Cover URL (opsional)');
+  static String get adminArticleFieldSummaryOptionalLabel =>
+      _t('Summary (optional)', 'Ringkasan (opsional)');
+  static String get adminArticleFieldContentLabel => _t('Content', 'Konten');
+
+  static String adminTodayAdherenceSummary({
+    required int completed,
+    required int total,
+    required int percent,
+  }) => _t(
+    'Today task adherence: $completed/$total ($percent%)',
+    'Kepatuhan tugas hari ini: $completed/$total ($percent%)',
+  );
+
+  static String adminCreatedAtLabel(String dateLabel) =>
+      _t('Created: $dateLabel', 'Dibuat: $dateLabel');
+
+  static String adminArticleMetaLabel({
+    required String slug,
+    required String updatedDate,
+  }) => _t(
+    'Slug: $slug | Updated: $updatedDate',
+    'Slug: $slug | Update: $updatedDate',
+  );
+
   // Medicine
   static String get addMedicine => _t('Add Medicine', 'Tambah Obat');
   static String get editMedicine => _t('Edit Medicine', 'Edit Obat');

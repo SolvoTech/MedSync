@@ -1,7 +1,7 @@
 -- Seed default admin account for development/testing.
 -- Username: admin
 -- Password: password
--- Internal email/login email: admin@users.medsync.local
+-- Internal auth email (derived from username): admin@users.medsync.local
 --
 -- This migration is idempotent:
 -- - creates the admin user if missing,
@@ -12,10 +12,13 @@ DO $$
 DECLARE
   v_admin_username CONSTANT text := 'admin';
   v_admin_password CONSTANT text := 'password';
-  v_admin_email CONSTANT text := 'admin@users.medsync.local';
+  v_internal_email_domain CONSTANT text := 'users.medsync.local';
+  v_admin_email text;
   v_admin_id uuid;
   v_profile_trigger_disabled boolean := false;
 BEGIN
+  v_admin_email := lower(format('%s@%s', v_admin_username, v_internal_email_domain));
+
   SELECT u.id
     INTO v_admin_id
   FROM auth.users u
@@ -56,6 +59,15 @@ BEGIN
       encrypted_password,
       email_confirmed_at,
       confirmation_sent_at,
+      confirmation_token,
+      recovery_token,
+      email_change_token_new,
+      email_change,
+      email_change_token_current,
+      reauthentication_token,
+      email_change_confirm_status,
+      is_sso_user,
+      is_anonymous,
       raw_app_meta_data,
       raw_user_meta_data,
       created_at,
@@ -69,6 +81,15 @@ BEGIN
       crypt(v_admin_password, gen_salt('bf')),
       now(),
       now(),
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      0,
+      false,
+      false,
       jsonb_build_object('provider', 'email', 'providers', ARRAY['email']),
       jsonb_build_object('username', v_admin_username, 'full_name', 'Administrator'),
       now(),
@@ -79,6 +100,15 @@ BEGIN
     SET
       encrypted_password = crypt(v_admin_password, gen_salt('bf')),
       email_confirmed_at = coalesce(email_confirmed_at, now()),
+      confirmation_token = coalesce(confirmation_token, ''),
+      recovery_token = coalesce(recovery_token, ''),
+      email_change_token_new = coalesce(email_change_token_new, ''),
+      email_change = coalesce(email_change, ''),
+      email_change_token_current = coalesce(email_change_token_current, ''),
+      reauthentication_token = coalesce(reauthentication_token, ''),
+      email_change_confirm_status = coalesce(email_change_confirm_status, 0),
+      is_sso_user = false,
+      is_anonymous = false,
       raw_app_meta_data = jsonb_build_object('provider', 'email', 'providers', ARRAY['email']),
       raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) ||
         jsonb_build_object('username', v_admin_username, 'full_name', 'Administrator'),

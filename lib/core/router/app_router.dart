@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/admin/admin_control_screen.dart';
 import '../../features/admin/admin_education_screen.dart';
+import '../../features/admin/admin_home_screen.dart';
 import '../../features/auth/forgot_password/forgot_password_screen.dart';
 import '../../features/auth/login/login_screen.dart';
 import '../../features/auth/onboarding_profile/onboarding_profile_screen.dart';
@@ -57,14 +58,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const OnboardingProfileScreen(),
       ),
       GoRoute(
-        path: AppRoutes.adminControl,
-        builder: (_, _) => const AdminControlScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.adminEducation,
-        builder: (_, _) => const AdminEducationScreen(),
-      ),
-      GoRoute(
         path: AppRoutes.notifications,
         builder: (_, _) => const NotificationScreen(),
       ),
@@ -76,13 +69,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       StatefulShellRoute.indexedStack(
-        builder: (_, state, shell) => AppShell(navigationShell: shell),
+        builder: (_, _, shell) =>
+            AppShell(navigationShell: shell, isAdmin: authNotifier.isAdmin),
         branches: [
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: AppRoutes.home,
-                builder: (_, _) => const HomeScreen(),
+                builder: (_, _) => authNotifier.isAdmin == true
+                    ? const AdminHomeScreen()
+                    : const HomeScreen(),
               ),
             ],
           ),
@@ -118,6 +114,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.adminControl,
+                builder: (_, _) => const AdminControlScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.adminEducation,
+                builder: (_, _) => const AdminEducationScreen(),
+              ),
+            ],
+          ),
         ],
       ),
     ],
@@ -137,6 +149,11 @@ String? resolveAppRedirect({
   final isAdminRoute =
       matchedLocation == AppRoutes.adminControl ||
       matchedLocation == AppRoutes.adminEducation;
+  final isUserFeatureRoute =
+      matchedLocation == AppRoutes.schedule ||
+      matchedLocation == AppRoutes.report ||
+      matchedLocation == AppRoutes.education ||
+      matchedLocation.startsWith('${AppRoutes.education}/');
   final isPublicRoute =
       matchedLocation == AppRoutes.splash ||
       matchedLocation == AppRoutes.onboarding;
@@ -156,6 +173,17 @@ String? resolveAppRedirect({
     }
 
     if (isAdmin != true) {
+      return AppRoutes.home;
+    }
+  }
+
+  if (isAuthenticated && isUserFeatureRoute) {
+    if (isAdmin == null) {
+      // Wait until role is loaded before deciding redirect.
+      return null;
+    }
+
+    if (isAdmin == true) {
       return AppRoutes.home;
     }
   }

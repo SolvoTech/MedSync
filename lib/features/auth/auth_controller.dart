@@ -40,12 +40,18 @@ class AuthController extends AutoDisposeNotifier<AsyncValue<void>> {
         throw Exception('Username tidak valid.');
       }
 
-      await Supabase.instance.client.auth.signUp(
+      final response = await Supabase.instance.client.auth.signUp(
         data: {'full_name': fullName.trim(), 'username': normalizedUsername},
         email: _internalEmailFromUsername(normalizedUsername),
         password: password,
         emailRedirectTo: 'io.supabase.medsync://login-callback/',
       );
+
+      // Keep registration flow explicit: users must log in manually after sign up.
+      if (response.session != null ||
+          Supabase.instance.client.auth.currentSession != null) {
+        await Supabase.instance.client.auth.signOut();
+      }
     });
   }
 
