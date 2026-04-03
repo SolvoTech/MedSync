@@ -271,13 +271,7 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
 
       // Fast-forward to today if it's already in the past
       if (scheduledAt.isBefore(now)) {
-        scheduledAt = DateTime(
-          now.year,
-          now.month,
-          now.day,
-          hour,
-          minute,
-        );
+        scheduledAt = DateTime(now.year, now.month, now.day, hour, minute);
         // If today's time block has also already passed, push it to tomorrow
         if (scheduledAt.isBefore(now)) {
           scheduledAt = scheduledAt.add(const Duration(days: 1));
@@ -288,7 +282,7 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
         taskType: 'medicine',
         referenceId: bundle.schedule.id,
         timeOfDay: slot.timeOfDay,
-        channelId: 'medicine_reminders',
+        channelId: NotificationService.medicineReminderChannelId,
         title: 'Pengingat Obat',
         body: 'Waktunya minum obat Anda.',
         scheduledAt: scheduledAt,

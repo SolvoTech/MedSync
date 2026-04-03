@@ -18,6 +18,15 @@ class NotificationService {
   NotificationService();
 
   static const String markDoneActionId = 'mark_done';
+  static const String medicineReminderChannelId = 'medicine_reminders_v2';
+  static const String legacyMedicineReminderChannelId = 'medicine_reminders';
+  static const String medicineReminderRingtoneName = 'MedSync Obat Tenang';
+  static const String medicineReminderSoundResource = 'medsync_obat_tenang';
+  static const String measurementReminderChannelId = 'measurement_reminders';
+  static const String activityReminderChannelId = 'activity_reminders';
+  static const String stockWarningChannelId = 'stock_warnings';
+  static const String streakChannelId = 'streak_notifications';
+  static const String dailySummaryChannelId = 'daily_summary';
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -27,7 +36,17 @@ class NotificationService {
       '@mipmap/ic_launcher',
     );
 
-    const initSettings = InitializationSettings(android: androidSettings);
+    const darwinSettings = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: darwinSettings,
+      macOS: darwinSettings,
+    );
     await _plugin.initialize(
       initSettings,
       onDidReceiveNotificationResponse: _onNotificationResponse,
@@ -45,37 +64,43 @@ class NotificationService {
 
     const channels = <AndroidNotificationChannel>[
       AndroidNotificationChannel(
-        'medicine_reminders',
+        medicineReminderChannelId,
         'Pengingat Obat',
-        description: 'Notifikasi jadwal minum obat',
-        importance: Importance.high,
+        description:
+            'Notifikasi jadwal minum obat (Dering: $medicineReminderRingtoneName)',
+        importance: Importance.max,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound(
+          medicineReminderSoundResource,
+        ),
+        audioAttributesUsage: AudioAttributesUsage.alarm,
       ),
       AndroidNotificationChannel(
-        'measurement_reminders',
+        measurementReminderChannelId,
         'Pengingat Pengukuran',
         description: 'Notifikasi pengukuran kesehatan',
         importance: Importance.high,
       ),
       AndroidNotificationChannel(
-        'activity_reminders',
+        activityReminderChannelId,
         'Pengingat Aktivitas',
         description: 'Notifikasi aktivitas fisik',
         importance: Importance.defaultImportance,
       ),
       AndroidNotificationChannel(
-        'stock_warnings',
+        stockWarningChannelId,
         'Peringatan Stok Obat',
         description: 'Notifikasi stok obat menipis',
         importance: Importance.high,
       ),
       AndroidNotificationChannel(
-        'streak_notifications',
+        streakChannelId,
         'Notifikasi Streak',
         description: 'Notifikasi pencapaian streak',
         importance: Importance.defaultImportance,
       ),
       AndroidNotificationChannel(
-        'daily_summary',
+        dailySummaryChannelId,
         'Ringkasan Harian',
         description: 'Notifikasi ringkasan aktivitas harian',
         importance: Importance.low,
@@ -92,6 +117,8 @@ class NotificationService {
         await android.createNotificationChannel(channel);
       }
     }
+
+    await _migrateMedicineNotificationsToRingtoneChannel();
   }
 
   Future<void> requestPermission() async {
@@ -100,6 +127,18 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin
         >();
     await android?.requestNotificationsPermission();
+
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+    await ios?.requestPermissions(alert: true, badge: true, sound: true);
+
+    final macos = _plugin
+        .resolvePlatformSpecificImplementation<
+          MacOSFlutterLocalNotificationsPlugin
+        >();
+    await macos?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
   Future<void> scheduleNotification({
@@ -111,6 +150,8 @@ class NotificationService {
     String? payload,
     bool repeatDaily = false,
   }) async {
+    final androidSound = _androidSoundForChannel(channelId);
+
     final details = NotificationDetails(
       android: AndroidNotificationDetails(
         channelId,
@@ -118,6 +159,11 @@ class NotificationService {
         channelDescription: _channelDescription(channelId),
         importance: Importance.high,
         priority: Priority.high,
+        playSound: true,
+        sound: androidSound,
+        audioAttributesUsage: channelId == medicineReminderChannelId
+            ? AudioAttributesUsage.alarm
+            : AudioAttributesUsage.notification,
         actions: _supportsTaskDoneAction(channelId)
             ? const <AndroidNotificationAction>[
                 AndroidNotificationAction(
@@ -128,6 +174,16 @@ class NotificationService {
                 ),
               ]
             : null,
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+      macOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
       ),
     );
 
@@ -214,9 +270,9 @@ class NotificationService {
   }) async {
     final targetPrefix = 'task|$taskType|$referenceId|$timeOfDay';
 
-    String channelId = 'medicine_reminders';
-    if (taskType == 'measurement') channelId = 'measurement_reminders';
-    if (taskType == 'physical_activity') channelId = 'activity_reminders';
+    var channelId = medicineReminderChannelId;
+    if (taskType == 'measurement') channelId = measurementReminderChannelId;
+    if (taskType == 'physical_activity') channelId = activityReminderChannelId;
 
     final pendingList = await _plugin.pendingNotificationRequests();
     final now = tz.TZDateTime.now(tz.local);
@@ -279,17 +335,18 @@ class NotificationService {
 
   String _channelName(String channelId) {
     switch (channelId) {
-      case 'medicine_reminders':
+      case legacyMedicineReminderChannelId:
+      case medicineReminderChannelId:
         return 'Pengingat Obat';
-      case 'measurement_reminders':
+      case measurementReminderChannelId:
         return 'Pengingat Pengukuran';
-      case 'activity_reminders':
+      case activityReminderChannelId:
         return 'Pengingat Aktivitas';
-      case 'stock_warnings':
+      case stockWarningChannelId:
         return 'Peringatan Stok Obat';
-      case 'streak_notifications':
+      case streakChannelId:
         return 'Notifikasi Streak';
-      case 'daily_summary':
+      case dailySummaryChannelId:
         return 'Ringkasan Harian';
       default:
         return 'MedSync';
@@ -298,17 +355,18 @@ class NotificationService {
 
   String _channelDescription(String channelId) {
     switch (channelId) {
-      case 'medicine_reminders':
-        return 'Notifikasi jadwal minum obat';
-      case 'measurement_reminders':
+      case legacyMedicineReminderChannelId:
+      case medicineReminderChannelId:
+        return 'Notifikasi jadwal minum obat (Dering: $medicineReminderRingtoneName)';
+      case measurementReminderChannelId:
         return 'Notifikasi pengukuran kesehatan';
-      case 'activity_reminders':
+      case activityReminderChannelId:
         return 'Notifikasi aktivitas fisik';
-      case 'stock_warnings':
+      case stockWarningChannelId:
         return 'Notifikasi stok obat menipis';
-      case 'streak_notifications':
+      case streakChannelId:
         return 'Notifikasi pencapaian streak';
-      case 'daily_summary':
+      case dailySummaryChannelId:
         return 'Notifikasi ringkasan aktivitas harian';
       default:
         return 'Notifikasi MedSync';
@@ -316,9 +374,76 @@ class NotificationService {
   }
 
   bool _supportsTaskDoneAction(String channelId) {
-    return channelId == 'medicine_reminders' ||
-        channelId == 'measurement_reminders' ||
-        channelId == 'activity_reminders';
+    return channelId == medicineReminderChannelId ||
+        channelId == legacyMedicineReminderChannelId ||
+        channelId == measurementReminderChannelId ||
+        channelId == activityReminderChannelId;
+  }
+
+  Future<void> _migrateMedicineNotificationsToRingtoneChannel() async {
+    final pendingList = await _plugin.pendingNotificationRequests();
+
+    for (final pending in pendingList) {
+      final payload = pending.payload;
+      if (payload == null || payload.isEmpty || !payload.startsWith('task|')) {
+        continue;
+      }
+
+      final parsed = _parseTaskPayload(payload);
+      if (parsed == null || parsed.taskType != 'medicine') {
+        continue;
+      }
+
+      final timeOfDay = parsed.timeOfDay;
+      if (timeOfDay == null || timeOfDay.isEmpty) {
+        continue;
+      }
+
+      final parts = payload.split('|');
+      final snoozeIndex = parts.length > 4 ? int.tryParse(parts[4]) ?? 0 : 0;
+      final nextTime = _nextDailyTime(timeOfDay, snoozeIndex: snoozeIndex);
+
+      await _plugin.cancel(pending.id);
+
+      await scheduleNotification(
+        id: pending.id,
+        channelId: medicineReminderChannelId,
+        title: pending.title ?? 'Pengingat Obat',
+        body: pending.body ?? 'Waktunya minum obat Anda.',
+        scheduledAt: nextTime,
+        payload: payload,
+        repeatDaily: true,
+      );
+    }
+  }
+
+  DateTime _nextDailyTime(String timeOfDay, {int snoozeIndex = 0}) {
+    final now = DateTime.now();
+    final parts = timeOfDay.split(':');
+
+    final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
+    final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+
+    var scheduledAt = DateTime(now.year, now.month, now.day, hour, minute);
+    if (scheduledAt.isBefore(now)) {
+      scheduledAt = scheduledAt.add(const Duration(days: 1));
+    }
+
+    if (snoozeIndex > 0) {
+      scheduledAt = scheduledAt.add(Duration(minutes: 5 * snoozeIndex));
+    }
+
+    return scheduledAt;
+  }
+
+  AndroidNotificationSound? _androidSoundForChannel(String channelId) {
+    if (channelId == medicineReminderChannelId ||
+        channelId == legacyMedicineReminderChannelId) {
+      return const RawResourceAndroidNotificationSound(
+        medicineReminderSoundResource,
+      );
+    }
+    return null;
   }
 
   Future<void> _onNotificationResponse(NotificationResponse response) async {

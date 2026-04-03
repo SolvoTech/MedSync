@@ -189,6 +189,13 @@ class _ArticleListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 390;
+    final hasSummary = (article.summary ?? '').trim().isNotEmpty;
+    final cardHeight = hasSummary
+        ? (compact ? 150.0 : 162.0)
+        : (compact ? 128.0 : 138.0);
+    final imageWidth = compact ? 108.0 : 116.0;
     final locale = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
     final publishedAt = article.publishedAt != null
         ? DateFormat(
@@ -200,7 +207,8 @@ class _ArticleListCard extends StatelessWidget {
     return AppCard(
       padding: EdgeInsets.zero,
       onTap: () => context.push(AppRoutes.educationDetail(article.id)),
-      child: IntrinsicHeight(
+      child: SizedBox(
+        height: cardHeight,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -210,11 +218,11 @@ class _ArticleListCard extends StatelessWidget {
                 bottomLeft: Radius.circular(20),
               ),
               child: SizedBox(
-                width: 116,
+                width: imageWidth,
                 child: _ArticleCover(
                   url: article.coverUrl,
-                  height: double.infinity,
-                  width: 116,
+                  height: cardHeight,
+                  width: imageWidth,
                 ),
               ),
             ),
@@ -250,7 +258,7 @@ class _ArticleListCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 10),
+                    const Spacer(),
                     Text(
                       publishedAt,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
