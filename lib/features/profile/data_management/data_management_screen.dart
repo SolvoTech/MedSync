@@ -28,7 +28,14 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
     try {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
-      if (user == null) throw Exception('Please sign in first');
+      if (user == null) {
+        throw Exception(
+          AppStrings.tr(
+            'Please sign in first.',
+            'Silakan masuk terlebih dahulu.',
+          ),
+        );
+      }
 
       // Fetch all user-owned data
       final medicines = await client
@@ -105,7 +112,12 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
       if (user == null) {
-        throw Exception('You must be signed in first.');
+        throw Exception(
+          AppStrings.tr(
+            'You must be signed in first.',
+            'Anda harus masuk terlebih dahulu.',
+          ),
+        );
       }
 
       // Delete auth account first so the email can be reused for sign up.

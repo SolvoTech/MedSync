@@ -165,8 +165,11 @@ class ProfileScreen extends ConsumerWidget {
                               strokeWidth: 2,
                             ),
                           ),
-                          error: (_, _) =>
-                              AppAvatar(size: 64, name: 'User', showRing: true),
+                          error: (_, _) => AppAvatar(
+                            size: 64,
+                            name: AppStrings.tr('User', 'Pengguna'),
+                            showRing: true,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -176,7 +179,8 @@ class ProfileScreen extends ConsumerWidget {
                           children: [
                             profileAsync.when(
                               data: (profile) => Text(
-                                profile?.fullName ?? 'User',
+                                profile?.fullName ??
+                                    AppStrings.tr('User', 'Pengguna'),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: textTheme.titleMedium?.copyWith(
@@ -184,7 +188,8 @@ class ProfileScreen extends ConsumerWidget {
                                 ),
                               ),
                               loading: () => const SizedBox.shrink(),
-                              error: (_, _) => const Text('User'),
+                              error: (_, _) =>
+                                  Text(AppStrings.tr('User', 'Pengguna')),
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -216,7 +221,7 @@ class ProfileScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Account section
-                _SectionHeader(title: 'AKUN'),
+                _SectionHeader(title: AppStrings.tr('ACCOUNT', 'AKUN')),
                 const SizedBox(height: 8),
                 AppCard(
                   padding: EdgeInsets.zero,
@@ -248,7 +253,7 @@ class ProfileScreen extends ConsumerWidget {
                       _MenuDivider(),
                       _MenuItem(
                         icon: Icons.photo_camera_outlined,
-                        label: 'Foto Profil',
+                        label: AppStrings.tr('Profile Photo', 'Foto Profil'),
                         color: const Color(0xFFED8936),
                         onTap: () async {
                           final updated = await Navigator.push(
@@ -269,7 +274,9 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
 
                 // Manage Members section
-                _SectionHeader(title: 'KELOLA ANGGOTA'),
+                _SectionHeader(
+                  title: AppStrings.tr('MANAGE MEMBERS', 'KELOLA ANGGOTA'),
+                ),
                 const SizedBox(height: 8),
                 AppCard(
                   padding: EdgeInsets.zero,
@@ -293,7 +300,9 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
 
                 // Preferences section
-                _SectionHeader(title: 'PREFERENSI'),
+                _SectionHeader(
+                  title: AppStrings.tr('PREFERENCES', 'PREFERENSI'),
+                ),
                 const SizedBox(height: 8),
                 AppCard(
                   padding: EdgeInsets.zero,
@@ -350,13 +359,21 @@ class ProfileScreen extends ConsumerWidget {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _SectionHeader(title: 'PUSAT KONTROL'),
+                        _SectionHeader(
+                          title: AppStrings.tr(
+                            'CONTROL CENTER',
+                            'PUSAT KONTROL',
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         AppCard(
                           padding: EdgeInsets.zero,
                           child: _MenuItem(
                             icon: Icons.admin_panel_settings_outlined,
-                            label: 'Admin Control Center',
+                            label: AppStrings.tr(
+                              'Admin Control Center',
+                              'Pusat Kontrol Admin',
+                            ),
                             color: const Color(0xFF2B6CB0),
                             onTap: () => context.push(AppRoutes.adminControl),
                           ),
@@ -370,7 +387,9 @@ class ProfileScreen extends ConsumerWidget {
                 ),
 
                 // Info section
-                _SectionHeader(title: 'INFORMASI'),
+                _SectionHeader(
+                  title: AppStrings.tr('INFORMATION', 'INFORMASI'),
+                ),
                 const SizedBox(height: 8),
                 AppCard(
                   padding: EdgeInsets.zero,
@@ -378,9 +397,19 @@ class ProfileScreen extends ConsumerWidget {
                     children: [
                       _MenuItem(
                         icon: Icons.menu_book_outlined,
-                        label: 'Edukasi Kesehatan',
+                        label: AppStrings.tr(
+                          'Health Articles',
+                          'Edukasi Kesehatan',
+                        ),
                         color: const Color(0xFF2B6CB0),
-                        onTap: () => context.push(AppRoutes.education),
+                        onTap: () => context.go(AppRoutes.education),
+                      ),
+                      _MenuDivider(),
+                      _MenuItem(
+                        icon: Icons.notifications_none_rounded,
+                        label: AppStrings.notificationTitle,
+                        color: const Color(0xFFE53E3E),
+                        onTap: () => context.push(AppRoutes.notifications),
                       ),
                       _MenuDivider(),
                       _MenuItem(
@@ -449,9 +478,14 @@ class ProfileScreen extends ConsumerWidget {
                         onTap: () async {
                           final shouldLogout = await AppDialog.showConfirm(
                             context,
-                            title: 'Keluar dari akun?',
-                            message:
-                                'Anda perlu masuk kembali untuk mengakses data Anda.',
+                            title: AppStrings.tr(
+                              'Sign out from your account?',
+                              'Keluar dari akun?',
+                            ),
+                            message: AppStrings.tr(
+                              'You will need to sign in again to access your data.',
+                              'Anda perlu masuk kembali untuk mengakses data Anda.',
+                            ),
                             confirmLabel: AppStrings.logout,
                             cancelLabel: AppStrings.cancel,
                             isDestructive: true,

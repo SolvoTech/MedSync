@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_gradients.dart';
+import '../../core/router/app_routes.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/extensions/context_ext.dart';
 import '../../core/widgets/app_card.dart';
@@ -65,6 +67,17 @@ class HomeScreen extends ConsumerWidget {
               expandedHeight: 132,
               toolbarHeight: 64,
               backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: IconButton(
+                    tooltip: AppStrings.notificationTitle,
+                    onPressed: () => context.push(AppRoutes.notifications),
+                    icon: const Icon(Icons.notifications_none_rounded),
+                  ),
+                ),
+              ],
               surfaceTintColor: Colors.transparent,
               flexibleSpace: Container(
                 decoration: BoxDecoration(
@@ -238,28 +251,37 @@ class HomeScreen extends ConsumerWidget {
             ),
 
             // Section header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 3,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+            tasksState.when(
+              data: (tasks) {
+                final doneOrSkipped = tasks
+                    .where((t) => t.status == 'done' || t.status == 'skipped')
+                    .length;
+                final pending = tasks.length - doneOrSkipped;
+
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                    child: _TodayTaskSectionHeader(
+                      total: tasks.length,
+                      pending: pending,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppStrings.todayTasks,
-                      style: textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ],
+                  ),
+                );
+              },
+              loading: () => SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                  child: const AppLoadingSkeleton(
+                    width: double.infinity,
+                    height: 78,
+                    borderRadius: 20,
+                  ),
+                ),
+              ),
+              error: (_, _) => SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                  child: _TodayTaskSectionHeader(total: 0, pending: 0),
                 ),
               ),
             ),
@@ -475,6 +497,94 @@ class _StatItem extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _TodayTaskSectionHeader extends StatelessWidget {
+  const _TodayTaskSectionHeader({required this.total, required this.pending});
+
+  final int total;
+  final int pending;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return AppCard(
+      color: colorScheme.surfaceContainerLow,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(
+              Icons.checklist_rtl_rounded,
+              color: colorScheme.primary,
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppStrings.todayTasks,
+                  style: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  AppStrings.tr(
+                    'Complete your scheduled tasks to keep your streak stable.',
+                    'Selesaikan tugas terjadwal agar streak tetap stabil.',
+                  ),
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.62),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '$pending',
+                  style: textTheme.titleSmall?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  total == 0
+                      ? AppStrings.tr('No task', 'Tidak ada')
+                      : AppStrings.tr('pending', 'menunggu'),
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colorScheme.primary.withValues(alpha: 0.88),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

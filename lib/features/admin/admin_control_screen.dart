@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/constants/app_strings.dart';
 import '../../core/errors/user_error_message.dart';
 import '../../core/extensions/context_ext.dart';
 import '../../core/router/app_routes.dart';
@@ -13,6 +14,7 @@ import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/app_error_widget.dart';
 import '../../core/widgets/app_loading_skeleton.dart';
 import '../../data/remote/supabase_client.dart';
+import 'widgets/admin_ui.dart';
 
 final adminRoleProvider = FutureProvider.autoDispose<bool>((ref) async {
   final client = SupabaseClientRef.maybeClient;
@@ -219,11 +221,19 @@ class AdminControlScreen extends ConsumerWidget {
 
     return roleState.when(
       loading: () => Scaffold(
-        appBar: AppBar(title: const Text('Admin Control Center')),
+        appBar: AppBar(
+          title: Text(
+            AppStrings.tr('Admin Control Center', 'Pusat Kontrol Admin'),
+          ),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       ),
       error: (error, _) => Scaffold(
-        appBar: AppBar(title: const Text('Admin Control Center')),
+        appBar: AppBar(
+          title: Text(
+            AppStrings.tr('Admin Control Center', 'Pusat Kontrol Admin'),
+          ),
+        ),
         body: AppErrorWidget(
           message: toUserErrorMessage(error),
           onRetry: () => ref.invalidate(adminRoleProvider),
@@ -232,10 +242,20 @@ class AdminControlScreen extends ConsumerWidget {
       data: (isAdmin) {
         if (!isAdmin) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Admin Control Center')),
-            body: const AppEmptyState(
-              message: 'Anda tidak memiliki akses ke halaman admin.',
-              subtitle: 'Hubungi administrator jika ini tidak sesuai.',
+            appBar: AppBar(
+              title: Text(
+                AppStrings.tr('Admin Control Center', 'Pusat Kontrol Admin'),
+              ),
+            ),
+            body: AppEmptyState(
+              message: AppStrings.tr(
+                'You do not have access to this admin page.',
+                'Anda tidak memiliki akses ke halaman admin.',
+              ),
+              subtitle: AppStrings.tr(
+                'Contact your administrator if this is unexpected.',
+                'Hubungi administrator jika ini tidak sesuai.',
+              ),
               icon: Icons.lock_outline,
             ),
           );
@@ -247,10 +267,12 @@ class AdminControlScreen extends ConsumerWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Admin Control Center'),
+            title: Text(
+              AppStrings.tr('Admin Control Center', 'Pusat Kontrol Admin'),
+            ),
             actions: [
               IconButton(
-                tooltip: 'Refresh',
+                tooltip: AppStrings.tr('Refresh', 'Muat Ulang'),
                 icon: const Icon(Icons.refresh),
                 onPressed: () {
                   ref.invalidate(adminDashboardProvider);
@@ -275,22 +297,64 @@ class AdminControlScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
+                AdminIntroCard(
+                  icon: Icons.admin_panel_settings_outlined,
+                  title: AppStrings.tr(
+                    'Admin Control Center',
+                    'Pusat Kontrol Admin',
+                  ),
+                  subtitle: AppStrings.tr(
+                    'Monitor account access, user status, and today\'s adherence from one dashboard.',
+                    'Pantau akses akun, status pengguna, dan kepatuhan hari ini dari satu dashboard.',
+                  ),
+                  badge: AppStrings.tr('ADMIN', 'ADMIN'),
+                ),
+                const SizedBox(height: 14),
                 AppCard(
                   child: Row(
                     children: [
-                      const Icon(Icons.school_outlined),
-                      const SizedBox(width: 10),
-                      const Expanded(
-                        child: Text('Kelola artikel edukasi untuk pengguna.'),
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.school_outlined,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
                       ),
-                      FilledButton.tonal(
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          AppStrings.tr(
+                            'Manage educational articles for users.',
+                            'Kelola artikel edukasi untuk pengguna.',
+                          ),
+                        ),
+                      ),
+                      FilledButton.tonalIcon(
                         onPressed: () => context.push(AppRoutes.adminEducation),
-                        child: const Text('Kelola'),
+                        icon: const Icon(Icons.chevron_right_rounded, size: 18),
+                        label: Text(AppStrings.tr('Manage', 'Kelola')),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
+                AdminSectionTitle(
+                  title: AppStrings.tr('System Snapshot', 'Ringkasan Sistem'),
+                  subtitle: AppStrings.tr(
+                    'Quick metrics for users and daily adherence.',
+                    'Metrik cepat pengguna dan kepatuhan harian.',
+                  ),
+                  icon: Icons.query_stats_rounded,
+                ),
+                const SizedBox(height: 8),
                 dashboardState.when(
                   loading: () => const _DashboardLoading(),
                   error: (error, _) => AppErrorWidget(
@@ -300,11 +364,13 @@ class AdminControlScreen extends ConsumerWidget {
                   data: (dashboard) => _DashboardSummary(data: dashboard),
                 ),
                 const SizedBox(height: 20),
-                Text(
-                  'Manajemen Pengguna',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                AdminSectionTitle(
+                  title: AppStrings.tr('User Management', 'Manajemen Pengguna'),
+                  subtitle: AppStrings.tr(
+                    'Activate, suspend, or reset user access securely.',
+                    'Aktifkan, nonaktifkan, atau reset akses pengguna dengan aman.',
                   ),
+                  icon: Icons.groups_rounded,
                 ),
                 const SizedBox(height: 8),
                 usersState.when(
@@ -315,9 +381,15 @@ class AdminControlScreen extends ConsumerWidget {
                   ),
                   data: (users) {
                     if (users.isEmpty) {
-                      return const AppEmptyState(
-                        message: 'Belum ada data pengguna.',
-                        subtitle: 'Data user akan tampil di sini.',
+                      return AppEmptyState(
+                        message: AppStrings.tr(
+                          'No user data available yet.',
+                          'Belum ada data pengguna.',
+                        ),
+                        subtitle: AppStrings.tr(
+                          'User data will appear here.',
+                          'Data user akan tampil di sini.',
+                        ),
                         icon: Icons.group_outlined,
                       );
                     }
@@ -361,12 +433,22 @@ class AdminControlScreen extends ConsumerWidget {
     final suspend = user.accountStatus != 'suspended';
     final confirmed = await AppDialog.showConfirm(
       context,
-      title: suspend ? 'Nonaktifkan akun?' : 'Aktifkan akun?',
+      title: suspend
+          ? AppStrings.tr('Suspend account?', 'Nonaktifkan akun?')
+          : AppStrings.tr('Activate account?', 'Aktifkan akun?'),
       message: suspend
-          ? 'User tidak bisa login selama status dinonaktifkan.'
-          : 'User akan bisa login kembali.',
-      confirmLabel: suspend ? 'Nonaktifkan' : 'Aktifkan',
-      cancelLabel: 'Batal',
+          ? AppStrings.tr(
+              'The user will not be able to sign in while suspended.',
+              'User tidak bisa login selama status dinonaktifkan.',
+            )
+          : AppStrings.tr(
+              'The user will be able to sign in again.',
+              'User akan bisa login kembali.',
+            ),
+      confirmLabel: suspend
+          ? AppStrings.tr('Suspend', 'Nonaktifkan')
+          : AppStrings.tr('Activate', 'Aktifkan'),
+      cancelLabel: AppStrings.cancel,
       isDestructive: suspend,
       icon: suspend ? Icons.block : Icons.check_circle_outline,
     );
@@ -390,7 +472,12 @@ class AdminControlScreen extends ConsumerWidget {
     }
 
     context.showSuccessSnackBar(
-      suspend ? 'Akun user dinonaktifkan.' : 'Akun user diaktifkan kembali.',
+      suspend
+          ? AppStrings.tr('User account suspended.', 'Akun user dinonaktifkan.')
+          : AppStrings.tr(
+              'User account reactivated.',
+              'Akun user diaktifkan kembali.',
+            ),
     );
     ref.invalidate(adminDashboardProvider);
     ref.invalidate(adminUsersProvider);
@@ -403,11 +490,13 @@ class AdminControlScreen extends ConsumerWidget {
   ) async {
     final confirmed = await AppDialog.showConfirm(
       context,
-      title: 'Reset akses user?',
-      message:
-          'Instruksi reset akan dikirim melalui kanal akun internal yang terdaftar.',
-      confirmLabel: 'Kirim Reset',
-      cancelLabel: 'Batal',
+      title: AppStrings.tr('Reset user access?', 'Reset akses user?'),
+      message: AppStrings.tr(
+        'Reset instructions will be sent via the registered internal account channel.',
+        'Instruksi reset akan dikirim melalui kanal akun internal yang terdaftar.',
+      ),
+      confirmLabel: AppStrings.tr('Send Reset', 'Kirim Reset'),
+      cancelLabel: AppStrings.cancel,
       icon: Icons.key_outlined,
     );
 
@@ -429,7 +518,12 @@ class AdminControlScreen extends ConsumerWidget {
       return;
     }
 
-    context.showSuccessSnackBar('Instruksi reset akses berhasil dikirim.');
+    context.showSuccessSnackBar(
+      AppStrings.tr(
+        'Reset access instructions sent successfully.',
+        'Instruksi reset akses berhasil dikirim.',
+      ),
+    );
     ref.invalidate(adminUsersProvider);
   }
 }
@@ -478,7 +572,9 @@ class AdminManagedUser {
 
     return AdminManagedUser(
       id: map['id'] as String,
-      fullName: (map['full_name'] as String?) ?? 'Tanpa Nama',
+      fullName:
+          (map['full_name'] as String?) ??
+          AppStrings.tr('No Name', 'Tanpa Nama'),
       username: (map['username'] as String?) ?? '-',
       role: (map['role'] as String?) ?? 'user',
       accountStatus: (map['account_status'] as String?) ?? 'active',
@@ -505,7 +601,7 @@ class _DashboardSummary extends StatelessWidget {
           children: [
             Expanded(
               child: _MetricCard(
-                title: 'Total User',
+                title: AppStrings.tr('Total Users', 'Total User'),
                 value: data.totalUsers.toString(),
                 icon: Icons.groups_2_outlined,
                 color: const Color(0xFF2B6CB0),
@@ -514,7 +610,7 @@ class _DashboardSummary extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: _MetricCard(
-                title: 'User Aktif',
+                title: AppStrings.tr('Active Users', 'User Aktif'),
                 value: data.activeUsers.toString(),
                 icon: Icons.check_circle_outline,
                 color: const Color(0xFF2F855A),
@@ -527,7 +623,7 @@ class _DashboardSummary extends StatelessWidget {
           children: [
             Expanded(
               child: _MetricCard(
-                title: 'User Suspended',
+                title: AppStrings.tr('Suspended Users', 'User Suspended'),
                 value: data.suspendedUsers.toString(),
                 icon: Icons.block_outlined,
                 color: const Color(0xFFC53030),
@@ -536,7 +632,7 @@ class _DashboardSummary extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: _MetricCard(
-                title: 'Akun Admin',
+                title: AppStrings.tr('Admin Accounts', 'Akun Admin'),
                 value: data.adminUsers.toString(),
                 icon: Icons.admin_panel_settings_outlined,
                 color: const Color(0xFF805AD5),
@@ -552,7 +648,10 @@ class _DashboardSummary extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Kepatuhan tugas hari ini: ${data.todayCompleted}/${data.todayTasks} (${data.adherencePercent}%)',
+                  AppStrings.tr(
+                    'Today task adherence: ${data.todayCompleted}/${data.todayTasks} (${data.adherencePercent}%)',
+                    'Kepatuhan tugas hari ini: ${data.todayCompleted}/${data.todayTasks} (${data.adherencePercent}%)',
+                  ),
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
@@ -631,16 +730,18 @@ class _UserItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final statusColor = user.accountStatus == 'suspended'
         ? const Color(0xFFC53030)
         : const Color(0xFF2F855A);
     final statusLabel = user.accountStatus == 'suspended'
-        ? 'SUSPENDED'
-        : 'ACTIVE';
+        ? AppStrings.tr('SUSPENDED', 'DINONAKTIFKAN')
+        : AppStrings.tr('ACTIVE', 'AKTIF');
     final canManage = !isSelf && user.role != 'admin';
     final createdAtLabel = user.createdAt == null
         ? '-'
         : DateFormat('dd MMM yyyy').format(user.createdAt!.toLocal());
+    final initials = _initials(user.fullName);
 
     return AppCard(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -650,6 +751,24 @@ class _UserItem extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    initials,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -660,22 +779,29 @@ class _UserItem extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '@${user.username}  |  ${user.role.toUpperCase()}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
+                    const SizedBox(height: 5),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        _InfoTag(
+                          label: '@${user.username}',
+                          icon: Icons.alternate_email_rounded,
+                        ),
+                        _InfoTag(
+                          label: user.role.toUpperCase(),
+                          icon: Icons.shield_outlined,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 6),
                     Text(
-                      'Dibuat: $createdAtLabel',
+                      AppStrings.tr(
+                        'Created: $createdAtLabel',
+                        'Dibuat: $createdAtLabel',
+                      ),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.55),
+                        color: colorScheme.onSurface.withValues(alpha: 0.55),
                       ),
                     ),
                   ],
@@ -708,13 +834,17 @@ class _UserItem extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: isBusy || !canManage ? null : onResetAccess,
                   icon: const Icon(Icons.key_outlined, size: 18),
-                  label: const Text('Reset Akses'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 42),
+                  ),
+                  label: Text(AppStrings.tr('Reset Access', 'Reset Akses')),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: FilledButton.icon(
                   onPressed: isBusy || !canManage ? null : onToggleStatus,
+                  style: FilledButton.styleFrom(minimumSize: const Size(0, 42)),
                   icon: Icon(
                     user.accountStatus == 'suspended'
                         ? Icons.check_circle_outline
@@ -722,7 +852,9 @@ class _UserItem extends StatelessWidget {
                     size: 18,
                   ),
                   label: Text(
-                    user.accountStatus == 'suspended' ? 'Aktifkan' : 'Suspend',
+                    user.accountStatus == 'suspended'
+                        ? AppStrings.tr('Activate', 'Aktifkan')
+                        : AppStrings.tr('Suspend', 'Suspend'),
                   ),
                 ),
               ),
@@ -732,8 +864,14 @@ class _UserItem extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               isSelf
-                  ? 'Akun ini adalah akun Anda sendiri.'
-                  : 'Akun admin lain tidak bisa dikelola dari layar ini.',
+                  ? AppStrings.tr(
+                      'This account is your own account.',
+                      'Akun ini adalah akun Anda sendiri.',
+                    )
+                  : AppStrings.tr(
+                      'Other admin accounts cannot be managed from this screen.',
+                      'Akun admin lain tidak bisa dikelola dari layar ini.',
+                    ),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(
                   context,
@@ -741,6 +879,61 @@ class _UserItem extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  String _initials(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) {
+      return 'U';
+    }
+
+    if (parts.length == 1) {
+      return parts.first.substring(0, 1).toUpperCase();
+    }
+
+    return (parts.first.substring(0, 1) + parts[1].substring(0, 1))
+        .toUpperCase();
+  }
+}
+
+class _InfoTag extends StatelessWidget {
+  const _InfoTag({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 12,
+            color: colorScheme.onSurface.withValues(alpha: 0.62),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.75),
+            ),
+          ),
         ],
       ),
     );

@@ -65,8 +65,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const AdminEducationScreen(),
       ),
       GoRoute(
-        path: AppRoutes.education,
-        builder: (_, _) => const EducationFeedScreen(),
+        path: AppRoutes.notifications,
+        builder: (_, _) => const NotificationScreen(),
       ),
       GoRoute(
         path: '${AppRoutes.education}/:articleId',
@@ -105,8 +105,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.notifications,
-                builder: (_, _) => const NotificationScreen(),
+                path: AppRoutes.education,
+                builder: (_, _) => const EducationFeedScreen(),
               ),
             ],
           ),

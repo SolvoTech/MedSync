@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../domain/models/medicine_schedule.dart';
 
 class MedicineScheduleBundleCard extends StatelessWidget {
@@ -21,6 +23,11 @@ class MedicineScheduleBundleCard extends StatelessWidget {
     final schedule = bundle.schedule;
     final slots = bundle.slots;
     final colorScheme = Theme.of(context).colorScheme;
+    final locale = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+    final startDateLabel = DateFormat(
+      'dd MMM yyyy',
+      locale,
+    ).format(schedule.startDate);
 
     return Container(
       decoration: BoxDecoration(
@@ -55,7 +62,10 @@ class MedicineScheduleBundleCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Mode nonaktif: jadwal hanya bisa dilihat',
+                    AppStrings.tr(
+                      'Inactive mode: schedule is view-only',
+                      'Mode nonaktif: jadwal hanya bisa dilihat',
+                    ),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -89,7 +99,8 @@ class MedicineScheduleBundleCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        schedule.scheduleName ?? 'Jadwal Harian',
+                        schedule.scheduleName ??
+                            AppStrings.tr('Daily Schedule', 'Jadwal Harian'),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
@@ -109,14 +120,16 @@ class MedicineScheduleBundleCard extends StatelessWidget {
                             onDelete();
                           }
                         },
-                        itemBuilder: (context) => const [
+                        itemBuilder: (context) => [
                           PopupMenuItem(
                             value: 'edit',
                             child: Row(
                               children: [
-                                Icon(Icons.edit_outlined, size: 20),
-                                SizedBox(width: 12),
-                                Text('Edit Jadwal'),
+                                const Icon(Icons.edit_outlined, size: 20),
+                                const SizedBox(width: 12),
+                                Text(
+                                  AppStrings.tr('Edit Schedule', 'Edit Jadwal'),
+                                ),
                               ],
                             ),
                           ),
@@ -124,15 +137,18 @@ class MedicineScheduleBundleCard extends StatelessWidget {
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.delete_outline,
                                   color: Colors.red,
                                   size: 20,
                                 ),
-                                SizedBox(width: 12),
+                                const SizedBox(width: 12),
                                 Text(
-                                  'Hapus Jadwal',
-                                  style: TextStyle(color: Colors.red),
+                                  AppStrings.tr(
+                                    'Delete Schedule',
+                                    'Hapus Jadwal',
+                                  ),
+                                  style: const TextStyle(color: Colors.red),
                                 ),
                               ],
                             ),
@@ -190,7 +206,10 @@ class MedicineScheduleBundleCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Mulai: ${schedule.startDate.day.toString().padLeft(2, '0')}/${schedule.startDate.month.toString().padLeft(2, '0')}/${schedule.startDate.year}',
+                      AppStrings.tr(
+                        'Start: $startDateLabel',
+                        'Mulai: $startDateLabel',
+                      ),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.6),
                         fontWeight: FontWeight.w600,
@@ -223,10 +242,10 @@ class MedicineScheduleBundleCard extends StatelessWidget {
   String _repeatTypeLabel(String value) {
     switch (value) {
       case 'weekly':
-        return 'Mingguan';
+        return AppStrings.weekly;
       case 'daily':
       default:
-        return 'Harian';
+        return AppStrings.daily;
     }
   }
 }

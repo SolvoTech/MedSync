@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/constants/app_strings.dart';
 import '../../core/errors/user_error_message.dart';
 import '../../core/extensions/context_ext.dart';
 import '../../core/widgets/app_card.dart';
@@ -11,6 +12,7 @@ import '../../core/widgets/app_error_widget.dart';
 import '../../core/widgets/app_loading_skeleton.dart';
 import '../../domain/models/education_article.dart';
 import '../education/education_providers.dart';
+import 'widgets/admin_ui.dart';
 
 final adminEducationActionControllerProvider =
     AutoDisposeNotifierProvider<
@@ -72,17 +74,17 @@ class AdminEducationScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kelola Edukasi'),
+        title: Text(AppStrings.tr('Manage Articles', 'Kelola Edukasi')),
         actions: [
           IconButton(
-            tooltip: 'Tambah Artikel',
+            tooltip: AppStrings.tr('Add Article', 'Tambah Artikel'),
             icon: const Icon(Icons.add),
             onPressed: actionState.isLoading
                 ? null
                 : () => _openEditor(context, ref),
           ),
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: AppStrings.tr('Refresh', 'Muat Ulang'),
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.invalidate(adminEducationArticlesProvider),
           ),
@@ -99,7 +101,7 @@ class AdminEducationScreen extends ConsumerWidget {
             ? null
             : () => _openEditor(context, ref),
         icon: const Icon(Icons.post_add),
-        label: const Text('Artikel Baru'),
+        label: Text(AppStrings.tr('New Article', 'Artikel Baru')),
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -108,15 +110,37 @@ class AdminEducationScreen extends ConsumerWidget {
         },
         child: articlesState.when(
           loading: () => ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: const [
-              AppLoadingSkeleton(
+            children: [
+              AdminIntroCard(
+                icon: Icons.menu_book_outlined,
+                title: AppStrings.tr(
+                  'Content Workspace',
+                  'Ruang Kelola Konten',
+                ),
+                subtitle: AppStrings.tr(
+                  'Draft, publish, and update educational content shown to users.',
+                  'Buat draf, publikasikan, dan perbarui konten edukasi untuk pengguna.',
+                ),
+              ),
+              const SizedBox(height: 14),
+              AdminSectionTitle(
+                title: AppStrings.tr('Article Collection', 'Koleksi Artikel'),
+                subtitle: AppStrings.tr(
+                  'Loading article records...',
+                  'Memuat data artikel...',
+                ),
+                icon: Icons.article_outlined,
+              ),
+              const SizedBox(height: 8),
+              const AppLoadingSkeleton(
                 width: double.infinity,
                 height: 140,
                 borderRadius: 20,
               ),
-              SizedBox(height: 10),
-              AppLoadingSkeleton(
+              const SizedBox(height: 10),
+              const AppLoadingSkeleton(
                 width: double.infinity,
                 height: 140,
                 borderRadius: 20,
@@ -130,128 +154,207 @@ class AdminEducationScreen extends ConsumerWidget {
           data: (articles) {
             if (articles.isEmpty) {
               return ListView(
-                children: const [
-                  SizedBox(height: 80),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                children: [
+                  AdminIntroCard(
+                    icon: Icons.menu_book_outlined,
+                    title: AppStrings.tr(
+                      'Content Workspace',
+                      'Ruang Kelola Konten',
+                    ),
+                    subtitle: AppStrings.tr(
+                      'Draft, publish, and update educational content shown to users.',
+                      'Buat draf, publikasikan, dan perbarui konten edukasi untuk pengguna.',
+                    ),
+                    badge: '0',
+                  ),
+                  const SizedBox(height: 28),
                   AppEmptyState(
-                    message: 'Belum ada artikel edukasi.',
-                    subtitle:
-                        'Buat artikel pertama untuk ditampilkan kepada pengguna.',
+                    message: AppStrings.tr(
+                      'No educational articles yet.',
+                      'Belum ada artikel edukasi.',
+                    ),
+                    subtitle: AppStrings.tr(
+                      'Create your first article for users.',
+                      'Buat artikel pertama untuk pengguna.',
+                    ),
                     icon: Icons.menu_book_outlined,
                   ),
                 ],
               );
             }
 
-            return ListView.separated(
+            return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              itemCount: articles.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final article = articles[index];
-                final statusColor = article.isPublished
-                    ? const Color(0xFF2F855A)
-                    : const Color(0xFF805AD5);
-                final dateLabel = article.updatedAt;
+              children: [
+                AdminIntroCard(
+                  icon: Icons.menu_book_outlined,
+                  title: AppStrings.tr(
+                    'Content Workspace',
+                    'Ruang Kelola Konten',
+                  ),
+                  subtitle: AppStrings.tr(
+                    'Review and publish educational articles with one tap.',
+                    'Tinjau dan publikasikan artikel edukasi dalam satu sentuhan.',
+                  ),
+                  badge: '${articles.length}',
+                ),
+                const SizedBox(height: 14),
+                AdminSectionTitle(
+                  title: AppStrings.tr('Article Collection', 'Koleksi Artikel'),
+                  subtitle: AppStrings.tr(
+                    'Manage draft and published content.',
+                    'Kelola konten draf dan yang sudah terbit.',
+                  ),
+                  icon: Icons.article_outlined,
+                ),
+                const SizedBox(height: 8),
+                for (var index = 0; index < articles.length; index++) ...[
+                  if (index > 0) const SizedBox(height: 10),
+                  Builder(
+                    builder: (context) {
+                      final article = articles[index];
+                      final statusColor = article.isPublished
+                          ? const Color(0xFF2F855A)
+                          : const Color(0xFF805AD5);
+                      final dateLabel = article.updatedAt;
+                      final locale = AppStrings.languageCode == 'id'
+                          ? 'id_ID'
+                          : 'en_US';
 
-                return AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              article.title,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w700),
+                      return AppCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    article.title,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: statusColor.withValues(alpha: 0.14),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    article.isPublished
+                                        ? AppStrings.tr('PUBLISHED', 'TERBIT')
+                                        : AppStrings.tr('DRAFT', 'DRAF'),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: statusColor,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.14),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              article.isPublished ? 'PUBLISHED' : 'DRAFT',
-                              style: Theme.of(context).textTheme.labelSmall
+                            const SizedBox(height: 4),
+                            Text(
+                              AppStrings.tr(
+                                'Slug: ${article.slug} | Updated: ${DateFormat('dd MMM yyyy', locale).format(dateLabel.toLocal())}',
+                                'Slug: ${article.slug} | Update: ${DateFormat('dd MMM yyyy', locale).format(dateLabel.toLocal())}',
+                              ),
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
-                                    color: statusColor,
-                                    fontWeight: FontWeight.w700,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.6),
                                   ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Slug: ${article.slug} | Update: ${DateFormat('dd MMM yyyy').format(dateLabel.toLocal())}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      if ((article.summary ?? '').trim().isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          article.summary!,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: actionState.isLoading
-                                  ? null
-                                  : () => _openEditor(
-                                      context,
-                                      ref,
-                                      article: article,
+                            if ((article.summary ?? '').trim().isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                article.summary!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: actionState.isLoading
+                                        ? null
+                                        : () => _openEditor(
+                                            context,
+                                            ref,
+                                            article: article,
+                                          ),
+                                    icon: const Icon(
+                                      Icons.edit_outlined,
+                                      size: 18,
                                     ),
-                              icon: const Icon(Icons.edit_outlined, size: 18),
-                              label: const Text('Edit'),
+                                    label: Text(AppStrings.edit),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    onPressed: actionState.isLoading
+                                        ? null
+                                        : () => _togglePublish(
+                                            context,
+                                            ref,
+                                            article,
+                                          ),
+                                    icon: Icon(
+                                      article.isPublished
+                                          ? Icons.unpublished_outlined
+                                          : Icons.publish_outlined,
+                                      size: 18,
+                                    ),
+                                    label: Text(
+                                      article.isPublished
+                                          ? AppStrings.tr(
+                                              'Unpublish',
+                                              'Batalkan Publikasi',
+                                            )
+                                          : AppStrings.tr(
+                                              'Publish',
+                                              'Publikasikan',
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton.filledTonal(
+                                  onPressed: actionState.isLoading
+                                      ? null
+                                      : () => _deleteArticle(
+                                          context,
+                                          ref,
+                                          article,
+                                        ),
+                                  icon: const Icon(Icons.delete_outline),
+                                  tooltip: AppStrings.delete,
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: actionState.isLoading
-                                  ? null
-                                  : () => _togglePublish(context, ref, article),
-                              icon: Icon(
-                                article.isPublished
-                                    ? Icons.unpublished_outlined
-                                    : Icons.publish_outlined,
-                                size: 18,
-                              ),
-                              label: Text(
-                                article.isPublished ? 'Unpublish' : 'Publish',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton.filledTonal(
-                            onPressed: actionState.isLoading
-                                ? null
-                                : () => _deleteArticle(context, ref, article),
-                            icon: const Icon(Icons.delete_outline),
-                            tooltip: 'Hapus',
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
+                ],
+              ],
             );
           },
         ),
@@ -297,7 +400,9 @@ class AdminEducationScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  article == null ? 'Buat Artikel' : 'Edit Artikel',
+                  article == null
+                      ? AppStrings.tr('Create Article', 'Buat Artikel')
+                      : AppStrings.tr('Edit Article', 'Edit Artikel'),
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
@@ -306,8 +411,8 @@ class AdminEducationScreen extends ConsumerWidget {
                 TextField(
                   controller: titleController,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Judul',
+                  decoration: InputDecoration(
+                    labelText: AppStrings.tr('Title', 'Judul'),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -315,8 +420,11 @@ class AdminEducationScreen extends ConsumerWidget {
                 TextField(
                   controller: slugController,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Slug (opsional)',
+                  decoration: InputDecoration(
+                    labelText: AppStrings.tr(
+                      'Slug (optional)',
+                      'Slug (opsional)',
+                    ),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -324,8 +432,11 @@ class AdminEducationScreen extends ConsumerWidget {
                 TextField(
                   controller: categoryController,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Kategori (opsional)',
+                  decoration: InputDecoration(
+                    labelText: AppStrings.tr(
+                      'Category (optional)',
+                      'Kategori (opsional)',
+                    ),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -333,8 +444,11 @@ class AdminEducationScreen extends ConsumerWidget {
                 TextField(
                   controller: coverController,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Cover URL (opsional)',
+                  decoration: InputDecoration(
+                    labelText: AppStrings.tr(
+                      'Cover URL (optional)',
+                      'Cover URL (opsional)',
+                    ),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -343,8 +457,11 @@ class AdminEducationScreen extends ConsumerWidget {
                   controller: summaryController,
                   textInputAction: TextInputAction.next,
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Ringkasan (opsional)',
+                  decoration: InputDecoration(
+                    labelText: AppStrings.tr(
+                      'Summary (optional)',
+                      'Ringkasan (opsional)',
+                    ),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -352,8 +469,8 @@ class AdminEducationScreen extends ConsumerWidget {
                 TextField(
                   controller: contentController,
                   maxLines: 8,
-                  decoration: const InputDecoration(
-                    labelText: 'Konten',
+                  decoration: InputDecoration(
+                    labelText: AppStrings.tr('Content', 'Konten'),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -363,7 +480,7 @@ class AdminEducationScreen extends ConsumerWidget {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text('Batal'),
+                        child: Text(AppStrings.cancel),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -373,15 +490,20 @@ class AdminEducationScreen extends ConsumerWidget {
                           if (titleController.text.trim().isEmpty ||
                               contentController.text.trim().isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Judul dan konten wajib diisi.'),
+                              SnackBar(
+                                content: Text(
+                                  AppStrings.tr(
+                                    'Title and content are required.',
+                                    'Judul dan konten wajib diisi.',
+                                  ),
+                                ),
                               ),
                             );
                             return;
                           }
                           Navigator.of(context).pop(true);
                         },
-                        child: const Text('Simpan'),
+                        child: Text(AppStrings.save),
                       ),
                     ),
                   ],
@@ -435,8 +557,8 @@ class AdminEducationScreen extends ConsumerWidget {
 
     context.showSuccessSnackBar(
       article == null
-          ? 'Artikel berhasil dibuat.'
-          : 'Artikel berhasil diperbarui.',
+          ? AppStrings.tr('Article created.', 'Artikel berhasil dibuat.')
+          : AppStrings.tr('Article updated.', 'Artikel berhasil diperbarui.'),
     );
     ref.invalidate(adminEducationArticlesProvider);
   }
@@ -449,12 +571,22 @@ class AdminEducationScreen extends ConsumerWidget {
     final nextStatus = article.isPublished ? 'draft' : 'published';
     final confirmed = await AppDialog.showConfirm(
       context,
-      title: article.isPublished ? 'Unpublish artikel?' : 'Publish artikel?',
+      title: article.isPublished
+          ? AppStrings.tr('Unpublish article?', 'Unpublish artikel?')
+          : AppStrings.tr('Publish article?', 'Publish artikel?'),
       message: article.isPublished
-          ? 'Artikel tidak akan terlihat oleh user.'
-          : 'Artikel akan langsung terlihat oleh user.',
-      confirmLabel: article.isPublished ? 'Unpublish' : 'Publish',
-      cancelLabel: 'Batal',
+          ? AppStrings.tr(
+              'This article will no longer be visible to users.',
+              'Artikel tidak akan terlihat oleh user.',
+            )
+          : AppStrings.tr(
+              'This article will be visible to users immediately.',
+              'Artikel akan langsung terlihat oleh user.',
+            ),
+      confirmLabel: article.isPublished
+          ? AppStrings.tr('Unpublish', 'Batalkan Publikasi')
+          : AppStrings.tr('Publish', 'Publikasikan'),
+      cancelLabel: AppStrings.cancel,
       isDestructive: article.isPublished,
       icon: article.isPublished ? Icons.unpublished_outlined : Icons.publish,
     );
@@ -479,8 +611,14 @@ class AdminEducationScreen extends ConsumerWidget {
 
     context.showSuccessSnackBar(
       article.isPublished
-          ? 'Artikel berhasil di-unpublish.'
-          : 'Artikel berhasil dipublish.',
+          ? AppStrings.tr(
+              'Article unpublished successfully.',
+              'Artikel berhasil di-unpublish.',
+            )
+          : AppStrings.tr(
+              'Article published successfully.',
+              'Artikel berhasil dipublish.',
+            ),
     );
     ref.invalidate(adminEducationArticlesProvider);
   }
@@ -492,10 +630,13 @@ class AdminEducationScreen extends ConsumerWidget {
   ) async {
     final confirmed = await AppDialog.showConfirm(
       context,
-      title: 'Hapus artikel?',
-      message: 'Artikel yang dihapus tidak dapat dikembalikan.',
-      confirmLabel: 'Hapus',
-      cancelLabel: 'Batal',
+      title: AppStrings.tr('Delete article?', 'Hapus artikel?'),
+      message: AppStrings.tr(
+        'Deleted articles cannot be restored.',
+        'Artikel yang dihapus tidak dapat dikembalikan.',
+      ),
+      confirmLabel: AppStrings.delete,
+      cancelLabel: AppStrings.cancel,
       isDestructive: true,
       icon: Icons.delete_outline,
     );
@@ -518,7 +659,9 @@ class AdminEducationScreen extends ConsumerWidget {
       return;
     }
 
-    context.showSuccessSnackBar('Artikel berhasil dihapus.');
+    context.showSuccessSnackBar(
+      AppStrings.tr('Article deleted.', 'Artikel berhasil dihapus.'),
+    );
     ref.invalidate(adminEducationArticlesProvider);
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:med_syn/core/constants/app_strings.dart';
 import 'package:med_syn/domain/models/education_article.dart';
 import 'package:med_syn/domain/repositories/education_repository.dart';
 import 'package:med_syn/features/education/education_feed_screen.dart';
@@ -53,7 +54,10 @@ void main() {
     await tester.pumpWidget(buildSubject(repository));
     await tester.pumpAndSettle();
 
-    expect(find.text('Edukasi Kesehatan'), findsOneWidget);
+    expect(
+      find.text(AppStrings.tr('Health Articles', 'Artikel Kesehatan')),
+      findsOneWidget,
+    );
     expect(find.text('Panduan Diet Seimbang'), findsOneWidget);
     expect(find.text('Nutrisi'), findsOneWidget);
   });
@@ -66,7 +70,15 @@ void main() {
     await tester.pumpWidget(buildSubject(repository));
     await tester.pumpAndSettle();
 
-    expect(find.text('Artikel edukasi belum tersedia.'), findsOneWidget);
+    expect(
+      find.text(
+        AppStrings.tr(
+          'No educational articles available yet.',
+          'Artikel edukasi belum tersedia.',
+        ),
+      ),
+      findsOneWidget,
+    );
   });
 }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/constants/app_strings.dart';
 import '../../core/errors/user_error_message.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/app_error_widget.dart';
@@ -17,28 +18,45 @@ class EducationDetailScreen extends ConsumerWidget {
     final state = ref.watch(educationArticleByIdProvider(articleId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail Edukasi')),
+      appBar: AppBar(
+        title: Text(AppStrings.tr('Article Detail', 'Detail Edukasi')),
+      ),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => AppErrorWidget(message: toUserErrorMessage(error)),
         data: (article) {
           if (article == null) {
-            return const AppEmptyState(
-              message: 'Artikel tidak ditemukan.',
-              subtitle: 'Konten mungkin sudah dihapus atau dipindahkan.',
+            return AppEmptyState(
+              message: AppStrings.tr(
+                'Article not found.',
+                'Artikel tidak ditemukan.',
+              ),
+              subtitle: AppStrings.tr(
+                'Content may have been deleted or moved.',
+                'Konten mungkin sudah dihapus atau dipindahkan.',
+              ),
               icon: Icons.search_off,
             );
           }
 
+          final locale = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
           final publishedAt = article.publishedAt != null
-              ? DateFormat('dd MMM yyyy').format(article.publishedAt!.toLocal())
+              ? DateFormat(
+                  'dd MMM yyyy',
+                  locale,
+                ).format(article.publishedAt!.toLocal())
               : '-';
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: _DetailCover(url: article.coverUrl),
+                ),
+                const SizedBox(height: 14),
                 if ((article.category ?? '').trim().isNotEmpty)
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -67,7 +85,10 @@ class EducationDetailScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Dipublikasi: $publishedAt',
+                  AppStrings.tr(
+                    'Published: $publishedAt',
+                    'Dipublikasi: $publishedAt',
+                  ),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(
                       context,
@@ -90,12 +111,65 @@ class EducationDetailScreen extends ConsumerWidget {
                   article.content,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyLarge?.copyWith(height: 1.5),
+                  ).textTheme.bodyLarge?.copyWith(height: 1.7),
                 ),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _DetailCover extends StatelessWidget {
+  const _DetailCover({required this.url});
+
+  final String? url;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasUrl = (url ?? '').trim().isNotEmpty;
+
+    if (!hasUrl) {
+      return _fallback(context);
+    }
+
+    return Image.network(
+      url!,
+      width: double.infinity,
+      height: 240,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+        return _fallback(context);
+      },
+      errorBuilder: (_, __, ___) {
+        return _fallback(context);
+      },
+    );
+  }
+
+  Widget _fallback(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 240,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).colorScheme.primaryContainer,
+            Theme.of(context).colorScheme.secondaryContainer,
+          ],
+        ),
+      ),
+      child: Icon(
+        Icons.menu_book_rounded,
+        size: 44,
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
       ),
     );
   }

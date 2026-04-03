@@ -144,6 +144,7 @@ class AppStrings {
   // Bottom nav
   static String get scheduleTitle => _t('Schedule', 'Jadwal');
   static String get reportTitle => _t('Reports', 'Laporan');
+  static String get articleTitle => _t('Articles', 'Artikel');
   static String get notificationTitle => _t('Notifications', 'Notifikasi');
   static String get profileTitle => _t('Profile', 'Profil');
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
 
 /// Status chip for task status display with theme-aware tonal colors.
 class StatusChip extends StatelessWidget {
@@ -12,18 +13,30 @@ class StatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final (label, color, icon) = switch (status) {
-      'done' => ('Selesai', AppColors.success, Icons.check_circle_outline),
-      'skipped' => ('Dilewati', AppColors.warning, Icons.skip_next_outlined),
-      'missed' => ('Terlewat', AppColors.error, Icons.cancel_outlined),
+      'done' => (
+        AppStrings.tr('Done', 'Selesai'),
+        AppColors.success,
+        Icons.check_circle_outline,
+      ),
+      'skipped' => (
+        AppStrings.tr('Skipped', 'Dilewati'),
+        AppColors.warning,
+        Icons.skip_next_outlined,
+      ),
+      'missed' => (
+        AppStrings.tr('Missed', 'Terlewat'),
+        AppColors.error,
+        Icons.cancel_outlined,
+      ),
       _ => (
-        'Menunggu',
+        AppStrings.tr('Pending', 'Menunggu'),
         isDark ? const Color(0xFF8899A6) : const Color(0xFF718096),
         Icons.schedule_outlined,
       ),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: isDark ? 0.2 : 0.1),
         borderRadius: BorderRadius.circular(20),
@@ -36,11 +49,11 @@ class StatusChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
+          const SizedBox(width: 5),
           Text(
             label,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 11.5,
               fontWeight: FontWeight.w600,
               color: color,
             ),

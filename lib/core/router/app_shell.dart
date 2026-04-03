@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../constants/app_strings.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/medicine/schedule/schedule_list_screen.dart';
-import '../../features/notifications/notification_screen.dart';
+import '../../features/education/education_feed_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/reports/report_screen.dart';
 
@@ -52,9 +52,9 @@ class AppShell extends StatelessWidget {
               label: AppStrings.reportTitle,
             ),
             NavigationDestination(
-              icon: Icon(Icons.notifications_outlined),
-              selectedIcon: Icon(Icons.notifications_rounded),
-              label: AppStrings.notificationTitle,
+              icon: Icon(Icons.menu_book_outlined),
+              selectedIcon: Icon(Icons.menu_book_rounded),
+              label: AppStrings.articleTitle,
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline),
@@ -72,6 +72,6 @@ const List<Widget> shellScreens = <Widget>[
   HomeScreen(),
   ScheduleListScreen(),
   ReportScreen(),
-  NotificationScreen(),
+  EducationFeedScreen(),
   ProfileScreen(),
 ];

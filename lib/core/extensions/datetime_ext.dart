@@ -1,14 +1,19 @@
 import 'package:intl/intl.dart';
 
+import '../constants/app_strings.dart';
+
 extension DateTimeExt on DateTime {
+  String get _activeLocale =>
+      AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+
   /// "17 Maret 2025"
   String toIndonesianDate() {
-    return DateFormat('d MMMM yyyy', 'id_ID').format(this);
+    return DateFormat('d MMMM yyyy', _activeLocale).format(this);
   }
 
   /// "17 Mar"
   String toShortDate() {
-    return DateFormat('d MMM', 'id_ID').format(this);
+    return DateFormat('d MMM', _activeLocale).format(this);
   }
 
   /// "08:00"
@@ -18,7 +23,7 @@ extension DateTimeExt on DateTime {
 
   /// "Senin, 17 Maret 2025"
   String toFullIndonesianDate() {
-    return DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(this);
+    return DateFormat('EEEE, d MMMM yyyy', _activeLocale).format(this);
   }
 
   bool get isToday {
@@ -39,16 +44,16 @@ extension DateTimeExt on DateTime {
 
   /// Returns "Pagi" | "Siang" | "Sore" | "Malam"
   String get greetingTime {
-    if (hour >= 5 && hour < 11) return 'Pagi';
-    if (hour >= 11 && hour < 15) return 'Siang';
-    if (hour >= 15 && hour < 18) return 'Sore';
-    return 'Malam';
+    if (hour >= 5 && hour < 11) return AppStrings.tr('Morning', 'Pagi');
+    if (hour >= 11 && hour < 15) return AppStrings.tr('Noon', 'Siang');
+    if (hour >= 15 && hour < 18) return AppStrings.tr('Afternoon', 'Sore');
+    return AppStrings.tr('Night', 'Malam');
   }
 
   /// Label for grouping: "Hari ini", "Kemarin", or formatted date
   String get groupLabel {
-    if (isToday) return 'Hari ini';
-    if (isYesterday) return 'Kemarin';
+    if (isToday) return AppStrings.tr('Today', 'Hari ini');
+    if (isYesterday) return AppStrings.tr('Yesterday', 'Kemarin');
     return toIndonesianDate();
   }
 

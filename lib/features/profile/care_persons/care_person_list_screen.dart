@@ -62,9 +62,14 @@ class CarePersonListScreen extends ConsumerWidget {
                 children: [
                   SizedBox(height: 80),
                   AppEmptyState(
-                    message: 'Belum ada anggota yang ditambahkan',
-                    subtitle:
-                        'Tambahkan anggota keluarga\nuntuk membantu mengelola kesehatan mereka.',
+                    message: AppStrings.tr(
+                      'No members added yet',
+                      'Belum ada anggota yang ditambahkan',
+                    ),
+                    subtitle: AppStrings.tr(
+                      'Add a family member\nto help manage their health.',
+                      'Tambahkan anggota keluarga\nuntuk membantu mengelola kesehatan mereka.',
+                    ),
                     icon: Icons.people_outline,
                     actionLabel: AppStrings.addCarePerson,
                   ),
@@ -130,12 +135,15 @@ class CarePersonListScreen extends ConsumerWidget {
                             _confirmDelete(context, ref, person);
                           }
                         },
-                        itemBuilder: (_) => const [
-                          PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Text(AppStrings.edit),
+                          ),
                           PopupMenuItem(
                             value: 'delete',
                             child: Text(
-                              'Hapus',
+                              AppStrings.delete,
                               style: TextStyle(color: Colors.red),
                             ),
                           ),
@@ -149,7 +157,10 @@ class CarePersonListScreen extends ConsumerWidget {
           },
           loading: () => const AppListSkeleton(itemCount: 3, itemHeight: 80),
           error: (e, _) => AppErrorWidget(
-            message: 'Gagal memuat daftar anggota. Silakan coba lagi.',
+            message: AppStrings.tr(
+              'Failed to load member list. Please try again.',
+              'Gagal memuat daftar anggota. Silakan coba lagi.',
+            ),
             onRetry: () => ref.invalidate(carePersonListProvider),
           ),
         ),
@@ -186,17 +197,24 @@ class CarePersonListScreen extends ConsumerWidget {
   ) async {
     final confirmed = await AppDialog.showConfirm(
       context,
-      title: 'Hapus Anggota',
-      message:
-          'Hapus ${person.displayName}? Semua data terkait akan ikut dihapus.',
-      confirmLabel: 'Hapus',
+      title: AppStrings.tr('Delete Member', 'Hapus Anggota'),
+      message: AppStrings.tr(
+        'Delete ${person.displayName}? All related data will also be removed.',
+        'Hapus ${person.displayName}? Semua data terkait akan ikut dihapus.',
+      ),
+      confirmLabel: AppStrings.delete,
       isDestructive: true,
     );
 
     if (confirmed == true) {
       await ref.read(carePersonListProvider.notifier).delete(person.id);
       if (context.mounted) {
-        context.showSuccessSnackBar('${person.displayName} dihapus.');
+        context.showSuccessSnackBar(
+          AppStrings.tr(
+            '${person.displayName} deleted.',
+            '${person.displayName} dihapus.',
+          ),
+        );
       }
     }
   }
