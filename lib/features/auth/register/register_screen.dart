@@ -22,7 +22,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _fullNameController = TextEditingController();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -33,7 +33,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void dispose() {
     _fullNameController.dispose();
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -51,7 +51,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         .read(authControllerProvider.notifier)
         .signUp(
           fullName: _fullNameController.text,
-          email: _emailController.text,
+          username: _usernameController.text,
           password: _passwordController.text,
         );
 
@@ -244,14 +244,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                             const SizedBox(height: 16),
 
-                            // Email
+                            // Username
                             AppTextField(
-                              controller: _emailController,
-                              label: AppStrings.emailLabel,
-                              keyboardType: TextInputType.emailAddress,
+                              controller: _usernameController,
+                              label: AppStrings.usernameLabel,
+                              keyboardType: TextInputType.text,
                               textInputAction: TextInputAction.next,
-                              prefixIcon: const Icon(Icons.email_outlined),
-                              validator: AppValidators.email,
+                              prefixIcon: const Icon(Icons.alternate_email),
+                              validator: AppValidators.username,
                               useAuthSubtleStyle: true,
                             ),
                             const SizedBox(height: 16),

@@ -5,10 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../features/admin/admin_control_screen.dart';
+import '../../features/admin/admin_education_screen.dart';
 import '../../features/auth/forgot_password/forgot_password_screen.dart';
 import '../../features/auth/login/login_screen.dart';
 import '../../features/auth/onboarding_profile/onboarding_profile_screen.dart';
 import '../../features/auth/register/register_screen.dart';
+import '../../features/education/education_detail_screen.dart';
+import '../../features/education/education_feed_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/medicine/schedule/schedule_list_screen.dart';
 import '../../features/notifications/notification_screen.dart';
@@ -27,24 +31,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.splash,
     refreshListenable: authNotifier,
     redirect: (context, state) {
-      final isAuthenticated = authNotifier.session != null;
-      final isAuthRoute =
-          state.matchedLocation == AppRoutes.login ||
-          state.matchedLocation == AppRoutes.register ||
-          state.matchedLocation == AppRoutes.forgotPassword;
-      final isPublicRoute =
-          state.matchedLocation == AppRoutes.splash ||
-          state.matchedLocation == AppRoutes.onboarding;
-
-      if (!isAuthenticated && !isAuthRoute && !isPublicRoute) {
-        return AppRoutes.login;
-      }
-
-      if (isAuthenticated && isAuthRoute) {
-        return AppRoutes.home;
-      }
-
-      return null;
+      return resolveAppRedirect(
+        matchedLocation: state.matchedLocation,
+        isAuthenticated: authNotifier.session != null,
+        isAdmin: authNotifier.isAdmin,
+      );
     },
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashScreen()),
@@ -64,6 +55,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.onboardingProfile,
         builder: (_, _) => const OnboardingProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminControl,
+        builder: (_, _) => const AdminControlScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminEducation,
+        builder: (_, _) => const AdminEducationScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.education,
+        builder: (_, _) => const EducationFeedScreen(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.education}/:articleId',
+        builder: (_, state) {
+          final articleId = state.pathParameters['articleId'] ?? '';
+          return EducationDetailScreen(articleId: articleId);
+        },
       ),
       StatefulShellRoute.indexedStack(
         builder: (_, state, shell) => AppShell(navigationShell: shell),
@@ -114,14 +124,56 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
+@visibleForTesting
+String? resolveAppRedirect({
+  required String matchedLocation,
+  required bool isAuthenticated,
+  required bool? isAdmin,
+}) {
+  final isAuthRoute =
+      matchedLocation == AppRoutes.login ||
+      matchedLocation == AppRoutes.register ||
+      matchedLocation == AppRoutes.forgotPassword;
+  final isAdminRoute =
+      matchedLocation == AppRoutes.adminControl ||
+      matchedLocation == AppRoutes.adminEducation;
+  final isPublicRoute =
+      matchedLocation == AppRoutes.splash ||
+      matchedLocation == AppRoutes.onboarding;
+
+  if (!isAuthenticated && !isAuthRoute && !isPublicRoute) {
+    return AppRoutes.login;
+  }
+
+  if (isAuthenticated && isAuthRoute) {
+    return AppRoutes.home;
+  }
+
+  if (isAuthenticated && isAdminRoute) {
+    if (isAdmin == null) {
+      // Wait until role is loaded before deciding redirect.
+      return null;
+    }
+
+    if (isAdmin != true) {
+      return AppRoutes.home;
+    }
+  }
+
+  return null;
+}
+
 class GoRouterAuthNotifier extends ChangeNotifier {
   GoRouterAuthNotifier() {
     _tryReadSession();
+    _syncAdminRole();
 
     try {
       _sub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
         session = data.session;
+        isAdmin = null;
         notifyListeners();
+        _syncAdminRole();
       });
     } catch (_) {
       _sub = null;
@@ -130,12 +182,49 @@ class GoRouterAuthNotifier extends ChangeNotifier {
 
   StreamSubscription<AuthState>? _sub;
   Session? session;
+  bool? isAdmin;
 
   void _tryReadSession() {
     try {
       session = Supabase.instance.client.auth.currentSession;
     } catch (_) {
       session = null;
+    }
+  }
+
+  Future<void> _syncAdminRole() async {
+    final activeSession = session;
+    if (activeSession == null) {
+      isAdmin = null;
+      notifyListeners();
+      return;
+    }
+
+    final expectedUserId = activeSession.user.id;
+
+    try {
+      final row = await Supabase.instance.client
+          .from('profiles')
+          .select('role')
+          .eq('id', expectedUserId)
+          .maybeSingle();
+      final role = (row?['role'] as String?) ?? 'user';
+
+      final currentUserId = session?.user.id;
+      if (currentUserId != expectedUserId) {
+        return;
+      }
+
+      isAdmin = role == 'admin';
+      notifyListeners();
+    } catch (_) {
+      final currentUserId = session?.user.id;
+      if (currentUserId != expectedUserId) {
+        return;
+      }
+
+      isAdmin = false;
+      notifyListeners();
     }
   }
 

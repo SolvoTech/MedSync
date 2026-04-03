@@ -7,40 +7,54 @@ final authControllerProvider =
     );
 
 class AuthController extends AutoDisposeNotifier<AsyncValue<void>> {
+  static const String _internalEmailDomain = 'users.medsync.local';
+  static final RegExp _usernameRegex = RegExp(r'^[a-z0-9_]{3,24}$');
+
   @override
   AsyncValue<void> build() => const AsyncData(null);
 
-  Future<void> signIn({required String email, required String password}) async {
+  Future<void> signIn({
+    required String username,
+    required String password,
+  }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
+      final email = _resolveLoginEmail(username);
       await Supabase.instance.client.auth.signInWithPassword(
-        email: email.trim(),
+        email: email,
         password: password,
       );
+      await _enforceAccountStatus();
     });
   }
 
   Future<void> signUp({
     required String fullName,
-    required String email,
+    required String username,
     required String password,
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
+      final normalizedUsername = _normalizeUsername(username);
+      if (!_usernameRegex.hasMatch(normalizedUsername)) {
+        throw Exception('Username tidak valid.');
+      }
+
       await Supabase.instance.client.auth.signUp(
-        data: {'full_name': fullName.trim()},
-        email: email.trim(),
+        data: {'full_name': fullName.trim(), 'username': normalizedUsername},
+        email: _internalEmailFromUsername(normalizedUsername),
         password: password,
         emailRedirectTo: 'io.supabase.medsync://login-callback/',
       );
     });
   }
 
-  Future<void> resetPassword({required String email}) async {
+  Future<void> resetPassword({required String username}) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
+      final email = _resolveLoginEmail(username);
       await Supabase.instance.client.auth.resetPasswordForEmail(
-        email.trim(),
+        email,
         redirectTo: 'io.supabase.medsync://login-callback/',
       );
     });
@@ -51,5 +65,42 @@ class AuthController extends AutoDisposeNotifier<AsyncValue<void>> {
     state = await AsyncValue.guard(() async {
       await Supabase.instance.client.auth.signOut();
     });
+  }
+
+  String _normalizeUsername(String username) => username.trim().toLowerCase();
+
+  String _resolveLoginEmail(String usernameOrEmail) {
+    final raw = usernameOrEmail.trim().toLowerCase();
+    if (raw.contains('@')) {
+      // Backward compatibility for legacy accounts that still authenticate by email.
+      return raw;
+    }
+    if (!_usernameRegex.hasMatch(raw)) {
+      throw Exception('Username tidak valid.');
+    }
+    return _internalEmailFromUsername(raw);
+  }
+
+  String _internalEmailFromUsername(String username) =>
+      '$username@$_internalEmailDomain';
+
+  Future<void> _enforceAccountStatus() async {
+    final client = Supabase.instance.client;
+    final user = client.auth.currentUser;
+    if (user == null) {
+      return;
+    }
+
+    final profile = await client
+        .from('profiles')
+        .select('account_status')
+        .eq('id', user.id)
+        .maybeSingle();
+    final status = (profile?['account_status'] as String?) ?? 'active';
+
+    if (status == 'suspended') {
+      await client.auth.signOut();
+      throw Exception('Akun Anda sedang dinonaktifkan oleh admin.');
+    }
   }
 }

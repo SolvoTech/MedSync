@@ -14,4 +14,9 @@ class AppRoutes {
   static const String notifications = '/notifications';
   static const String profile = '/profile';
   static const String healthConnect = '/health-connect';
+  static const String adminControl = '/admin-control';
+  static const String adminEducation = '/admin-education';
+  static const String education = '/education';
+
+  static String educationDetail(String articleId) => '/education/$articleId';
 }

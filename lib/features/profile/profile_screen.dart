@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_gradients.dart';
+import '../../core/router/app_routes.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/widgets/app_avatar.dart';
 import '../../core/widgets/app_card.dart';
@@ -339,6 +340,35 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 20),
 
+                // Admin control center
+                profileAsync.when(
+                  data: (profile) {
+                    if (profile?.role != 'admin') {
+                      return const SizedBox.shrink();
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _SectionHeader(title: 'PUSAT KONTROL'),
+                        const SizedBox(height: 8),
+                        AppCard(
+                          padding: EdgeInsets.zero,
+                          child: _MenuItem(
+                            icon: Icons.admin_panel_settings_outlined,
+                            label: 'Admin Control Center',
+                            color: const Color(0xFF2B6CB0),
+                            onTap: () => context.push(AppRoutes.adminControl),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    );
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
+                ),
+
                 // Info section
                 _SectionHeader(title: 'INFORMASI'),
                 const SizedBox(height: 8),
@@ -346,6 +376,13 @@ class ProfileScreen extends ConsumerWidget {
                   padding: EdgeInsets.zero,
                   child: Column(
                     children: [
+                      _MenuItem(
+                        icon: Icons.menu_book_outlined,
+                        label: 'Edukasi Kesehatan',
+                        color: const Color(0xFF2B6CB0),
+                        onTap: () => context.push(AppRoutes.education),
+                      ),
+                      _MenuDivider(),
                       _MenuItem(
                         icon: Icons.info_outline,
                         label: AppStrings.about,

@@ -194,6 +194,8 @@ class _NotificationTile extends ConsumerWidget {
         return Icons.monitor_heart_rounded;
       case 'activity':
         return Icons.directions_run_rounded;
+      case 'education_article':
+        return Icons.menu_book_rounded;
       case 'stock_warning':
         return Icons.warning_amber_rounded;
       case 'streak':
@@ -213,6 +215,8 @@ class _NotificationTile extends ConsumerWidget {
         return const Color(0xFF38A169);
       case 'activity':
         return const Color(0xFFED8936);
+      case 'education_article':
+        return const Color(0xFF2B6CB0);
       case 'stock_warning':
         return const Color(0xFFE53E3E);
       case 'streak':

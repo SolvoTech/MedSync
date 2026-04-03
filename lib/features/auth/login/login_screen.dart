@@ -22,7 +22,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
@@ -30,7 +30,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -46,7 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     await ref
         .read(authControllerProvider.notifier)
         .signIn(
-          email: _emailController.text,
+          username: _usernameController.text,
           password: _passwordController.text,
         );
 
@@ -240,14 +240,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Email
+                          // Username
                           AppTextField(
-                            controller: _emailController,
-                            label: AppStrings.emailLabel,
-                            keyboardType: TextInputType.emailAddress,
+                            controller: _usernameController,
+                            label: AppStrings.usernameLabel,
+                            keyboardType: TextInputType.text,
                             textInputAction: TextInputAction.next,
-                            prefixIcon: const Icon(Icons.email_outlined),
-                            validator: AppValidators.email,
+                            prefixIcon: const Icon(Icons.alternate_email),
+                            validator: AppValidators.username,
                             useAuthSubtleStyle: true,
                           ),
                           const SizedBox(height: 16),

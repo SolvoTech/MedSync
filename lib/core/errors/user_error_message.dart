@@ -43,14 +43,14 @@ String _mapAuthError(String? code, String? message, String fallback) {
   switch (normalizedCode) {
     case 'invalid_credentials':
     case 'invalid_login_credentials':
-      return 'Email atau kata sandi salah.';
+      return 'Username atau kata sandi salah.';
     case 'email_not_confirmed':
-      return 'Email belum diverifikasi. Silakan cek inbox Anda.';
+      return 'Akun belum aktif. Silakan hubungi admin.';
     case 'user_not_found':
       return 'Akun tidak ditemukan.';
     case 'email_exists':
     case 'user_already_exists':
-      return 'Email sudah terdaftar. Silakan gunakan email lain.';
+      return 'Username sudah terdaftar. Silakan gunakan username lain.';
     case 'weak_password':
       return 'Kata sandi terlalu lemah. Gunakan kombinasi yang lebih kuat.';
     case 'over_request_rate_limit':
@@ -107,10 +107,10 @@ String? _mapKnownText(String message) {
   final lower = message.toLowerCase();
 
   if (lower.contains('invalid login credentials')) {
-    return 'Email atau kata sandi salah.';
+    return 'Username atau kata sandi salah.';
   }
   if (lower.contains('email not confirmed')) {
-    return 'Email belum diverifikasi. Silakan cek inbox Anda.';
+    return 'Akun belum aktif. Silakan hubungi admin.';
   }
   if (lower.contains('network') || lower.contains('socketexception')) {
     return 'Koneksi internet bermasalah. Silakan coba lagi.';

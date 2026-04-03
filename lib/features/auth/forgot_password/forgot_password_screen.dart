@@ -22,13 +22,13 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _hasAttemptedSubmit = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -42,7 +42,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
     await ref
         .read(authControllerProvider.notifier)
-        .resetPassword(email: _emailController.text);
+        .resetPassword(username: _usernameController.text);
 
     final authState = ref.read(authControllerProvider);
     if (!mounted) {
@@ -224,12 +224,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           AppTextField(
-                            controller: _emailController,
-                            label: AppStrings.emailLabel,
-                            keyboardType: TextInputType.emailAddress,
+                            controller: _usernameController,
+                            label: AppStrings.usernameLabel,
+                            keyboardType: TextInputType.text,
                             textInputAction: TextInputAction.done,
-                            prefixIcon: const Icon(Icons.email_outlined),
-                            validator: AppValidators.email,
+                            prefixIcon: const Icon(Icons.alternate_email),
+                            validator: AppValidators.username,
                             useAuthSubtleStyle: true,
                           ),
                           const SizedBox(height: 24),

@@ -51,6 +51,7 @@ class AppStrings {
     'Do not worry, we will help reset your account.',
     'Tenang, kami bantu reset akun Anda.',
   );
+  static String get usernameLabel => _t('Username', 'Username');
   static String get emailLabel => _t('Email Address', 'Alamat Email');
   static String get passwordLabel => _t('Password', 'Kata Sandi');
   static String get confirmPasswordLabel =>
@@ -72,28 +73,28 @@ class AppStrings {
     'Link reset telah dikirim ke email Anda.',
   );
   static String get loginFailed => _t(
-    'Failed to sign in. Check your email and password.',
-    'Gagal masuk. Periksa email dan kata sandi Anda.',
+    'Failed to sign in. Check your username and password.',
+    'Gagal masuk. Periksa username dan kata sandi Anda.',
   );
   static String get registerSuccess => _t(
-    'Registration successful. Please check your verification email.',
-    'Pendaftaran berhasil. Silakan cek email verifikasi.',
+    'Registration successful. Please sign in with your new username.',
+    'Pendaftaran berhasil. Silakan masuk dengan username baru Anda.',
   );
   static String get registerFailed => _t(
     'Failed to register. Please try again.',
     'Gagal mendaftar. Silakan coba lagi.',
   );
   static String get resetPasswordEmailSent => _t(
-    'Password reset email has been sent.',
-    'Email reset kata sandi sudah dikirim.',
+    'Password reset instructions have been sent.',
+    'Instruksi reset kata sandi telah dikirim.',
   );
   static String get resetPasswordFailed => _t(
     'Failed to send reset email. Please try again.',
     'Gagal mengirim email reset. Silakan coba lagi.',
   );
   static String get resetPasswordInstruction => _t(
-    'Enter your email to receive a reset link.',
-    'Masukkan email Anda untuk menerima tautan reset.',
+    'Enter your username to receive password reset instructions.',
+    'Masukkan username Anda untuk menerima instruksi reset kata sandi.',
   );
   static String get rememberPasswordPrompt =>
       _t('Remember your password? ', 'Sudah ingat kata sandi? ');
@@ -231,6 +232,12 @@ class AppStrings {
       _t('This field is required', 'Bidang ini wajib diisi');
   static String get emailInvalid =>
       _t('Invalid email format', 'Format email tidak valid');
+  static String get usernameRequired =>
+      _t('Username is required', 'Username wajib diisi');
+  static String get usernameInvalid => _t(
+    'Username must be 3-24 characters using lowercase letters, numbers, or underscore',
+    'Username harus 3-24 karakter menggunakan huruf kecil, angka, atau underscore',
+  );
   static String get passwordTooShort => _t(
     'Password must be at least 8 characters',
     'Kata sandi minimal 8 karakter',

@@ -4,6 +4,7 @@ class AppValidators {
   AppValidators._();
 
   static final RegExp _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+  static final RegExp _usernameRegex = RegExp(r'^[a-z0-9_]{3,24}$');
   static final RegExp _accessTokenRegex = RegExp(r'^[A-Za-z0-9-]{4,64}$');
 
   static String? required(String? value, {String? message}) {
@@ -20,6 +21,17 @@ class AppValidators {
     }
     if (!_emailRegex.hasMatch(raw)) {
       return AppStrings.emailInvalid;
+    }
+    return null;
+  }
+
+  static String? username(String? value) {
+    final raw = (value ?? '').trim().toLowerCase();
+    if (raw.isEmpty) {
+      return AppStrings.usernameRequired;
+    }
+    if (!_usernameRegex.hasMatch(raw)) {
+      return AppStrings.usernameInvalid;
     }
     return null;
   }
