@@ -39,13 +39,25 @@ class ActivityTab extends ConsumerWidget {
               );
             }
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return ReminderListTile(
+            final tiles = <Widget>[
+              ReminderSectionHeader(
+                label: AppStrings.tr(
+                  'Activity Reminders',
+                  'Reminder Aktivitas',
+                ),
+                icon: Icons.directions_walk_rounded,
+                color: const Color(0xFFED8936),
+                count: items.length,
+              ),
+              const SizedBox(height: 10),
+            ];
+
+            for (var i = 0; i < items.length; i++) {
+              final item = items[i];
+              tiles.add(
+                ReminderListTile(
                   icon: Icons.directions_walk_rounded,
+                  accentColor: const Color(0xFFED8936),
                   title:
                       item.customName ?? activityTypeLabel(item.activityType),
                   timeOfDay: item.timeOfDay,
@@ -54,8 +66,16 @@ class ActivityTab extends ConsumerWidget {
                       _openActivityEditor(context, ref, existing: item),
                   onActionSelected: (value) =>
                       _handleActivityAction(context, ref, item, value),
-                );
-              },
+                ),
+              );
+              if (i != items.length - 1) {
+                tiles.add(const SizedBox(height: 10));
+              }
+            }
+
+            return ListView(
+              padding: scheduleTabListPadding(context),
+              children: tiles,
             );
           },
           loading: () => ListView(
@@ -82,10 +102,13 @@ class ActivityTab extends ConsumerWidget {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openActivityEditor(context, ref, existing: null),
-        icon: const Icon(Icons.add),
-        label: Text(AppStrings.addActivity),
+      floatingActionButton: Padding(
+        padding: scheduleTabFabPadding(context),
+        child: FloatingActionButton.extended(
+          onPressed: () => _openActivityEditor(context, ref, existing: null),
+          icon: const Icon(Icons.add),
+          label: Text(AppStrings.addActivity),
+        ),
       ),
     );
   }

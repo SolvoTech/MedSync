@@ -39,13 +39,25 @@ class MeasurementTab extends ConsumerWidget {
               );
             }
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return ReminderListTile(
+            final tiles = <Widget>[
+              ReminderSectionHeader(
+                label: AppStrings.tr(
+                  'Measurement Reminders',
+                  'Reminder Pengukuran',
+                ),
+                icon: Icons.monitor_heart_rounded,
+                color: const Color(0xFF2F855A),
+                count: items.length,
+              ),
+              const SizedBox(height: 10),
+            ];
+
+            for (var i = 0; i < items.length; i++) {
+              final item = items[i];
+              tiles.add(
+                ReminderListTile(
                   icon: Icons.monitor_heart_rounded,
+                  accentColor: const Color(0xFF2F855A),
                   title:
                       item.customName ??
                       measurementTypeLabel(item.measurementType),
@@ -55,8 +67,16 @@ class MeasurementTab extends ConsumerWidget {
                       _openMeasurementEditor(context, ref, existing: item),
                   onActionSelected: (value) =>
                       _handleMeasurementAction(context, ref, item, value),
-                );
-              },
+                ),
+              );
+              if (i != items.length - 1) {
+                tiles.add(const SizedBox(height: 10));
+              }
+            }
+
+            return ListView(
+              padding: scheduleTabListPadding(context),
+              children: tiles,
             );
           },
           loading: () => ListView(
@@ -83,10 +103,13 @@ class MeasurementTab extends ConsumerWidget {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openMeasurementEditor(context, ref, existing: null),
-        icon: const Icon(Icons.add),
-        label: Text(AppStrings.addMeasurement),
+      floatingActionButton: Padding(
+        padding: scheduleTabFabPadding(context),
+        child: FloatingActionButton.extended(
+          onPressed: () => _openMeasurementEditor(context, ref, existing: null),
+          icon: const Icon(Icons.add),
+          label: Text(AppStrings.addMeasurement),
+        ),
       ),
     );
   }

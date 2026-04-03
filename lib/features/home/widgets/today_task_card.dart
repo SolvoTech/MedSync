@@ -19,205 +19,257 @@ class TodayTaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 390;
+    final tight = width < 360;
     final isCompleted = task.status == 'done' || task.status == 'skipped';
     final isSkipped = task.status == 'skipped';
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final accentColor = _colorForTaskType(task.taskType);
     final timeLabel = _timeLabel();
+    final radius = compact ? 18.0 : 20.0;
+
+    Widget buildTimeChip() {
+      return Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 8 : 9,
+          vertical: compact ? 4 : 5,
+        ),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.schedule_rounded,
+              size: compact ? 13 : 14,
+              color: colorScheme.onSurface.withValues(alpha: 0.68),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              timeLabel,
+              style: textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return AppCard(
       padding: EdgeInsets.zero,
-      borderRadius: 22,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 4,
-            decoration: BoxDecoration(
-              color: accentColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(22),
-                topRight: Radius.circular(22),
+      borderRadius: radius,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(height: 3, color: accentColor),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                compact ? 10 : 12,
+                compact ? 10 : 11,
+                compact ? 10 : 12,
+                compact ? 10 : 11,
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.13),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        _iconForTaskType(task.taskType),
-                        color: accentColor,
-                        size: 21,
-                      ),
-                    ),
-                    const SizedBox(width: 11),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _labelForTaskType(task.taskType),
-                            style: textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              height: 1.15,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            _supportingText(),
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                              height: 1.25,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 7,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest.withValues(
-                          alpha: 0.65,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.schedule_rounded,
-                            size: 14,
-                            color: colorScheme.onSurface.withValues(
-                              alpha: 0.68,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            timeLabel,
-                            style: textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    StatusChip(status: task.status),
-                    if (isCompleted) ...[
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _completedText(),
-                          style: textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withValues(
-                              alpha: 0.58,
-                            ),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                if (!isCompleted) ...[
-                  const SizedBox(height: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Row(
                     children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: onSkip,
-                          icon: const Icon(Icons.skip_next_rounded, size: 18),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(0, 42),
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                      Container(
+                        width: compact ? 36 : 40,
+                        height: compact ? 36 : 40,
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.13),
+                          borderRadius: BorderRadius.circular(
+                            compact ? 10 : 11,
                           ),
-                          label: Text(AppStrings.skip),
+                        ),
+                        child: Icon(
+                          _iconForTaskType(task.taskType),
+                          color: accentColor,
+                          size: compact ? 18 : 20,
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: compact ? 9 : 10),
                       Expanded(
-                        child: FilledButton.icon(
-                          onPressed: onDone,
-                          icon: const Icon(Icons.check_rounded, size: 18),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size(0, 42),
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                          ),
-                          label: Text(AppStrings.done),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _labelForTaskType(task.taskType),
+                              style: textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                height: 1.15,
+                              ),
+                            ),
+                            SizedBox(height: compact ? 2 : 3),
+                            Text(
+                              _supportingText(),
+                              maxLines: tight ? 1 : 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                                height: 1.25,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      if (!tight) ...[
+                        SizedBox(width: compact ? 6 : 8),
+                        buildTimeChip(),
+                      ],
                     ],
                   ),
-                ] else ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 11,
-                      vertical: 9,
+                  if (tight) ...[
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: buildTimeChip(),
                     ),
-                    decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(11),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          isSkipped
-                              ? Icons.pause_circle_outline_rounded
-                              : Icons.verified_rounded,
-                          size: 16,
-                          color: accentColor,
-                        ),
-                        const SizedBox(width: 7),
+                  ],
+                  SizedBox(height: compact ? 8 : 9),
+                  Row(
+                    children: [
+                      StatusChip(status: task.status),
+                      if (isCompleted) ...[
+                        SizedBox(width: compact ? 6 : 8),
                         Expanded(
                           child: Text(
-                            isSkipped
-                                ? AppStrings.tr(
-                                    'This task was skipped for today.',
-                                    'Tugas ini dilewati untuk hari ini.',
-                                  )
-                                : AppStrings.tr(
-                                    'Great, this task is done for today.',
-                                    'Bagus, tugas ini sudah selesai hari ini.',
-                                  ),
+                            _completedText(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: textTheme.bodySmall?.copyWith(
                               color: colorScheme.onSurface.withValues(
-                                alpha: 0.72,
+                                alpha: 0.58,
                               ),
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
+                  if (!isCompleted) ...[
+                    SizedBox(height: compact ? 9 : 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: tight
+                              ? OutlinedButton(
+                                  onPressed: onSkip,
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: Size(0, compact ? 38 : 40),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
+                                  ),
+                                  child: Text(AppStrings.skip),
+                                )
+                              : OutlinedButton.icon(
+                                  onPressed: onSkip,
+                                  icon: Icon(
+                                    Icons.skip_next_rounded,
+                                    size: compact ? 16 : 18,
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: Size(0, compact ? 38 : 40),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
+                                  ),
+                                  label: Text(AppStrings.skip),
+                                ),
+                        ),
+                        SizedBox(width: compact ? 8 : 9),
+                        Expanded(
+                          child: tight
+                              ? FilledButton(
+                                  onPressed: onDone,
+                                  style: FilledButton.styleFrom(
+                                    minimumSize: Size(0, compact ? 38 : 40),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
+                                  ),
+                                  child: Text(AppStrings.done),
+                                )
+                              : FilledButton.icon(
+                                  onPressed: onDone,
+                                  icon: Icon(
+                                    Icons.check_rounded,
+                                    size: compact ? 16 : 18,
+                                  ),
+                                  style: FilledButton.styleFrom(
+                                    minimumSize: Size(0, compact ? 38 : 40),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
+                                  ),
+                                  label: Text(AppStrings.done),
+                                ),
+                        ),
+                      ],
+                    ),
+                  ] else ...[
+                    SizedBox(height: compact ? 9 : 10),
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: compact ? 10 : 11,
+                        vertical: compact ? 8 : 9,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(compact ? 10 : 11),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isSkipped
+                                ? Icons.pause_circle_outline_rounded
+                                : Icons.verified_rounded,
+                            size: compact ? 15 : 16,
+                            color: accentColor,
+                          ),
+                          const SizedBox(width: 7),
+                          Expanded(
+                            child: Text(
+                              isSkipped
+                                  ? AppStrings.tr(
+                                      'This task was skipped for today.',
+                                      'Tugas ini dilewati untuk hari ini.',
+                                    )
+                                  : AppStrings.tr(
+                                      'Great, this task is done for today.',
+                                      'Bagus, tugas ini sudah selesai hari ini.',
+                                    ),
+                              maxLines: compact ? 2 : 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.72,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -21,12 +21,17 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 390;
+    final tight = width < 360;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final appBarTitleStyle = textTheme.headlineMedium?.copyWith(
-      fontWeight: FontWeight.w700,
-      color: colorScheme.onSurface,
-    );
+    final appBarTitleStyle =
+        (compact ? textTheme.headlineSmall : textTheme.headlineMedium)
+            ?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: colorScheme.onSurface,
+            );
 
     return Scaffold(
       appBar: AppBar(
@@ -35,43 +40,75 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: EdgeInsets.fromLTRB(
+              compact ? 12 : 16,
+              8,
+              compact ? 12 : 16,
+              0,
+            ),
             child: SizedBox(
               width: double.infinity,
-              child: SegmentedButton<ScheduleSection>(
-                showSelectedIcon: false,
-                style: ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  padding: const WidgetStatePropertyAll(
-                    EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                  ),
-                  textStyle: const WidgetStatePropertyAll(
-                    TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(compact ? 16 : 18),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.45),
                   ),
                 ),
-                segments: [
-                  ButtonSegment(
-                    value: ScheduleSection.medicine,
-                    label: Text(AppStrings.scheduleTabMedicine, maxLines: 1),
+                child: SegmentedButton<ScheduleSection>(
+                  showSelectedIcon: false,
+                  style: ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: WidgetStatePropertyAll(
+                      EdgeInsets.symmetric(
+                        horizontal: tight ? 6 : 8,
+                        vertical: compact ? 9 : 10,
+                      ),
+                    ),
+                    textStyle: WidgetStatePropertyAll(
+                      TextStyle(
+                        fontSize: tight ? 12 : 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                  ButtonSegment(
-                    value: ScheduleSection.measurement,
-                    label: Text(AppStrings.scheduleTabMeasurement, maxLines: 1),
-                  ),
-                  ButtonSegment(
-                    value: ScheduleSection.activity,
-                    label: Text(AppStrings.scheduleTabActivity, maxLines: 1),
-                  ),
-                ],
-                selected: {_selected},
-                onSelectionChanged: (selected) {
-                  setState(() => _selected = selected.first);
-                },
+                  segments: [
+                    ButtonSegment(
+                      value: ScheduleSection.medicine,
+                      label: Text(
+                        AppStrings.scheduleTabMedicine,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    ButtonSegment(
+                      value: ScheduleSection.measurement,
+                      label: Text(
+                        AppStrings.scheduleTabMeasurement,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    ButtonSegment(
+                      value: ScheduleSection.activity,
+                      label: Text(
+                        AppStrings.scheduleTabActivity,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                  selected: {_selected},
+                  onSelectionChanged: (selected) {
+                    setState(() => _selected = selected.first);
+                  },
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: compact ? 10 : 12),
           Expanded(child: _pages[_selected.index]),
         ],
       ),

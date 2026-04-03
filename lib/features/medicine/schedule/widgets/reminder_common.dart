@@ -7,6 +7,7 @@ import '../../../../core/validators/app_validators.dart';
 import '../../../../core/widgets/app_date_field.dart';
 import '../../../../core/widgets/app_dialog.dart';
 import '../../../../core/widgets/app_form_container.dart';
+import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_time_field.dart';
 
 typedef ReminderSubmit =
@@ -32,6 +33,24 @@ ReminderAction? parseReminderAction(String value) {
     default:
       return null;
   }
+}
+
+EdgeInsets scheduleTabListPadding(BuildContext context) {
+  final height = MediaQuery.sizeOf(context).height;
+  final compactHeight = height < 760;
+  final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
+  final bottomInset =
+      bottomSafeArea + kBottomNavigationBarHeight + (compactHeight ? 40 : 50);
+
+  return EdgeInsets.fromLTRB(16, 16, 16, bottomInset);
+}
+
+EdgeInsets scheduleTabFabPadding(BuildContext context) {
+  final height = MediaQuery.sizeOf(context).height;
+  final compactHeight = height < 760;
+  final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
+
+  return EdgeInsets.only(bottom: bottomSafeArea + (compactHeight ? 8 : 12));
 }
 
 Future<void> handleReminderAction({
@@ -119,6 +138,64 @@ Future<void> handleReminderAction({
   }
 }
 
+class ReminderSectionHeader extends StatelessWidget {
+  const ReminderSectionHeader({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.count,
+    super.key,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Icon(icon, size: 16, color: color),
+        ),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            '$count',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class ReminderListTile extends StatelessWidget {
   const ReminderListTile({
     required this.icon,
@@ -127,6 +204,7 @@ class ReminderListTile extends StatelessWidget {
     required this.onTap,
     required this.onActionSelected,
     this.showMarkDoneAction = false,
+    this.accentColor,
     super.key,
   });
 
@@ -136,38 +214,153 @@ class ReminderListTile extends StatelessWidget {
   final VoidCallback onTap;
   final ValueChanged<String> onActionSelected;
   final bool showMarkDoneAction;
+  final Color? accentColor;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: Icon(icon),
-        title: Text(title),
-        subtitle: Text(
-          '${AppStrings.reminderHourPrefix} ${timeOfDay.substring(0, 5)}',
-        ),
-        onTap: onTap,
-        trailing: PopupMenuButton<String>(
-          onSelected: onActionSelected,
-          itemBuilder: (context) => [
-            PopupMenuItem(value: 'edit', child: Text(AppStrings.reminderEdit)),
-            if (showMarkDoneAction)
-              PopupMenuItem(
-                value: 'mark_done',
-                child: Text(AppStrings.tr('Mark as Done', 'Tandai Selesai')),
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 390;
+    final tight = width < 360;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final tone = accentColor ?? _toneFromIcon(icon);
+    final radius = compact ? 18.0 : 20.0;
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      borderRadius: radius,
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(height: 3, color: tone),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                compact ? 10 : 12,
+                compact ? 10 : 11,
+                compact ? 10 : 12,
+                compact ? 10 : 11,
               ),
-            PopupMenuItem(
-              value: 'deactivate',
-              child: Text(AppStrings.reminderDeactivate),
-            ),
-            PopupMenuItem(
-              value: 'delete',
-              child: Text(AppStrings.reminderDelete),
+              child: Row(
+                children: [
+                  Container(
+                    width: compact ? 36 : 40,
+                    height: compact ? 36 : 40,
+                    decoration: BoxDecoration(
+                      color: tone.withValues(alpha: 0.13),
+                      borderRadius: BorderRadius.circular(compact ? 10 : 12),
+                    ),
+                    child: Icon(icon, color: tone, size: compact ? 18 : 20),
+                  ),
+                  SizedBox(width: compact ? 9 : 11),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: tight ? 1 : 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        SizedBox(height: compact ? 3 : 4),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: compact ? 8 : 9,
+                            vertical: compact ? 4 : 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.schedule_rounded,
+                                size: compact ? 12 : 13,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.66,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${AppStrings.reminderHourPrefix} ${timeOfDay.substring(0, 5)}',
+                                style: textTheme.labelSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: compact ? 6 : 8),
+                  PopupMenuButton<String>(
+                    onSelected: onActionSelected,
+                    icon: Container(
+                      width: compact ? 31 : 34,
+                      height: compact ? 31 : 34,
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.55,
+                        ),
+                        borderRadius: BorderRadius.circular(compact ? 9 : 10),
+                      ),
+                      child: Icon(
+                        Icons.more_vert_rounded,
+                        color: colorScheme.onSurface.withValues(alpha: 0.72),
+                        size: compact ? 16 : 18,
+                      ),
+                    ),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Text(AppStrings.reminderEdit),
+                      ),
+                      if (showMarkDoneAction)
+                        PopupMenuItem(
+                          value: 'mark_done',
+                          child: Text(
+                            AppStrings.tr('Mark as Done', 'Tandai Selesai'),
+                          ),
+                        ),
+                      PopupMenuItem(
+                        value: 'deactivate',
+                        child: Text(AppStrings.reminderDeactivate),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text(AppStrings.reminderDelete),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Color _toneFromIcon(IconData value) {
+    if (value == Icons.monitor_heart_rounded) {
+      return const Color(0xFF2F855A);
+    }
+    if (value == Icons.directions_walk_rounded) {
+      return const Color(0xFFED8936);
+    }
+    if (value == Icons.medication_rounded) {
+      return const Color(0xFF0077B6);
+    }
+    return const Color(0xFF4299E1);
   }
 }
 
