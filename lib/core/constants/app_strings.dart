@@ -206,6 +206,54 @@ class AppStrings {
     'Adjust search or filter chips to view users.',
     'Ubah kata kunci atau chip filter untuk menampilkan pengguna.',
   );
+  static String get adminBulkActionTitle => _t('Bulk Actions', 'Aksi Massal');
+  static String adminBulkSelectionSummary({
+    required int selectedCount,
+    required int suspendCandidateCount,
+    required int activateCandidateCount,
+  }) => _t(
+    '$selectedCount selected. $suspendCandidateCount can be suspended, $activateCandidateCount can be activated.',
+    '$selectedCount dipilih. $suspendCandidateCount bisa dinonaktifkan, $activateCandidateCount bisa diaktifkan.',
+  );
+  static String get adminBulkSelectAllAction =>
+      _t('Select All Filtered', 'Pilih Semua Tersaring');
+  static String get adminBulkClearSelectionAction =>
+      _t('Clear Selection', 'Bersihkan Pilihan');
+  static String get adminBulkSuspendAction =>
+      _t('Suspend Selected', 'Nonaktifkan Terpilih');
+  static String get adminBulkActivateAction =>
+      _t('Activate Selected', 'Aktifkan Terpilih');
+  static String get adminBulkNoEligibleSelection => _t(
+    'No eligible users in current selection for this action.',
+    'Tidak ada pengguna yang memenuhi syarat pada pilihan saat ini untuk aksi ini.',
+  );
+  static String adminBulkSuspendTitle(int count) => _t(
+    'Suspend $count selected users?',
+    'Nonaktifkan $count pengguna terpilih?',
+  );
+  static String adminBulkActivateTitle(int count) => _t(
+    'Activate $count selected users?',
+    'Aktifkan $count pengguna terpilih?',
+  );
+  static String adminBulkSuspendMessage(int count) => _t(
+    '$count selected users will be unable to sign in until reactivated.',
+    '$count pengguna terpilih tidak akan bisa masuk sampai diaktifkan kembali.',
+  );
+  static String adminBulkActivateMessage(int count) => _t(
+    '$count selected users will be able to sign in again.',
+    '$count pengguna terpilih akan bisa masuk kembali.',
+  );
+  static String adminBulkStatusResult({
+    required int successCount,
+    required int failedCount,
+  }) => _t(
+    'Bulk update finished. Success: $successCount, Failed: $failedCount.',
+    'Update massal selesai. Berhasil: $successCount, Gagal: $failedCount.',
+  );
+  static String get adminBulkActionFailed => _t(
+    'Bulk update failed. Please try again.',
+    'Update massal gagal. Silakan coba lagi.',
+  );
   static String adminLastSyncLabel(String dateTimeLabel) =>
       _t('Last synced: $dateTimeLabel', 'Sinkron terakhir: $dateTimeLabel');
   static String get adminContentManagementTitle =>

@@ -51,6 +51,7 @@
 - [x] Monitoring kegagalan query role/account status ditambahkan pada beberapa flow utama (router auth sync, role resolver home, auth account-status, dan admin control queries).
 - [x] Dashboard admin kini menampilkan indikator sinkronisasi terakhir agar operator mudah melihat freshness data.
 - [x] Manajemen pengguna admin kini mendukung filter cepat berdasarkan status akun, role, dan pencarian kata kunci.
+- [x] Bulk action aman ditambahkan pada manajemen pengguna (pilih banyak akun + konfirmasi bertingkat sebelum suspend/activate).
 
 ## Roadmap Lanjutan (Prioritas)
 
@@ -67,7 +68,7 @@
 ### P2 - UX dan Operasional (2-4 hari)
 - [x] Tambah indikator sinkronisasi terakhir di dashboard admin.
 - [x] Tambah filter user management (status role/account + pencarian cepat).
-- [ ] Tambah bulk action aman (mis. bulk suspend dengan konfirmasi bertingkat).
+- [x] Tambah bulk action aman (mis. bulk suspend dengan konfirmasi bertingkat).
 
 ### P3 - Performa dan Maintainability (berjalan)
 - [ ] Refactor query profil/role ke satu service/provider bersama agar tidak duplikasi lintas layar.
@@ -92,4 +93,5 @@
 - [x] Penambahan test spesifik role resolver.
 - [x] Audit RLS dan hardening akses admin sisi backend.
 - [x] Peningkatan UX admin: indikator last sync dan filter cepat user management.
+- [x] Peningkatan UX admin: bulk action aman untuk suspend/activate akun terpilih.
 

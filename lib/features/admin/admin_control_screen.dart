@@ -179,6 +179,10 @@ final adminUserRoleFilterProvider = StateProvider.autoDispose<AdminRoleFilter>(
   (ref) => AdminRoleFilter.all,
 );
 
+final adminSelectedUserIdsProvider = StateProvider.autoDispose<Set<String>>(
+  (ref) => <String>{},
+);
+
 final adminActionControllerProvider =
     AutoDisposeNotifierProvider<AdminActionController, AsyncValue<void>>(
       AdminActionController.new,
@@ -282,6 +286,7 @@ class AdminControlScreen extends ConsumerWidget {
         final searchQuery = ref.watch(adminUserSearchQueryProvider);
         final accountFilter = ref.watch(adminUserAccountFilterProvider);
         final roleFilter = ref.watch(adminUserRoleFilterProvider);
+        final selectedUserIds = ref.watch(adminSelectedUserIdsProvider);
 
         return Scaffold(
           appBar: AppBar(
@@ -293,6 +298,8 @@ class AdminControlScreen extends ConsumerWidget {
                 onPressed: () {
                   ref.invalidate(adminDashboardProvider);
                   ref.invalidate(adminUsersProvider);
+                  ref.read(adminSelectedUserIdsProvider.notifier).state =
+                      <String>{};
                 },
               ),
             ],
@@ -307,6 +314,8 @@ class AdminControlScreen extends ConsumerWidget {
             onRefresh: () async {
               ref.invalidate(adminDashboardProvider);
               ref.invalidate(adminUsersProvider);
+              ref.read(adminSelectedUserIdsProvider.notifier).state =
+                  <String>{};
               await ref.read(adminDashboardProvider.future);
               await ref.read(adminUsersProvider.future);
             },
@@ -397,6 +406,24 @@ class AdminControlScreen extends ConsumerWidget {
                     final currentUserId =
                         SupabaseClientRef.maybeClient?.auth.currentUser?.id;
 
+                    final manageableFilteredUsers = filteredUsers
+                        .where(
+                          (user) => _canManageUser(
+                            user: user,
+                            currentUserId: currentUserId,
+                          ),
+                        )
+                        .toList();
+                    final selectedFilteredUsers = manageableFilteredUsers
+                        .where((user) => selectedUserIds.contains(user.id))
+                        .toList();
+                    final selectedSuspendCandidates = selectedFilteredUsers
+                        .where((user) => user.accountStatus != 'suspended')
+                        .toList();
+                    final selectedActivateCandidates = selectedFilteredUsers
+                        .where((user) => user.accountStatus == 'suspended')
+                        .toList();
+
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -427,6 +454,42 @@ class AdminControlScreen extends ConsumerWidget {
                           },
                         ),
                         const SizedBox(height: 12),
+                        _AdminBulkActionPanel(
+                          selectedCount: selectedFilteredUsers.length,
+                          suspendCandidateCount:
+                              selectedSuspendCandidates.length,
+                          activateCandidateCount:
+                              selectedActivateCandidates.length,
+                          isBusy: actionState.isLoading,
+                          onSelectAll: () {
+                            final ids = manageableFilteredUsers
+                                .map((user) => user.id)
+                                .toSet();
+                            ref
+                                    .read(adminSelectedUserIdsProvider.notifier)
+                                    .state =
+                                ids;
+                          },
+                          onClearSelection: () {
+                            ref
+                                    .read(adminSelectedUserIdsProvider.notifier)
+                                    .state =
+                                <String>{};
+                          },
+                          onBulkSuspend: () => _onBulkSetStatus(
+                            context,
+                            ref,
+                            targets: selectedFilteredUsers,
+                            suspend: true,
+                          ),
+                          onBulkActivate: () => _onBulkSetStatus(
+                            context,
+                            ref,
+                            targets: selectedFilteredUsers,
+                            suspend: false,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                         if (filteredUsers.isEmpty)
                           AppEmptyState(
                             message: AppStrings.adminNoFilteredUserMessage,
@@ -443,6 +506,16 @@ class AdminControlScreen extends ConsumerWidget {
                                       user: user,
                                       isBusy: actionState.isLoading,
                                       isSelf: currentUserId == user.id,
+                                      isSelected: selectedUserIds.contains(
+                                        user.id,
+                                      ),
+                                      onSelectionChanged: (value) {
+                                        _toggleUserSelection(
+                                          ref,
+                                          userId: user.id,
+                                          selected: value ?? false,
+                                        );
+                                      },
                                       onToggleStatus: () =>
                                           _onToggleStatus(context, ref, user),
                                       onResetAccess: () =>
@@ -509,6 +582,108 @@ class AdminControlScreen extends ConsumerWidget {
     }).toList();
   }
 
+  bool _canManageUser({
+    required AdminManagedUser user,
+    required String? currentUserId,
+  }) {
+    return currentUserId != user.id && user.role != 'admin';
+  }
+
+  void _toggleUserSelection(
+    WidgetRef ref, {
+    required String userId,
+    required bool selected,
+  }) {
+    final current = ref.read(adminSelectedUserIdsProvider);
+    final next = <String>{...current};
+
+    if (selected) {
+      next.add(userId);
+    } else {
+      next.remove(userId);
+    }
+
+    ref.read(adminSelectedUserIdsProvider.notifier).state = next;
+  }
+
+  Future<void> _onBulkSetStatus(
+    BuildContext context,
+    WidgetRef ref, {
+    required List<AdminManagedUser> targets,
+    required bool suspend,
+  }) async {
+    final actionableTargets = targets
+        .where(
+          (user) => suspend
+              ? user.accountStatus != 'suspended'
+              : user.accountStatus == 'suspended',
+        )
+        .toList();
+
+    if (actionableTargets.isEmpty) {
+      context.showErrorSnackBar(AppStrings.adminBulkNoEligibleSelection);
+      return;
+    }
+
+    final confirmed = await AppDialog.showConfirm(
+      context,
+      title: suspend
+          ? AppStrings.adminBulkSuspendTitle(actionableTargets.length)
+          : AppStrings.adminBulkActivateTitle(actionableTargets.length),
+      message: suspend
+          ? AppStrings.adminBulkSuspendMessage(actionableTargets.length)
+          : AppStrings.adminBulkActivateMessage(actionableTargets.length),
+      confirmLabel: suspend
+          ? AppStrings.adminBulkSuspendAction
+          : AppStrings.adminBulkActivateAction,
+      cancelLabel: AppStrings.cancel,
+      isDestructive: suspend,
+      icon: suspend ? Icons.block : Icons.check_circle_outline,
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    var successCount = 0;
+    var failedCount = 0;
+
+    for (final user in actionableTargets) {
+      await ref
+          .read(adminActionControllerProvider.notifier)
+          .setUserStatus(target: user, suspend: suspend);
+
+      final actionState = ref.read(adminActionControllerProvider);
+      if (actionState.hasError) {
+        failedCount += 1;
+        continue;
+      }
+
+      successCount += 1;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
+
+    if (successCount > 0) {
+      context.showSuccessSnackBar(
+        AppStrings.adminBulkStatusResult(
+          successCount: successCount,
+          failedCount: failedCount,
+        ),
+      );
+      ref.invalidate(adminDashboardProvider);
+      ref.invalidate(adminUsersProvider);
+    }
+
+    if (successCount == 0 && failedCount > 0) {
+      context.showErrorSnackBar(AppStrings.adminBulkActionFailed);
+    }
+
+    ref.read(adminSelectedUserIdsProvider.notifier).state = <String>{};
+  }
+
   Future<void> _onToggleStatus(
     BuildContext context,
     WidgetRef ref,
@@ -554,6 +729,11 @@ class AdminControlScreen extends ConsumerWidget {
           ? AppStrings.adminUserSuspendedSuccess
           : AppStrings.adminUserActivatedSuccess,
     );
+
+    final nextSelected = <String>{...ref.read(adminSelectedUserIdsProvider)}
+      ..remove(user.id);
+    ref.read(adminSelectedUserIdsProvider.notifier).state = nextSelected;
+
     ref.invalidate(adminDashboardProvider);
     ref.invalidate(adminUsersProvider);
   }
@@ -932,11 +1112,101 @@ class _AdminUserFilterPanel extends StatelessWidget {
   }
 }
 
+class _AdminBulkActionPanel extends StatelessWidget {
+  const _AdminBulkActionPanel({
+    required this.selectedCount,
+    required this.suspendCandidateCount,
+    required this.activateCandidateCount,
+    required this.isBusy,
+    required this.onSelectAll,
+    required this.onClearSelection,
+    required this.onBulkSuspend,
+    required this.onBulkActivate,
+  });
+
+  final int selectedCount;
+  final int suspendCandidateCount;
+  final int activateCandidateCount;
+  final bool isBusy;
+  final VoidCallback onSelectAll;
+  final VoidCallback onClearSelection;
+  final VoidCallback onBulkSuspend;
+  final VoidCallback onBulkActivate;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.adminBulkActionTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            AppStrings.adminBulkSelectionSummary(
+              selectedCount: selectedCount,
+              suspendCandidateCount: suspendCandidateCount,
+              activateCandidateCount: activateCandidateCount,
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: isBusy ? null : onSelectAll,
+                  icon: const Icon(Icons.done_all_rounded, size: 18),
+                  label: Text(AppStrings.adminBulkSelectAllAction),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: isBusy ? null : onClearSelection,
+                  icon: const Icon(Icons.deselect_rounded, size: 18),
+                  label: Text(AppStrings.adminBulkClearSelectionAction),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: isBusy ? null : onBulkSuspend,
+                  icon: const Icon(Icons.block_rounded, size: 18),
+                  label: Text(AppStrings.adminBulkSuspendAction),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: isBusy ? null : onBulkActivate,
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: Text(AppStrings.adminBulkActivateAction),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _UserItem extends StatelessWidget {
   const _UserItem({
     required this.user,
     required this.isBusy,
     required this.isSelf,
+    required this.isSelected,
+    required this.onSelectionChanged,
     required this.onToggleStatus,
     required this.onResetAccess,
   });
@@ -944,6 +1214,8 @@ class _UserItem extends StatelessWidget {
   final AdminManagedUser user;
   final bool isBusy;
   final bool isSelf;
+  final bool isSelected;
+  final ValueChanged<bool?> onSelectionChanged;
   final VoidCallback onToggleStatus;
   final VoidCallback onResetAccess;
 
@@ -957,6 +1229,7 @@ class _UserItem extends StatelessWidget {
         ? AppStrings.adminStatusSuspended
         : AppStrings.adminStatusActive;
     final canManage = !isSelf && user.role != 'admin';
+    final canSelect = canManage && !isBusy;
     final createdAtLabel = user.createdAt == null
         ? '-'
         : DateFormat('dd MMM yyyy').format(user.createdAt!.toLocal());
@@ -1023,23 +1296,32 @@ class _UserItem extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  statusLabel,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: statusColor,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.4,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Checkbox(
+                    value: isSelected,
+                    onChanged: canSelect ? onSelectionChanged : null,
                   ),
-                ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      statusLabel,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: statusColor,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
