@@ -51,11 +51,8 @@ class AppTextField extends StatelessWidget {
     final effectiveDecoration = useAuthSubtleStyle
         ? decoration.copyWith(
             filled: true,
-            fillColor: isDark
-                ? Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.28)
-                : Theme.of(context).colorScheme.surfaceVariant,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest
+                .withValues(alpha: isDark ? 0.28 : 0.6),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide.none,

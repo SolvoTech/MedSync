@@ -333,7 +333,7 @@ class _ArticleCover extends StatelessWidget {
           }
           return _coverFallback(context, width: width, height: height);
         },
-        errorBuilder: (_, __, ___) {
+        errorBuilder: (context, error, stackTrace) {
           return _coverFallback(context, width: width, height: height);
         },
       );

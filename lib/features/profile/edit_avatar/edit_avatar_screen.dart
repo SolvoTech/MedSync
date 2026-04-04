@@ -63,9 +63,7 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
         }
       }
 
-      if (croppedFile == null) {
-        croppedFile = CroppedFile(pickedFile.path);
-      }
+      croppedFile ??= CroppedFile(pickedFile.path);
 
       setState(() => _isLoading = true);
 

@@ -7,14 +7,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/admin/admin_control_screen.dart';
 import '../../features/admin/admin_education_screen.dart';
-import '../../features/admin/admin_home_screen.dart';
 import '../../features/auth/forgot_password/forgot_password_screen.dart';
 import '../../features/auth/login/login_screen.dart';
 import '../../features/auth/onboarding_profile/onboarding_profile_screen.dart';
 import '../../features/auth/register/register_screen.dart';
 import '../../features/education/education_detail_screen.dart';
 import '../../features/education/education_feed_screen.dart';
-import '../../features/home/home_screen.dart';
+import '../../features/home/role_home_screen.dart';
 import '../../features/medicine/schedule/schedule_list_screen.dart';
 import '../../features/notifications/notification_screen.dart';
 import '../../features/profile/profile_screen.dart';
@@ -76,9 +75,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.home,
-                builder: (_, _) => authNotifier.isAdmin == true
-                    ? const AdminHomeScreen()
-                    : const HomeScreen(),
+                builder: (_, _) => const RoleHomeScreen(),
               ),
             ],
           ),

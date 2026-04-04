@@ -15,7 +15,7 @@ void main() {
     addTearDown(container.dispose);
     container.listen<AsyncValue<void>>(
       adminEducationActionControllerProvider,
-      (_, __) {},
+      (previous, next) {},
     );
     return container;
   }

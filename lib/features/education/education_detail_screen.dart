@@ -146,7 +146,7 @@ class _DetailCover extends StatelessWidget {
         }
         return _fallback(context);
       },
-      errorBuilder: (_, __, ___) {
+      errorBuilder: (context, error, stackTrace) {
         return _fallback(context);
       },
     );

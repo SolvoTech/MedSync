@@ -24,18 +24,20 @@ final reportDateProvider = StateProvider<DateTime>((ref) => DateTime.now());
 
 final reportDataProvider = FutureProvider.autoDispose<_ReportData>((ref) async {
   final client = SupabaseClientRef.maybeClient;
-  if (client == null)
+  if (client == null) {
     throw Exception(
       AppStrings.tr(
         'Supabase is not initialized.',
         'Supabase belum diinisialisasi.',
       ),
     );
+  }
   final user = client.auth.currentUser;
-  if (user == null)
+  if (user == null) {
     throw Exception(
       AppStrings.tr('Please sign in first.', 'Login terlebih dahulu.'),
     );
+  }
 
   final period = ref.watch(reportPeriodProvider);
   final refDate = ref.watch(reportDateProvider);

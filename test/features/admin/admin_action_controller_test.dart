@@ -8,7 +8,7 @@ void main() {
     addTearDown(container.dispose);
     container.listen<AsyncValue<void>>(
       adminActionControllerProvider,
-      (_, __) {},
+      (previous, next) {},
     );
     return container;
   }

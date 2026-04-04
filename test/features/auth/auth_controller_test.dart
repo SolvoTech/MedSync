@@ -6,7 +6,10 @@ void main() {
   ProviderContainer createContainer() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    container.listen<AsyncValue<void>>(authControllerProvider, (_, __) {});
+    container.listen<AsyncValue<void>>(
+      authControllerProvider,
+      (previous, next) {},
+    );
     return container;
   }
 

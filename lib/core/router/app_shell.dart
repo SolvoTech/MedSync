@@ -15,13 +15,9 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isAdmin == null) {
-      // Avoid rendering an incorrect nav set while role is still loading.
-      return Scaffold(body: navigationShell);
-    }
-
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Keep navigation visible even while role is loading to avoid empty shell state.
     final navItems = _buildNavItems(isAdmin == true);
     final visibleIndex = navItems.indexWhere(
       (item) => item.branchIndex == navigationShell.currentIndex,
