@@ -189,6 +189,9 @@ final adminActionControllerProvider =
     );
 
 class AdminActionController extends AutoDisposeNotifier<AsyncValue<void>> {
+  static const String _internalEmailDomain = 'users.medsync.local';
+  static final RegExp _usernameRegex = RegExp(r'^[a-z0-9_]{3,24}$');
+
   @override
   AsyncValue<void> build() => const AsyncData(null);
 
@@ -200,7 +203,65 @@ class AdminActionController extends AutoDisposeNotifier<AsyncValue<void>> {
     state = await AsyncValue.guard(() async {
       final client = _requireClient();
       final targetStatus = suspend ? 'suspended' : 'active';
+      final usedRpc = await _trySetUserStatusViaRpc(
+        client,
+        target: target,
+        targetStatus: targetStatus,
+      );
 
+      if (!usedRpc) {
+        await client
+            .from('profiles')
+            .update({'account_status': targetStatus})
+            .eq('id', target.id)
+            .select('id')
+            .single();
+
+        await _insertAuditLogBestEffort(
+          client,
+          action: suspend ? 'suspend_user' : 'unsuspend_user',
+          targetUserId: target.id,
+          metadata: {
+            'target_status': targetStatus,
+            'target_username': target.username,
+          },
+        );
+      }
+    });
+  }
+
+  Future<void> resetUserAccess({required AdminManagedUser target}) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final client = _requireClient();
+      final resetEmail = _resolveResetEmail(target);
+      if (resetEmail == null) {
+        throw Exception('Email internal user tidak ditemukan.');
+      }
+
+      await client.auth.resetPasswordForEmail(
+        resetEmail,
+        redirectTo: 'io.supabase.medsync://login-callback/',
+      );
+
+      await _insertAuditLogBestEffort(
+        client,
+        action: 'reset_user_access',
+        targetUserId: target.id,
+        metadata: {
+          'target_username': target.username,
+          'target_internal_email': resetEmail,
+        },
+      );
+    });
+  }
+
+  Future<bool> _trySetUserStatusViaRpc(
+    SupabaseClient client, {
+    required AdminManagedUser target,
+    required String targetStatus,
+  }) async {
+    try {
       await client.rpc(
         'admin_set_user_account_status',
         params: {
@@ -209,35 +270,78 @@ class AdminActionController extends AutoDisposeNotifier<AsyncValue<void>> {
           'target_username': target.username,
         },
       );
-    });
+      return true;
+    } catch (error) {
+      if (_isMissingRpcFunction(
+        error,
+        functionName: 'admin_set_user_account_status',
+      )) {
+        return false;
+      }
+      rethrow;
+    }
   }
 
-  Future<void> resetUserAccess({required AdminManagedUser target}) async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final client = _requireClient();
+  Future<void> _insertAuditLogBestEffort(
+    SupabaseClient client, {
+    required String action,
+    required String? targetUserId,
+    required Map<String, dynamic> metadata,
+  }) async {
+    final actorId = client.auth.currentUser?.id;
 
-      if (target.internalEmail == null || target.internalEmail!.isEmpty) {
-        throw Exception('Email internal user tidak ditemukan.');
-      }
-
-      await client.auth.resetPasswordForEmail(
-        target.internalEmail!,
-        redirectTo: 'io.supabase.medsync://login-callback/',
-      );
-
+    try {
       await client.rpc(
         'admin_insert_audit_log',
         params: {
-          'action_name': 'reset_user_access',
-          'target_user_id': target.id,
-          'metadata': {
-            'target_username': target.username,
-            'target_internal_email': target.internalEmail,
-          },
+          'action_name': action,
+          'target_user_id': targetUserId,
+          'metadata': metadata,
         },
       );
-    });
+      return;
+    } catch (_) {
+      // Best-effort: never block primary action due to audit sink availability.
+    }
+
+    if (actorId == null) {
+      return;
+    }
+
+    try {
+      await client.from('admin_audit_logs').insert({
+        'actor_id': actorId,
+        'target_user_id': targetUserId,
+        'action': action,
+        'metadata': metadata,
+      });
+    } catch (_) {
+      // Ignore audit sink failures.
+    }
+  }
+
+  String? _resolveResetEmail(AdminManagedUser target) {
+    final internalEmail = target.internalEmail?.trim().toLowerCase();
+    if (internalEmail != null && internalEmail.contains('@')) {
+      return internalEmail;
+    }
+
+    final username = target.username.trim().toLowerCase();
+    if (_usernameRegex.hasMatch(username)) {
+      return '$username@$_internalEmailDomain';
+    }
+
+    return null;
+  }
+
+  bool _isMissingRpcFunction(Object error, {required String functionName}) {
+    if (error is! PostgrestException) {
+      return false;
+    }
+
+    final message = error.message.toLowerCase();
+    return message.contains('could not find the function') &&
+        message.contains(functionName.toLowerCase());
   }
 
   SupabaseClient _requireClient() {
@@ -251,6 +355,8 @@ class AdminActionController extends AutoDisposeNotifier<AsyncValue<void>> {
 
 class AdminControlScreen extends ConsumerWidget {
   const AdminControlScreen({super.key});
+
+  static final RegExp _usernameRegex = RegExp(r'^[a-z0-9_]{3,24}$');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -584,6 +690,7 @@ class AdminControlScreen extends ConsumerWidget {
                                       isSelected: selectedUserIds.contains(
                                         user.id,
                                       ),
+                                      canResetAccess: _canResetAccess(user),
                                       onSelectionChanged: (value) {
                                         _toggleUserSelection(
                                           ref,
@@ -662,6 +769,15 @@ class AdminControlScreen extends ConsumerWidget {
     required String? currentUserId,
   }) {
     return currentUserId != user.id && user.role != 'admin';
+  }
+
+  bool _canResetAccess(AdminManagedUser user) {
+    final internalEmail = user.internalEmail?.trim().toLowerCase();
+    if (internalEmail != null && internalEmail.contains('@')) {
+      return true;
+    }
+
+    return _usernameRegex.hasMatch(user.username.trim().toLowerCase());
   }
 
   void _toggleUserSelection(
@@ -1316,6 +1432,7 @@ class _UserItem extends StatelessWidget {
     required this.isBusy,
     required this.isSelf,
     required this.isSelected,
+    required this.canResetAccess,
     required this.onSelectionChanged,
     required this.onToggleStatus,
     required this.onResetAccess,
@@ -1325,6 +1442,7 @@ class _UserItem extends StatelessWidget {
   final bool isBusy;
   final bool isSelf;
   final bool isSelected;
+  final bool canResetAccess;
   final ValueChanged<bool?> onSelectionChanged;
   final VoidCallback onToggleStatus;
   final VoidCallback onResetAccess;
@@ -1455,7 +1573,9 @@ class _UserItem extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: isBusy || !canManage ? null : onResetAccess,
+                        onPressed: isBusy || !canManage || !canResetAccess
+                            ? null
+                            : onResetAccess,
                         icon: const Icon(Icons.key_outlined, size: 18),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(0, 40),
@@ -1498,7 +1618,9 @@ class _UserItem extends StatelessWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: isBusy || !canManage ? null : onResetAccess,
+                      onPressed: isBusy || !canManage || !canResetAccess
+                          ? null
+                          : onResetAccess,
                       icon: const Icon(Icons.key_outlined, size: 18),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(0, 42),
@@ -1542,6 +1664,16 @@ class _UserItem extends StatelessWidget {
               isSelf
                   ? AppStrings.adminSelfAccountHint
                   : AppStrings.adminOtherAdminHint,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.55),
+              ),
+            ),
+          ] else if (!canResetAccess) ...[
+            const SizedBox(height: 8),
+            Text(
+              AppStrings.adminResetAccessUnavailableHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(
                   context,

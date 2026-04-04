@@ -29,6 +29,50 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
     return 'image/jpeg';
   }
 
+  String _fallbackDisplayName(User user) {
+    final metadataName = (user.userMetadata?['full_name'] as String?)?.trim();
+    if (metadataName != null && metadataName.isNotEmpty) {
+      return metadataName;
+    }
+
+    final email = user.email?.trim();
+    if (email != null && email.isNotEmpty) {
+      final localPart = email.split('@').first.trim();
+      if (localPart.isNotEmpty) {
+        return localPart;
+      }
+    }
+
+    return AppStrings.tr('User', 'Pengguna');
+  }
+
+  String _avatarUploadErrorMessage(Object error) {
+    if (error is StorageException) {
+      final lower = error.message.toLowerCase();
+      if (lower.contains('bucket') && lower.contains('not found')) {
+        return AppStrings.tr(
+          'Avatar storage is not configured yet. Please contact admin.',
+          'Penyimpanan avatar belum dikonfigurasi. Silakan hubungi admin.',
+        );
+      }
+      if (lower.contains('permission') ||
+          lower.contains('row-level security')) {
+        return AppStrings.tr(
+          'You do not have permission to upload avatar.',
+          'Anda tidak memiliki izin untuk mengunggah avatar.',
+        );
+      }
+    }
+
+    return toUserErrorMessage(
+      error,
+      fallback: AppStrings.tr(
+        'Failed to update profile photo. Please try again.',
+        'Gagal mengubah foto profil. Silakan coba lagi.',
+      ),
+    );
+  }
+
   Future<void> _pickAndUploadImage(ImageSource source) async {
     final toolbarColor = Theme.of(context).primaryColor;
 
@@ -92,12 +136,20 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
 
       final publicUrl = client.storage.from('avatars').getPublicUrl(path);
 
-      await client
+      final updatedProfile = await client
           .from('profiles')
           .update({'avatar_url': publicUrl})
           .eq('id', user.id)
           .select('id')
-          .single();
+          .maybeSingle();
+
+      if (updatedProfile == null) {
+        await client.from('profiles').upsert({
+          'id': user.id,
+          'full_name': _fallbackDisplayName(user),
+          'avatar_url': publicUrl,
+        });
+      }
 
       if (mounted) {
         Navigator.pop(context, true);
@@ -110,15 +162,7 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
       }
     } catch (e) {
       if (mounted) {
-        context.showErrorSnackBar(
-          toUserErrorMessage(
-            e,
-            fallback: AppStrings.tr(
-              'Failed to update profile photo. Please try again.',
-              'Gagal mengubah foto profil. Silakan coba lagi.',
-            ),
-          ),
-        );
+        context.showErrorSnackBar(_avatarUploadErrorMessage(e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

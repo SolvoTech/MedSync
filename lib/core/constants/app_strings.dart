@@ -345,6 +345,10 @@ class AppStrings {
   static String get adminStatusSuspended => _t('SUSPENDED', 'DINONAKTIFKAN');
   static String get adminStatusActive => _t('ACTIVE', 'AKTIF');
   static String get adminResetAccessButton => _t('Reset Access', 'Reset Akses');
+  static String get adminResetAccessUnavailableHint => _t(
+    'Reset access is only available for users with a valid internal account email.',
+    'Reset akses hanya tersedia untuk pengguna dengan email akun internal yang valid.',
+  );
   static String get adminSelfAccountHint => _t(
     'This account is your own account.',
     'Akun ini adalah akun Anda sendiri.',

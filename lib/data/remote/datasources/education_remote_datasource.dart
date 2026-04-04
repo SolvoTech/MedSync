@@ -161,9 +161,35 @@ class EducationRemoteDataSource {
     required String action,
     required Map<String, dynamic> metadata,
   }) async {
-    await client.rpc(
-      'admin_insert_audit_log',
-      params: {'action_name': action, 'metadata': metadata},
-    );
+    final actorId = client.auth.currentUser?.id;
+
+    try {
+      await client.rpc(
+        'admin_insert_audit_log',
+        params: {
+          'action_name': action,
+          'target_user_id': null,
+          'metadata': metadata,
+        },
+      );
+      return;
+    } catch (_) {
+      // Best-effort logging: CRUD should still succeed even if RPC is missing.
+    }
+
+    if (actorId == null) {
+      return;
+    }
+
+    try {
+      await client.from('admin_audit_logs').insert({
+        'actor_id': actorId,
+        'target_user_id': null,
+        'action': action,
+        'metadata': metadata,
+      });
+    } catch (_) {
+      // Ignore audit sink failures to avoid blocking main CRUD operations.
+    }
   }
 }

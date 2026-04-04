@@ -1007,6 +1007,32 @@ class _ArticleEditorSheetState extends ConsumerState<_ArticleEditorSheet> {
     return client.storage.from('education-covers').getPublicUrl(path);
   }
 
+  String _coverUploadErrorMessage(Object error) {
+    if (error is StorageException) {
+      final lower = error.message.toLowerCase();
+
+      if (lower.contains('bucket') && lower.contains('not found')) {
+        return AppStrings.tr(
+          'Cover storage is not configured yet. Please contact admin.',
+          'Penyimpanan cover belum dikonfigurasi. Silakan hubungi admin.',
+        );
+      }
+
+      if (lower.contains('permission') ||
+          lower.contains('row-level security')) {
+        return AppStrings.tr(
+          'You do not have permission to upload article cover.',
+          'Anda tidak memiliki izin untuk mengunggah cover artikel.',
+        );
+      }
+    }
+
+    return toUserErrorMessage(
+      error,
+      fallback: AppStrings.adminArticleCoverUploadFailedMessage,
+    );
+  }
+
   Future<void> _submit() async {
     if (_isSaving) {
       return;
@@ -1044,12 +1070,7 @@ class _ArticleEditorSheetState extends ConsumerState<_ArticleEditorSheet> {
         return;
       }
 
-      context.showErrorSnackBar(
-        toUserErrorMessage(
-          error,
-          fallback: AppStrings.adminArticleCoverUploadFailedMessage,
-        ),
-      );
+      context.showErrorSnackBar(_coverUploadErrorMessage(error));
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);

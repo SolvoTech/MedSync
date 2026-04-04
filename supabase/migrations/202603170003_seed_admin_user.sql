@@ -12,6 +12,7 @@ DO $$
 DECLARE
   v_admin_username CONSTANT text := 'admin';
   v_admin_password CONSTANT text := 'password';
+  v_admin_birth_date CONSTANT date := DATE '1990-01-01';
   v_internal_email_domain CONSTANT text := 'users.medsync.local';
   v_admin_email text;
   v_admin_id uuid;
@@ -160,6 +161,7 @@ BEGIN
   INSERT INTO public.profiles (
     id,
     full_name,
+    birth_date,
     username,
     role,
     account_status,
@@ -168,6 +170,7 @@ BEGIN
   ) VALUES (
     v_admin_id,
     'Administrator',
+    v_admin_birth_date,
     v_admin_username,
     'admin',
     'active',
@@ -177,6 +180,7 @@ BEGIN
   ON CONFLICT (id)
   DO UPDATE SET
     full_name = excluded.full_name,
+    birth_date = excluded.birth_date,
     username = excluded.username,
     role = 'admin',
     account_status = 'active',
