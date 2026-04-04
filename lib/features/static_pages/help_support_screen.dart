@@ -115,10 +115,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       ),
     ),
     (
-      q: AppStrings.tr('Forgot password?', 'Lupa kata sandi?'),
+      q: AppStrings.tr('Cannot access account?', 'Tidak bisa mengakses akun?'),
       a: AppStrings.tr(
-        'On the login screen, tap Forgot password? -> enter your email -> check your email for a reset link.',
-        'Di halaman login, ketuk Lupa kata sandi? -> Masukkan email Anda -> Cek email untuk tautan reset kata sandi.',
+        'Contact your administrator to reset your account access from the Admin Control Center.',
+        'Hubungi administrator untuk melakukan reset akses akun melalui Pusat Kontrol Admin.',
       ),
     ),
   ];

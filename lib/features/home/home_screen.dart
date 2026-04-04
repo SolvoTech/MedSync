@@ -291,13 +291,26 @@ class HomeScreen extends ConsumerWidget {
               data: (tasks) {
                 if (tasks.isEmpty) {
                   return SliverFillRemaining(
-                    child: AppEmptyState(
-                      message: AppStrings.noTasksToday,
-                      icon: Icons.task_alt,
-                      subtitle: AppStrings.tr(
-                        'Add medication or activity schedules\nto start tracking your health.',
-                        'Tambahkan jadwal obat atau aktivitas\nuntuk mulai melacak kesehatan Anda.',
-                      ),
+                    hasScrollBody: false,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          physics: const ClampingScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: AppEmptyState(
+                              message: AppStrings.noTasksToday,
+                              icon: Icons.task_alt,
+                              subtitle: AppStrings.tr(
+                                'Add medication or activity schedules\nto start tracking your health.',
+                                'Tambahkan jadwal obat atau aktivitas\nuntuk mulai melacak kesehatan Anda.',
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   );
                 }

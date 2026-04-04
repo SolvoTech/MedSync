@@ -12,20 +12,6 @@ import '../admin/admin_home_screen.dart';
 import 'home_screen.dart';
 
 final homeRoleProvider = FutureProvider.autoDispose<bool>((ref) async {
-  final link = ref.keepAlive();
-  Timer? disposeTimer;
-
-  ref
-    ..onCancel(() {
-      disposeTimer = Timer(const Duration(minutes: 2), link.close);
-    })
-    ..onResume(() {
-      disposeTimer?.cancel();
-    })
-    ..onDispose(() {
-      disposeTimer?.cancel();
-    });
-
   final client = SupabaseClientRef.maybeClient;
   if (client == null) {
     throw Exception(
@@ -40,6 +26,15 @@ final homeRoleProvider = FutureProvider.autoDispose<bool>((ref) async {
   if (user == null) {
     return false;
   }
+
+  final initialUserId = user.id;
+  final authSub = client.auth.onAuthStateChange.listen((data) {
+    final nextUserId = data.session?.user.id;
+    if (nextUserId != initialUserId) {
+      ref.invalidateSelf();
+    }
+  });
+  ref.onDispose(authSub.cancel);
 
   try {
     final row = await client
@@ -87,28 +82,14 @@ class RoleHomeScreen extends ConsumerWidget {
     final roleState = ref.watch(homeRoleProvider);
 
     return roleState.when(
-      loading: () {
-        if (initialIsAdmin == false) {
-          return _userHome();
-        }
-
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
-      },
-      error: (error, _) {
-        if (initialIsAdmin == false) {
-          return _userHome();
-        }
-
-        return Scaffold(
-          body: AppErrorWidget(
-            message: toUserErrorMessage(
-              error,
-              fallback: AppStrings.errorGeneral,
-            ),
-            onRetry: () => ref.invalidate(homeRoleProvider),
-          ),
-        );
-      },
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, _) => Scaffold(
+        body: AppErrorWidget(
+          message: toUserErrorMessage(error, fallback: AppStrings.errorGeneral),
+          onRetry: () => ref.invalidate(homeRoleProvider),
+        ),
+      ),
       data: (isAdmin) => isAdmin ? _adminHome() : _userHome(),
     );
   }

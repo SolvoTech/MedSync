@@ -7,7 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/admin/admin_control_screen.dart';
 import '../../features/admin/admin_education_screen.dart';
-import '../../features/auth/forgot_password/forgot_password_screen.dart';
 import '../../features/auth/login/login_screen.dart';
 import '../../features/auth/onboarding_profile/onboarding_profile_screen.dart';
 import '../../features/auth/register/register_screen.dart';
@@ -48,10 +47,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.register,
         builder: (_, _) => const RegisterScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.forgotPassword,
-        builder: (_, _) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: AppRoutes.onboardingProfile,
@@ -146,8 +141,7 @@ String? resolveAppRedirect({
 }) {
   final isAuthRoute =
       matchedLocation == AppRoutes.login ||
-      matchedLocation == AppRoutes.register ||
-      matchedLocation == AppRoutes.forgotPassword;
+      matchedLocation == AppRoutes.register;
   final isAdminRoute =
       matchedLocation == AppRoutes.adminControl ||
       matchedLocation == AppRoutes.adminEducation;

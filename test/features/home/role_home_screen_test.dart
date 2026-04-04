@@ -42,7 +42,7 @@ void main() {
       expect(find.text('ADMIN_VIEW'), findsOneWidget);
     });
 
-    testWidgets('user login stays on user home while role verification fails', (
+    testWidgets('user bootstrap shows error when role verification fails', (
       tester,
     ) async {
       await pumpRoleHome(
@@ -53,7 +53,10 @@ void main() {
         }),
       );
 
-      expect(find.text('USER_VIEW'), findsOneWidget);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppErrorWidget), findsOneWidget);
+      expect(find.text(AppStrings.retry), findsOneWidget);
     });
 
     testWidgets('shows loading indicator without bootstrap role', (

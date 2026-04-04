@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,6 +22,7 @@ class EditAvatarScreen extends ConsumerStatefulWidget {
 }
 
 class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
+  static const int _maxAvatarBytes = 3 * 1024 * 1024;
   bool _isLoading = false;
 
   String _contentTypeFor(String path) {
@@ -62,6 +65,26 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
           'Anda tidak memiliki izin untuk mengunggah avatar.',
         );
       }
+
+      if (lower.contains('mime') ||
+          lower.contains('content type') ||
+          lower.contains('invalid') && lower.contains('image')) {
+        return AppStrings.tr(
+          'Image format is not supported. Please use JPG, PNG, or WEBP.',
+          'Format gambar tidak didukung. Gunakan JPG, PNG, atau WEBP.',
+        );
+      }
+
+      if (lower.contains('size') ||
+          lower.contains('too large') ||
+          lower.contains('payload') ||
+          lower.contains('limit')) {
+        final maxMb = (_maxAvatarBytes / (1024 * 1024)).round();
+        return AppStrings.tr(
+          'Profile photo is too large. Maximum $maxMb MB.',
+          'Ukuran foto profil terlalu besar. Maksimal $maxMb MB.',
+        );
+      }
     }
 
     return toUserErrorMessage(
@@ -71,6 +94,34 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
         'Gagal mengubah foto profil. Silakan coba lagi.',
       ),
     );
+  }
+
+  bool _isSupportedExtension(String extension) {
+    return extension == 'jpg' || extension == 'png' || extension == 'webp';
+  }
+
+  Future<Uint8List> _compressToAvatarSafeBytes(Uint8List originalBytes) async {
+    Uint8List bytes = originalBytes;
+    var quality = 82;
+
+    while (bytes.lengthInBytes > _maxAvatarBytes && quality >= 42) {
+      final compressed = await FlutterImageCompress.compressWithList(
+        bytes,
+        quality: quality,
+        minWidth: 1080,
+        minHeight: 1080,
+        format: CompressFormat.jpeg,
+      );
+
+      if (compressed.isEmpty) {
+        break;
+      }
+
+      bytes = compressed;
+      quality -= 10;
+    }
+
+    return bytes;
   }
 
   Future<void> _pickAndUploadImage(ImageSource source) async {
@@ -117,33 +168,63 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
 
       final file = File(croppedFile.path);
       final uniqueId = DateTime.now().millisecondsSinceEpoch;
-      final extension = file.path.toLowerCase().endsWith('.png')
+      var extension = file.path.toLowerCase().endsWith('.png')
           ? 'png'
           : file.path.toLowerCase().endsWith('.webp')
           ? 'webp'
           : 'jpg';
-      final path = '${user.id}/avatar_$uniqueId.$extension';
-      final contentType = _contentTypeFor(file.path);
-      final bytes = await file.readAsBytes();
+      var contentType = _contentTypeFor(file.path);
+      var bytes = await file.readAsBytes();
+
+      if (bytes.isEmpty) {
+        throw Exception('Avatar image file is empty.');
+      }
+
+      if (!_isSupportedExtension(extension) ||
+          bytes.lengthInBytes > _maxAvatarBytes) {
+        final compressedBytes = await _compressToAvatarSafeBytes(bytes);
+        if (compressedBytes.isNotEmpty) {
+          bytes = compressedBytes;
+          extension = 'jpg';
+          contentType = 'image/jpeg';
+        }
+      }
+
+      if (bytes.lengthInBytes > _maxAvatarBytes) {
+        if (mounted) {
+          final maxMb = (_maxAvatarBytes / (1024 * 1024)).round();
+          context.showWarningSnackBar(
+            AppStrings.tr(
+              'Profile photo is too large. Maximum $maxMb MB.',
+              'Ukuran foto profil terlalu besar. Maksimal $maxMb MB.',
+            ),
+          );
+        }
+        return;
+      }
+
+      final uploadPath = '${user.id}/avatar_$uniqueId.$extension';
 
       await client.storage
           .from('avatars')
           .uploadBinary(
-            path,
+            uploadPath,
             bytes,
             fileOptions: FileOptions(contentType: contentType, upsert: true),
           );
 
-      final publicUrl = client.storage.from('avatars').getPublicUrl(path);
+      final publicUrl = client.storage.from('avatars').getPublicUrl(uploadPath);
 
-      final updatedProfile = await client
+      await client
           .from('profiles')
           .update({'avatar_url': publicUrl})
-          .eq('id', user.id)
-          .select('id')
-          .maybeSingle();
+          .eq('id', user.id);
 
-      if (updatedProfile == null) {
+      final existingRows =
+          await client.from('profiles').select('id').eq('id', user.id).limit(1)
+              as List<dynamic>;
+
+      if (existingRows.isEmpty) {
         await client.from('profiles').upsert({
           'id': user.id,
           'full_name': _fallbackDisplayName(user),

@@ -274,17 +274,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             validator: AppValidators.required,
                             useAuthSubtleStyle: true,
                           ),
-                          const SizedBox(height: 4),
-
-                          // Forgot password
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () =>
-                                  context.go(AppRoutes.forgotPassword),
-                              child: Text(AppStrings.forgotPassword),
-                            ),
-                          ),
                           const SizedBox(height: 8),
 
                           // Login button
