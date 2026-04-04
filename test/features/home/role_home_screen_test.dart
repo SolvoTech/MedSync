@@ -59,13 +59,13 @@ void main() {
     testWidgets('shows loading indicator without bootstrap role', (
       tester,
     ) async {
-        final pendingRole = Completer<bool>();
+      final pendingRole = Completer<bool>();
 
       await pumpRoleHome(
         tester,
         initialIsAdmin: null,
         roleOverride: homeRoleProvider.overrideWith((ref) async {
-            return pendingRole.future;
+          return pendingRole.future;
         }),
       );
 

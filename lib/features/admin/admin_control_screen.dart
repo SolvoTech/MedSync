@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/errors/user_error_message.dart';
 import '../../core/extensions/context_ext.dart';
+import '../../core/observability/app_monitoring.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_dialog.dart';
@@ -27,13 +30,26 @@ final adminRoleProvider = FutureProvider.autoDispose<bool>((ref) async {
     return false;
   }
 
-  final row = await client
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle();
+  try {
+    final row = await client
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
 
-  return (row?['role'] as String?) == 'admin';
+    return (row?['role'] as String?) == 'admin';
+  } catch (error, stackTrace) {
+    unawaited(
+      AppMonitoring.logQueryFailure(
+        source: 'admin_control_screen',
+        event: 'admin_role_lookup_failed',
+        error: error,
+        stackTrace: stackTrace,
+        metadata: {'user_id': user.id},
+      ),
+    );
+    rethrow;
+  }
 });
 
 final adminDashboardProvider = FutureProvider.autoDispose<AdminDashboardData>((
@@ -44,52 +60,67 @@ final adminDashboardProvider = FutureProvider.autoDispose<AdminDashboardData>((
     throw Exception('Supabase belum diinisialisasi.');
   }
 
-  final profilesRows =
-      await client.from('profiles').select('id, role, account_status')
-          as List<dynamic>;
+  final currentUserId = client.auth.currentUser?.id;
 
-  final profiles = profilesRows.cast<Map<String, dynamic>>();
-  final totalUsers = profiles.length;
-  final activeUsers = profiles
-      .where((row) => (row['account_status'] as String?) != 'suspended')
-      .length;
-  final suspendedUsers = profiles
-      .where((row) => (row['account_status'] as String?) == 'suspended')
-      .length;
-  final adminUsers = profiles
-      .where((row) => (row['role'] as String?) == 'admin')
-      .length;
+  try {
+    final profilesRows =
+        await client.from('profiles').select('id, role, account_status')
+            as List<dynamic>;
 
-  final now = DateTime.now();
-  final start = DateTime(now.year, now.month, now.day);
-  final end = start.add(const Duration(days: 1));
+    final profiles = profilesRows.cast<Map<String, dynamic>>();
+    final totalUsers = profiles.length;
+    final activeUsers = profiles
+        .where((row) => (row['account_status'] as String?) != 'suspended')
+        .length;
+    final suspendedUsers = profiles
+        .where((row) => (row['account_status'] as String?) == 'suspended')
+        .length;
+    final adminUsers = profiles
+        .where((row) => (row['role'] as String?) == 'admin')
+        .length;
 
-  final tasksRows =
-      await client
-              .from('task_logs')
-              .select('status')
-              .gte('scheduled_at', start.toIso8601String())
-              .lt('scheduled_at', end.toIso8601String())
-          as List<dynamic>;
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day);
+    final end = start.add(const Duration(days: 1));
 
-  final tasks = tasksRows.cast<Map<String, dynamic>>();
-  final todayTasks = tasks.length;
-  final todayCompleted = tasks
-      .where((row) => row['status'] == 'done' || row['status'] == 'skipped')
-      .length;
-  final adherence = todayTasks == 0
-      ? 0
-      : ((todayCompleted / todayTasks) * 100).round();
+    final tasksRows =
+        await client
+                .from('task_logs')
+                .select('status')
+                .gte('scheduled_at', start.toIso8601String())
+                .lt('scheduled_at', end.toIso8601String())
+            as List<dynamic>;
 
-  return AdminDashboardData(
-    totalUsers: totalUsers,
-    activeUsers: activeUsers,
-    suspendedUsers: suspendedUsers,
-    adminUsers: adminUsers,
-    todayTasks: todayTasks,
-    todayCompleted: todayCompleted,
-    adherencePercent: adherence,
-  );
+    final tasks = tasksRows.cast<Map<String, dynamic>>();
+    final todayTasks = tasks.length;
+    final todayCompleted = tasks
+        .where((row) => row['status'] == 'done' || row['status'] == 'skipped')
+        .length;
+    final adherence = todayTasks == 0
+        ? 0
+        : ((todayCompleted / todayTasks) * 100).round();
+
+    return AdminDashboardData(
+      totalUsers: totalUsers,
+      activeUsers: activeUsers,
+      suspendedUsers: suspendedUsers,
+      adminUsers: adminUsers,
+      todayTasks: todayTasks,
+      todayCompleted: todayCompleted,
+      adherencePercent: adherence,
+    );
+  } catch (error, stackTrace) {
+    unawaited(
+      AppMonitoring.logQueryFailure(
+        source: 'admin_control_screen',
+        event: 'admin_dashboard_query_failed',
+        error: error,
+        stackTrace: stackTrace,
+        metadata: {'user_id': currentUserId},
+      ),
+    );
+    rethrow;
+  }
 });
 
 final adminUsersProvider = FutureProvider.autoDispose<List<AdminManagedUser>>((
@@ -100,19 +131,34 @@ final adminUsersProvider = FutureProvider.autoDispose<List<AdminManagedUser>>((
     throw Exception('Supabase belum diinisialisasi.');
   }
 
-  final rows =
-      await client
-              .from('profiles')
-              .select(
-                'id, full_name, username, role, account_status, internal_email, created_at',
-              )
-              .order('created_at', ascending: false)
-          as List<dynamic>;
+  final currentUserId = client.auth.currentUser?.id;
 
-  return rows
-      .cast<Map<String, dynamic>>()
-      .map(AdminManagedUser.fromMap)
-      .toList();
+  try {
+    final rows =
+        await client
+                .from('profiles')
+                .select(
+                  'id, full_name, username, role, account_status, internal_email, created_at',
+                )
+                .order('created_at', ascending: false)
+            as List<dynamic>;
+
+    return rows
+        .cast<Map<String, dynamic>>()
+        .map(AdminManagedUser.fromMap)
+        .toList();
+  } catch (error, stackTrace) {
+    unawaited(
+      AppMonitoring.logQueryFailure(
+        source: 'admin_control_screen',
+        event: 'admin_users_query_failed',
+        error: error,
+        stackTrace: stackTrace,
+        metadata: {'user_id': currentUserId},
+      ),
+    );
+    rethrow;
+  }
 });
 
 final adminActionControllerProvider =
@@ -131,22 +177,14 @@ class AdminActionController extends AutoDisposeNotifier<AsyncValue<void>> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final client = _requireClient();
-      final currentUser = _requireCurrentUser(client);
       final targetStatus = suspend ? 'suspended' : 'active';
 
-      await client
-          .from('profiles')
-          .update({'account_status': targetStatus})
-          .eq('id', target.id);
-
-      await _insertAuditLog(
-        client,
-        actorId: currentUser.id,
-        targetUserId: target.id,
-        action: suspend ? 'suspend_user' : 'unsuspend_user',
-        metadata: {
-          'target_username': target.username,
+      await client.rpc(
+        'admin_set_user_account_status',
+        params: {
+          'target_user_id': target.id,
           'target_status': targetStatus,
+          'target_username': target.username,
         },
       );
     });
@@ -156,7 +194,6 @@ class AdminActionController extends AutoDisposeNotifier<AsyncValue<void>> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final client = _requireClient();
-      final currentUser = _requireCurrentUser(client);
 
       if (target.internalEmail == null || target.internalEmail!.isEmpty) {
         throw Exception('Email internal user tidak ditemukan.');
@@ -167,14 +204,15 @@ class AdminActionController extends AutoDisposeNotifier<AsyncValue<void>> {
         redirectTo: 'io.supabase.medsync://login-callback/',
       );
 
-      await _insertAuditLog(
-        client,
-        actorId: currentUser.id,
-        targetUserId: target.id,
-        action: 'reset_user_access',
-        metadata: {
-          'target_username': target.username,
-          'target_internal_email': target.internalEmail,
+      await client.rpc(
+        'admin_insert_audit_log',
+        params: {
+          'action_name': 'reset_user_access',
+          'target_user_id': target.id,
+          'metadata': {
+            'target_username': target.username,
+            'target_internal_email': target.internalEmail,
+          },
         },
       );
     });
@@ -186,29 +224,6 @@ class AdminActionController extends AutoDisposeNotifier<AsyncValue<void>> {
       throw Exception('Supabase belum diinisialisasi.');
     }
     return client;
-  }
-
-  User _requireCurrentUser(SupabaseClient client) {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Anda harus login terlebih dahulu.');
-    }
-    return user;
-  }
-
-  Future<void> _insertAuditLog(
-    SupabaseClient client, {
-    required String actorId,
-    required String targetUserId,
-    required String action,
-    required Map<String, dynamic> metadata,
-  }) async {
-    await client.from('admin_audit_logs').insert({
-      'actor_id': actorId,
-      'target_user_id': targetUserId,
-      'action': action,
-      'metadata': metadata,
-    });
   }
 }
 

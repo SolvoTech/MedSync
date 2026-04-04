@@ -67,7 +67,6 @@ class EducationRemoteDataSource {
 
     await _insertAuditLog(
       client,
-      actorId: actorId,
       action: 'create_education_article',
       metadata: {'slug': input.slug, 'title': input.title},
     );
@@ -78,7 +77,7 @@ class EducationRemoteDataSource {
     EducationArticleInput input,
   ) async {
     final client = _requireClient();
-    final actorId = _requireCurrentUser(client).id;
+    _requireCurrentUser(client);
 
     await client
         .from('education_articles')
@@ -94,7 +93,6 @@ class EducationRemoteDataSource {
 
     await _insertAuditLog(
       client,
-      actorId: actorId,
       action: 'update_education_article',
       metadata: {'article_id': articleId, 'slug': input.slug},
     );
@@ -105,7 +103,7 @@ class EducationRemoteDataSource {
     required String status,
   }) async {
     final client = _requireClient();
-    final actorId = _requireCurrentUser(client).id;
+    _requireCurrentUser(client);
 
     await client
         .from('education_articles')
@@ -114,7 +112,6 @@ class EducationRemoteDataSource {
 
     await _insertAuditLog(
       client,
-      actorId: actorId,
       action: status == 'published'
           ? 'publish_education_article'
           : 'unpublish_education_article',
@@ -124,13 +121,12 @@ class EducationRemoteDataSource {
 
   Future<void> deleteArticle(String articleId) async {
     final client = _requireClient();
-    final actorId = _requireCurrentUser(client).id;
+    _requireCurrentUser(client);
 
     await client.from('education_articles').delete().eq('id', articleId);
 
     await _insertAuditLog(
       client,
-      actorId: actorId,
       action: 'delete_education_article',
       metadata: {'article_id': articleId},
     );
@@ -162,14 +158,12 @@ class EducationRemoteDataSource {
 
   Future<void> _insertAuditLog(
     SupabaseClient client, {
-    required String actorId,
     required String action,
     required Map<String, dynamic> metadata,
   }) async {
-    await client.from('admin_audit_logs').insert({
-      'actor_id': actorId,
-      'action': action,
-      'metadata': metadata,
-    });
+    await client.rpc(
+      'admin_insert_audit_log',
+      params: {'action_name': action, 'metadata': metadata},
+    );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_strings.dart';
+import '../../core/observability/app_monitoring.dart';
 import '../../core/errors/user_error_message.dart';
 import '../../core/widgets/app_error_widget.dart';
 import '../../data/remote/supabase_client.dart';
@@ -40,13 +41,26 @@ final homeRoleProvider = FutureProvider.autoDispose<bool>((ref) async {
     return false;
   }
 
-  final row = await client
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle();
+  try {
+    final row = await client
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
 
-  return (row?['role'] as String?) == 'admin';
+    return (row?['role'] as String?) == 'admin';
+  } catch (error, stackTrace) {
+    unawaited(
+      AppMonitoring.logQueryFailure(
+        source: 'role_home_screen',
+        event: 'home_role_lookup_failed',
+        error: error,
+        stackTrace: stackTrace,
+        metadata: {'user_id': user.id},
+      ),
+    );
+    Error.throwWithStackTrace(error, stackTrace);
+  }
 });
 
 class RoleHomeScreen extends ConsumerWidget {

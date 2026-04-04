@@ -46,6 +46,9 @@
 - [x] Provider role di home diberi cache singkat (keep-alive 2 menit) untuk menekan query berulang yang tidak perlu.
 - [x] Error state pada role resolver ditampilkan dengan komponen error + tombol retry, tidak lagi diam-diam fallback di semua kasus.
 - [x] Untuk sesi yang sudah teridentifikasi user (non-admin), UI tetap responsif sambil verifikasi role berjalan di background.
+- [x] Hardening backend ditambahkan lewat migration baru: FORCE RLS pada tabel kritikal, RPC guard untuk aksi admin, dan sink monitoring log query failure.
+- [x] Alur admin action di Flutter dialihkan dari mutasi tabel langsung ke RPC server-side agar otorisasi final divalidasi di database.
+- [x] Monitoring kegagalan query role/account status ditambahkan pada beberapa flow utama (router auth sync, role resolver home, auth account-status, dan admin control queries).
 
 ## Roadmap Lanjutan (Prioritas)
 
@@ -55,9 +58,9 @@
 - [x] Verifikasi semua redirect route sensitif role pada deep link.
 
 ### P1 - Keamanan dan Data (2-3 hari)
-- [ ] Audit dan hardening RLS policy untuk `profiles`, `admin_audit_logs`, dan konten edukasi.
-- [ ] Tambah guard server-side untuk aksi admin (bukan hanya guard di client).
-- [ ] Tambah monitoring log untuk kegagalan query role/account status.
+- [x] Audit dan hardening RLS policy untuk `profiles`, `admin_audit_logs`, dan konten edukasi.
+- [x] Tambah guard server-side untuk aksi admin (bukan hanya guard di client).
+- [x] Tambah monitoring log untuk kegagalan query role/account status.
 
 ### P2 - UX dan Operasional (2-4 hari)
 - [ ] Tambah indikator sinkronisasi terakhir di dashboard admin.
@@ -85,5 +88,5 @@
 - [x] Pembersihan lint dan verifikasi test/analyzer.
 - [x] Perbaikan role resolver (bootstrap role, cache singkat, retry error state).
 - [x] Penambahan test spesifik role resolver.
-- [ ] Audit RLS dan hardening akses admin sisi backend.
+- [x] Audit RLS dan hardening akses admin sisi backend.
 

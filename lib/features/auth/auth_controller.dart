@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../core/observability/app_monitoring.dart';
 
 final authControllerProvider =
     AutoDisposeNotifierProvider<AuthController, AsyncValue<void>>(
@@ -97,16 +101,29 @@ class AuthController extends AutoDisposeNotifier<AsyncValue<void>> {
       return;
     }
 
-    final profile = await client
-        .from('profiles')
-        .select('account_status')
-        .eq('id', user.id)
-        .maybeSingle();
-    final status = (profile?['account_status'] as String?) ?? 'active';
+    try {
+      final profile = await client
+          .from('profiles')
+          .select('account_status')
+          .eq('id', user.id)
+          .maybeSingle();
+      final status = (profile?['account_status'] as String?) ?? 'active';
 
-    if (status == 'suspended') {
-      await client.auth.signOut();
-      throw Exception('Akun Anda sedang dinonaktifkan oleh admin.');
+      if (status == 'suspended') {
+        await client.auth.signOut();
+        throw Exception('Akun Anda sedang dinonaktifkan oleh admin.');
+      }
+    } catch (error, stackTrace) {
+      unawaited(
+        AppMonitoring.logQueryFailure(
+          source: 'auth_controller',
+          event: 'enforce_account_status_failed',
+          error: error,
+          stackTrace: stackTrace,
+          metadata: {'user_id': user.id},
+        ),
+      );
+      rethrow;
     }
   }
 }

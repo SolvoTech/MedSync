@@ -20,6 +20,7 @@ import '../../features/profile/profile_screen.dart';
 import '../../features/reports/report_screen.dart';
 import '../../features/splash/onboarding/onboarding_screen.dart';
 import '../../features/splash/splash_screen.dart';
+import '../observability/app_monitoring.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
 
@@ -243,11 +244,21 @@ class GoRouterAuthNotifier extends ChangeNotifier {
 
       isAdmin = role == 'admin';
       notifyListeners();
-    } catch (_) {
+    } catch (error, stackTrace) {
       final currentUserId = session?.user.id;
       if (currentUserId != expectedUserId) {
         return;
       }
+
+      unawaited(
+        AppMonitoring.logQueryFailure(
+          source: 'router_auth_notifier',
+          event: 'sync_admin_role_failed',
+          error: error,
+          stackTrace: stackTrace,
+          metadata: {'user_id': expectedUserId},
+        ),
+      );
 
       isAdmin = false;
       notifyListeners();
