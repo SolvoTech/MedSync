@@ -39,7 +39,7 @@ void main() {
         AppRoutes.schedule,
         AppRoutes.report,
         AppRoutes.education,
-        '${AppRoutes.education}/:articleId',
+        '${AppRoutes.education}/article-123',
       ];
 
       for (final location in locations) {
@@ -90,6 +90,46 @@ void main() {
       );
 
       expect(result, isNull);
+    });
+
+    test('defers user feature redirects while role is loading', () {
+      final result = resolveAppRedirect(
+        matchedLocation: AppRoutes.schedule,
+        isAuthenticated: true,
+        isAdmin: null,
+      );
+
+      expect(result, isNull);
+    });
+
+    test('redirects unauthenticated user from education detail deep link', () {
+      final result = resolveAppRedirect(
+        matchedLocation: '${AppRoutes.education}/diabetes-guide',
+        isAuthenticated: false,
+        isAdmin: null,
+      );
+
+      expect(result, AppRoutes.login);
+    });
+
+    test('allows non-admin user on education detail deep link', () {
+      final result = resolveAppRedirect(
+        matchedLocation: '${AppRoutes.education}/diabetes-guide',
+        isAuthenticated: true,
+        isAdmin: false,
+      );
+
+      expect(result, isNull);
+    });
+
+    test('redirects admin user from education detail deep link', () {
+      final result = resolveAppRedirect(
+        matchedLocation: '${AppRoutes.education}/diabetes-guide',
+        isAuthenticated: true,
+        isAdmin: true,
+      );
+
+      expect(result, AppRoutes.home);
     });
   });
 }

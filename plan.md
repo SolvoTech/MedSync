@@ -5,50 +5,85 @@
 - [x] Selesai dikerjakan
 - [~] Butuh audit
 
+## Tujuan Implementasi
+- Menyediakan alur autentikasi berbasis username yang konsisten dan aman.
+- Memisahkan pengalaman pengguna admin dan user agar tidak saling tercampur.
+- Menstabilkan fitur admin control dan manajemen edukasi.
+- Menjaga kualitas kode tetap bersih (test hijau dan analyzer bersih).
+
+## Ringkasan Kondisi Saat Ini
+
+### 1) Auth dan Registrasi
+- [x] Login berbasis username (mapping ke internal email).
+- [x] Registrasi sukses diarahkan ke halaman login (bukan auto-masuk dashboard).
+- [x] Validasi username dan account status saat login.
+- [~] Audit messaging error auth agar benar-benar seragam pada semua edge case.
+
+### 2) Router dan Role Guard
+- [x] Route guard memisahkan akses admin route vs user route.
+- [x] Home route dipusatkan lewat role resolver screen.
+- [x] Bottom nav admin dan user dipisah sesuai role.
+- [~] Audit ulang skenario race condition auth/role saat koneksi tidak stabil.
+
+### 3) Admin Control
+- [x] Dashboard ringkasan sistem (user aktif, suspend, adherence harian).
+- [x] Kelola status user (suspend/unsuspend).
+- [x] Reset akses user dan audit log tindakan admin.
+- [~] Audit policy RLS Supabase untuk tabel admin (wajib sebelum release production).
+
+### 4) Edukasi
+- [x] Feed dan detail artikel berjalan.
+- [x] Admin education management tersedia.
+- [~] Audit konsistensi label dan empty state pada semua kondisi data kosong/gagal.
+
+### 5) Quality Gate
+- [x] Analyzer bersih (no issues).
+- [x] Test suite lulus penuh.
+- [x] Lint info yang sempat muncul sudah dibereskan.
+
+## Perbaikan yang Diterapkan Sekarang
+- [x] Home role resolver kini menerima bootstrap role dari router agar transisi ke dashboard admin lebih cepat saat role sudah diketahui.
+- [x] Provider role di home diberi cache singkat (keep-alive 2 menit) untuk menekan query berulang yang tidak perlu.
+- [x] Error state pada role resolver ditampilkan dengan komponen error + tombol retry, tidak lagi diam-diam fallback di semua kasus.
+- [x] Untuk sesi yang sudah teridentifikasi user (non-admin), UI tetap responsif sambil verifikasi role berjalan di background.
+
+## Roadmap Lanjutan (Prioritas)
+
+### P0 - Stabilitas Produksi (1-2 hari)
+- [x] Tambah test untuk skenario role fetch gagal saat login admin/user.
+- [x] Tambah test widget untuk role resolver (loading, error, retry, success).
+- [x] Verifikasi semua redirect route sensitif role pada deep link.
+
+### P1 - Keamanan dan Data (2-3 hari)
+- [ ] Audit dan hardening RLS policy untuk `profiles`, `admin_audit_logs`, dan konten edukasi.
+- [ ] Tambah guard server-side untuk aksi admin (bukan hanya guard di client).
+- [ ] Tambah monitoring log untuk kegagalan query role/account status.
+
+### P2 - UX dan Operasional (2-4 hari)
+- [ ] Tambah indikator sinkronisasi terakhir di dashboard admin.
+- [ ] Tambah filter user management (status role/account + pencarian cepat).
+- [ ] Tambah bulk action aman (mis. bulk suspend dengan konfirmasi bertingkat).
+
+### P3 - Performa dan Maintainability (berjalan)
+- [ ] Refactor query profil/role ke satu service/provider bersama agar tidak duplikasi lintas layar.
+- [ ] Tambah caching terukur untuk data dashboard admin.
+- [ ] Dokumentasi arsitektur role-based routing di README internal.
+
+## Checklist Verifikasi Setiap Perubahan
+- [x] `flutter test` lulus.
+- [x] `flutter analyze` tanpa issue.
+- [ ] Skenario manual: login user normal.
+- [ ] Skenario manual: login admin dan akses menu admin.
+- [ ] Skenario manual: non-admin tidak bisa akses route admin.
+- [ ] Skenario manual: admin tidak melihat fitur harian user.
+
 ## Progress Plan
+- [x] Alur auth username + register redirect ke login.
+- [x] Pemisahan dashboard dan bottom nav admin/user.
+- [x] Perapihan string admin ke AppStrings.
+- [x] Perbaikan bug admin dashboard menampilkan konten user.
+- [x] Pembersihan lint dan verifikasi test/analyzer.
+- [x] Perbaikan role resolver (bootstrap role, cache singkat, retry error state).
+- [x] Penambahan test spesifik role resolver.
+- [ ] Audit RLS dan hardening akses admin sisi backend.
 
-### Fase 1 - Fondasi Database dan Security
-- [x] Tambah migration pondasi untuk `profiles.username`, `profiles.role`, `profiles.account_status`, dan `profiles.internal_email`.
-- [x] Tambah helper fungsi SQL `public.is_admin()` untuk RBAC policy.
-- [x] Tambah tabel `admin_audit_logs` untuk jejak aksi admin.
-- [x] Tambah tabel `education_articles` untuk konten edukasi.
-- [x] Tambah baseline RLS policy untuk akses admin (monitoring) dan akses artikel published untuk user.
-- [x] Audit policy per tabel agar tidak ada celah privilege escalation.
-	- Artefak: `docs/security/phase1_rls_privilege_escalation_audit.md`.
-
-### Fase 2 - Migrasi Auth ke Username + Password
-- [x] Refactor alur login agar menerima `username + password`.
-- [x] Refactor alur registrasi agar menyimpan metadata username dan memakai email internal sintetis.
-- [x] Refactor alur forgot password agar menerima username.
-- [x] Refactor validator form ke validasi username.
-- [x] Refactor string UX auth dari email ke username.
-- [x] Audit kompatibilitas akun legacy berbasis email (fallback login email masih dipertahankan sementara).
-	- Artefak: `docs/security/phase2_legacy_auth_compatibility_audit.md`.
-
-### Fase 3 - Admin Control Center
-- [x] Tambah route dan guard role admin di layer router.
-- [x] Implement dashboard monitoring admin.
-- [x] Implement manajemen user (suspend/unsuspend + reset akses).
-- [x] Tulis audit log untuk setiap aksi admin dari aplikasi.
-
-### Fase 4 - Fitur Edukasi
-- [x] Buat model/domain/repository artikel di Flutter.
-- [x] Bangun UI admin CRUD + publish/unpublish artikel.
-- [x] Bangun UI user untuk feed + detail artikel (read-only).
-- [x] Integrasikan notifikasi in-app saat artikel dipublish.
-
-### Fase 5 - Verifikasi dan Rilis
-- [x] Tambah unit test dan widget test untuk auth username, role guard, admin action, artikel.
-- [x] Uji integrasi end-to-end skenario kritikal.
-- [x] Audit keamanan final (RLS bypass, username enumeration, kebocoran internal email).
-- [x] Rilis bertahap dengan monitoring error dan aktivitas admin.
-
-### Artefak Fase 5
-- [x] Test skenario kritikal: `test/integration/critical_scenarios_test.dart`.
-- [x] Laporan audit keamanan: `docs/security/phase5_final_audit.md`.
-- [x] Runbook rilis bertahap: `docs/release/staged_rollout_monitoring.md`.
-
-## Catatan Implementasi Penting
-- Username dinormalisasi ke lowercase.
-- Domain email internal yang dipakai auth saat ini: `@users.medsync.local`.
-- Untuk menghindari lockout saat transisi, fallback login email legacy masih diizinkan di controller.

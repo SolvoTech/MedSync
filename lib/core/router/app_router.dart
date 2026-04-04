@@ -75,7 +75,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.home,
-                builder: (_, _) => const RoleHomeScreen(),
+                builder: (_, _) =>
+                    RoleHomeScreen(initialIsAdmin: authNotifier.isAdmin),
               ),
             ],
           ),
