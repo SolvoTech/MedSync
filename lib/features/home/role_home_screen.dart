@@ -27,15 +27,6 @@ final homeRoleProvider = FutureProvider.autoDispose<bool>((ref) async {
     return false;
   }
 
-  final initialUserId = user.id;
-  final authSub = client.auth.onAuthStateChange.listen((data) {
-    final nextUserId = data.session?.user.id;
-    if (nextUserId != initialUserId) {
-      ref.invalidateSelf();
-    }
-  });
-  ref.onDispose(authSub.cancel);
-
   try {
     final row = await client
         .from('profiles')

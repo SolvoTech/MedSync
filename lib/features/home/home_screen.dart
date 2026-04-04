@@ -290,27 +290,17 @@ class HomeScreen extends ConsumerWidget {
             tasksState.when(
               data: (tasks) {
                 if (tasks.isEmpty) {
-                  return SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: constraints.maxHeight,
-                            ),
-                            child: AppEmptyState(
-                              message: AppStrings.noTasksToday,
-                              icon: Icons.task_alt,
-                              subtitle: AppStrings.tr(
-                                'Add medication or activity schedules\nto start tracking your health.',
-                                'Tambahkan jadwal obat atau aktivitas\nuntuk mulai melacak kesehatan Anda.',
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: AppEmptyState(
+                        message: AppStrings.noTasksToday,
+                        icon: Icons.task_alt,
+                        subtitle: AppStrings.tr(
+                          'Add medication or activity schedules\nto start tracking your health.',
+                          'Tambahkan jadwal obat atau aktivitas\nuntuk mulai melacak kesehatan Anda.',
+                        ),
+                      ),
                     ),
                   );
                 }
