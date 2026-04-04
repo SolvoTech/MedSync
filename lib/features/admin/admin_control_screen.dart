@@ -280,6 +280,16 @@ class AdminControlScreen extends ConsumerWidget {
           );
         }
 
+        final media = MediaQuery.of(context);
+        final isCompact =
+            media.size.width < 390 || media.textScaler.scale(1) > 1.1;
+        final pagePadding = EdgeInsets.fromLTRB(
+          isCompact ? 12 : 16,
+          isCompact ? 10 : 12,
+          isCompact ? 12 : 16,
+          isCompact ? 20 : 24,
+        );
+
         final dashboardState = ref.watch(adminDashboardProvider);
         final usersState = ref.watch(adminUsersProvider);
         final actionState = ref.watch(adminActionControllerProvider);
@@ -320,7 +330,7 @@ class AdminControlScreen extends ConsumerWidget {
               await ref.read(adminUsersProvider.future);
             },
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              padding: pagePadding,
               children: [
                 AdminIntroCard(
                   icon: Icons.admin_panel_settings_outlined,
@@ -330,33 +340,98 @@ class AdminControlScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 14),
                 AppCard(
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primaryContainer.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.school_outlined,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(AppStrings.adminManageEducationHint),
-                      ),
-                      FilledButton.tonalIcon(
-                        onPressed: () => context.go(AppRoutes.adminEducation),
-                        icon: const Icon(Icons.chevron_right_rounded, size: 18),
-                        label: Text(AppStrings.adminManageLabel),
-                      ),
-                    ],
+                  padding: EdgeInsets.all(isCompact ? 12 : 16),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final compactCard =
+                          isCompact || constraints.maxWidth < 360;
+
+                      if (compactCard) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 34,
+                                  height: 34,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primaryContainer
+                                        .withValues(alpha: 0.5),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    Icons.school_outlined,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    AppStrings.adminManageEducationHint,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.tonalIcon(
+                                onPressed: () =>
+                                    context.go(AppRoutes.adminEducation),
+                                icon: const Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 18,
+                                ),
+                                label: Text(AppStrings.adminManageLabel),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer
+                                  .withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.school_outlined,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(AppStrings.adminManageEducationHint),
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton.tonalIcon(
+                            onPressed: () =>
+                                context.go(AppRoutes.adminEducation),
+                            icon: const Icon(
+                              Icons.chevron_right_rounded,
+                              size: 18,
+                            ),
+                            label: Text(AppStrings.adminManageLabel),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -841,8 +916,17 @@ class _DashboardSummary extends StatelessWidget {
   final AdminDashboardData data;
 
   String _formatFetchedAt(DateTime value) {
-    final locale = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+    final locale = _resolvedDateLocale();
     return DateFormat('dd MMM yyyy, HH:mm', locale).format(value.toLocal());
+  }
+
+  String _resolvedDateLocale() {
+    final preferred = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+    try {
+      return DateFormat.localeExists(preferred) ? preferred : 'en_US';
+    } catch (_) {
+      return 'en_US';
+    }
   }
 
   @override
@@ -948,7 +1032,11 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final isCompact = media.size.width < 390 || media.textScaler.scale(1) > 1.1;
+
     return AppCard(
+      padding: EdgeInsets.all(isCompact ? 12 : 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1004,9 +1092,12 @@ class _AdminUserFilterPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final isCompact = media.size.width < 390 || media.textScaler.scale(1) > 1.1;
     final colorScheme = Theme.of(context).colorScheme;
 
     return AppCard(
+      padding: EdgeInsets.all(isCompact ? 12 : 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1016,7 +1107,7 @@ class _AdminUserFilterPanel extends StatelessWidget {
               context,
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: isCompact ? 8 : 10),
           TextField(
             onChanged: onSearchChanged,
             decoration: InputDecoration(
@@ -1033,7 +1124,7 @@ class _AdminUserFilterPanel extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isCompact ? 10 : 12),
           Text(
             AppStrings.adminUserFilterStatusLabel,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -1066,7 +1157,7 @@ class _AdminUserFilterPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isCompact ? 10 : 12),
           Text(
             AppStrings.adminUserFilterRoleLabel,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -1096,7 +1187,7 @@ class _AdminUserFilterPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isCompact ? 10 : 12),
           Text(
             AppStrings.adminUserFilterResultSummary(
               shown: shownCount,
@@ -1135,7 +1226,11 @@ class _AdminBulkActionPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final isCompact = media.size.width < 390 || media.textScaler.scale(1) > 1.1;
+
     return AppCard(
+      padding: EdgeInsets.all(isCompact ? 12 : 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1155,41 +1250,56 @@ class _AdminBulkActionPanel extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 10),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              Expanded(
+              SizedBox(
+                width: isCompact ? double.infinity : null,
                 child: OutlinedButton.icon(
                   onPressed: isBusy ? null : onSelectAll,
                   icon: const Icon(Icons.done_all_rounded, size: 18),
-                  label: Text(AppStrings.adminBulkSelectAllAction),
+                  label: Text(
+                    AppStrings.adminBulkSelectAllAction,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
+              SizedBox(
+                width: isCompact ? double.infinity : null,
                 child: OutlinedButton.icon(
                   onPressed: isBusy ? null : onClearSelection,
                   icon: const Icon(Icons.deselect_rounded, size: 18),
-                  label: Text(AppStrings.adminBulkClearSelectionAction),
+                  label: Text(
+                    AppStrings.adminBulkClearSelectionAction,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
+              SizedBox(
+                width: isCompact ? double.infinity : null,
                 child: FilledButton.icon(
                   onPressed: isBusy ? null : onBulkSuspend,
                   icon: const Icon(Icons.block_rounded, size: 18),
-                  label: Text(AppStrings.adminBulkSuspendAction),
+                  label: Text(
+                    AppStrings.adminBulkSuspendAction,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
+              SizedBox(
+                width: isCompact ? double.infinity : null,
                 child: FilledButton.tonalIcon(
                   onPressed: isBusy ? null : onBulkActivate,
                   icon: const Icon(Icons.check_circle_outline, size: 18),
-                  label: Text(AppStrings.adminBulkActivateAction),
+                  label: Text(
+                    AppStrings.adminBulkActivateAction,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             ],
@@ -1221,6 +1331,8 @@ class _UserItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final isCompact = media.size.width < 390 || media.textScaler.scale(1) > 1.1;
     final colorScheme = Theme.of(context).colorScheme;
     final statusColor = user.accountStatus == 'suspended'
         ? const Color(0xFFC53030)
@@ -1236,7 +1348,12 @@ class _UserItem extends StatelessWidget {
     final initials = _initials(user.fullName);
 
     return AppCard(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: EdgeInsets.fromLTRB(
+        isCompact ? 12 : 14,
+        isCompact ? 10 : 12,
+        isCompact ? 12 : 14,
+        isCompact ? 10 : 12,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1244,8 +1361,8 @@ class _UserItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: isCompact ? 36 : 40,
+                height: isCompact ? 36 : 40,
                 decoration: BoxDecoration(
                   color: colorScheme.primaryContainer.withValues(alpha: 0.55),
                   borderRadius: BorderRadius.circular(12),
@@ -1260,13 +1377,15 @@ class _UserItem extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: isCompact ? 8 : 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       user.fullName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -1325,38 +1444,97 @@ class _UserItem extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: isBusy || !canManage ? null : onResetAccess,
-                  icon: const Icon(Icons.key_outlined, size: 18),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(0, 42),
+          SizedBox(height: isCompact ? 8 : 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compactActions = isCompact || constraints.maxWidth < 360;
+
+              if (compactActions) {
+                return Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: isBusy || !canManage ? null : onResetAccess,
+                        icon: const Icon(Icons.key_outlined, size: 18),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(0, 40),
+                        ),
+                        label: Text(
+                          AppStrings.adminResetAccessButton,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: isBusy || !canManage ? null : onToggleStatus,
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(0, 40),
+                        ),
+                        icon: Icon(
+                          user.accountStatus == 'suspended'
+                              ? Icons.check_circle_outline
+                              : Icons.block,
+                          size: 18,
+                        ),
+                        label: Text(
+                          user.accountStatus == 'suspended'
+                              ? AppStrings.adminActivateAction
+                              : AppStrings.adminSuspendAction,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: isBusy || !canManage ? null : onResetAccess,
+                      icon: const Icon(Icons.key_outlined, size: 18),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 42),
+                      ),
+                      label: Text(
+                        AppStrings.adminResetAccessButton,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ),
-                  label: Text(AppStrings.adminResetAccessButton),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: isBusy || !canManage ? null : onToggleStatus,
-                  style: FilledButton.styleFrom(minimumSize: const Size(0, 42)),
-                  icon: Icon(
-                    user.accountStatus == 'suspended'
-                        ? Icons.check_circle_outline
-                        : Icons.block,
-                    size: 18,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: isBusy || !canManage ? null : onToggleStatus,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, 42),
+                      ),
+                      icon: Icon(
+                        user.accountStatus == 'suspended'
+                            ? Icons.check_circle_outline
+                            : Icons.block,
+                        size: 18,
+                      ),
+                      label: Text(
+                        user.accountStatus == 'suspended'
+                            ? AppStrings.adminActivateAction
+                            : AppStrings.adminSuspendAction,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ),
-                  label: Text(
-                    user.accountStatus == 'suspended'
-                        ? AppStrings.adminActivateAction
-                        : AppStrings.adminSuspendAction,
-                  ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
           if (!canManage) ...[
             const SizedBox(height: 8),

@@ -13,6 +13,15 @@ import '../../core/widgets/app_loading_skeleton.dart';
 import '../../domain/models/education_article.dart';
 import 'education_providers.dart';
 
+String _resolvedDateLocale() {
+  final preferred = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+  try {
+    return DateFormat.localeExists(preferred) ? preferred : 'en_US';
+  } catch (_) {
+    return 'en_US';
+  }
+}
+
 class EducationFeedScreen extends ConsumerWidget {
   const EducationFeedScreen({super.key});
 
@@ -114,7 +123,7 @@ class _FeaturedArticleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final locale = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+    final locale = _resolvedDateLocale();
     final publishedAt = article.publishedAt != null
         ? DateFormat(
             'dd MMM yyyy',
@@ -196,7 +205,7 @@ class _ArticleListCard extends StatelessWidget {
         ? (compact ? 150.0 : 162.0)
         : (compact ? 128.0 : 138.0);
     final imageWidth = compact ? 108.0 : 116.0;
-    final locale = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+    final locale = _resolvedDateLocale();
     final publishedAt = article.publishedAt != null
         ? DateFormat(
             'dd MMM yyyy',

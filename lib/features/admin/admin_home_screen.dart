@@ -16,6 +16,15 @@ class AdminHomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final media = MediaQuery.of(context);
+    final isCompact = media.size.width < 390 || media.textScaler.scale(1) > 1.1;
+    final pagePadding = EdgeInsets.fromLTRB(
+      isCompact ? 12 : 16,
+      isCompact ? 10 : 12,
+      isCompact ? 12 : 16,
+      isCompact ? 20 : 24,
+    );
+
     final dashboardState = ref.watch(adminDashboardProvider);
 
     return Scaffold(
@@ -36,7 +45,7 @@ class AdminHomeScreen extends ConsumerWidget {
         },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          padding: pagePadding,
           children: [
             AdminIntroCard(
               icon: Icons.admin_panel_settings_outlined,
@@ -147,30 +156,39 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final isCompact = media.size.width < 390 || media.textScaler.scale(1) > 1.1;
     final colorScheme = Theme.of(context).colorScheme;
 
     return AppCard(
+      padding: EdgeInsets.all(isCompact ? 12 : 16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: isCompact ? 36 : 40,
+              height: isCompact ? 36 : 40,
               decoration: BoxDecoration(
                 color: colorScheme.primaryContainer.withValues(alpha: 0.55),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: colorScheme.primary, size: 20),
+              child: Icon(
+                icon,
+                color: colorScheme.primary,
+                size: isCompact ? 18 : 20,
+              ),
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: isCompact ? 8 : 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -178,6 +196,8 @@ class _QuickActionCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
+                    maxLines: isCompact ? 2 : 3,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.65),
                     ),
@@ -211,20 +231,24 @@ class _OverviewMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final isCompact = media.size.width < 390 || media.textScaler.scale(1) > 1.1;
+
     return AppCard(
+      padding: EdgeInsets.all(isCompact ? 12 : 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: isCompact ? 32 : 36,
+            height: isCompact ? 32 : 36,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: color, size: isCompact ? 18 : 20),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: isCompact ? 8 : 10),
           Text(
             value,
             style: Theme.of(
@@ -234,6 +258,8 @@ class _OverviewMetric extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(
                 context,

@@ -20,33 +20,39 @@ class AdminIntroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final isCompact =
+        media.size.width < 380 || media.textScaler.scale(1) > 1.15;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final tone = accentColor ?? colorScheme.primary;
 
     return AppCard(
+      padding: EdgeInsets.all(isCompact ? 12 : 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: isCompact ? 40 : 44,
+            height: isCompact ? 40 : 44,
             decoration: BoxDecoration(
               color: tone.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: tone, size: 22),
+            child: Icon(icon, color: tone, size: isCompact ? 20 : 22),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: isCompact ? 10 : 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style:
+                      (isCompact ? textTheme.titleSmall : textTheme.titleMedium)
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -55,6 +61,8 @@ class AdminIntroCard extends StatelessWidget {
                     color: colorScheme.onSurface.withValues(alpha: 0.66),
                     height: 1.35,
                   ),
+                  maxLines: isCompact ? 3 : 4,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -62,7 +70,10 @@ class AdminIntroCard extends StatelessWidget {
           if (badge != null) ...[
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 8 : 10,
+                vertical: isCompact ? 4 : 5,
+              ),
               decoration: BoxDecoration(
                 color: tone.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(999),
@@ -96,33 +107,42 @@ class AdminSectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final isCompact =
+        media.size.width < 380 || media.textScaler.scale(1) > 1.15;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 0 : 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: isCompact ? 24 : 28,
+            height: isCompact ? 24 : 28,
             decoration: BoxDecoration(
               color: colorScheme.primaryContainer.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 16, color: colorScheme.primary),
+            child: Icon(
+              icon,
+              size: isCompact ? 14 : 16,
+              color: colorScheme.primary,
+            ),
           ),
-          const SizedBox(width: 9),
+          SizedBox(width: isCompact ? 7 : 9),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style:
+                      (isCompact ? textTheme.titleMedium : textTheme.titleSmall)
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 1),
@@ -131,6 +151,8 @@ class AdminSectionTitle extends StatelessWidget {
                     style: textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
+                    maxLines: isCompact ? 2 : 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ],

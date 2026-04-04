@@ -8,6 +8,15 @@ import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/app_error_widget.dart';
 import 'education_providers.dart';
 
+String _resolvedDateLocale() {
+  final preferred = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+  try {
+    return DateFormat.localeExists(preferred) ? preferred : 'en_US';
+  } catch (_) {
+    return 'en_US';
+  }
+}
+
 class EducationDetailScreen extends ConsumerWidget {
   const EducationDetailScreen({super.key, required this.articleId});
 
@@ -39,7 +48,7 @@ class EducationDetailScreen extends ConsumerWidget {
             );
           }
 
-          final locale = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+          final locale = _resolvedDateLocale();
           final publishedAt = article.publishedAt != null
               ? DateFormat(
                   'dd MMM yyyy',

@@ -7,45 +7,52 @@ class AppShell extends StatelessWidget {
   const AppShell({
     super.key,
     required this.navigationShell,
-    required this.isAdmin,
+    required this.roleListenable,
+    required this.readIsAdmin,
   });
 
   final StatefulNavigationShell navigationShell;
-  final bool? isAdmin;
+  final Listenable roleListenable;
+  final bool? Function() readIsAdmin;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Keep navigation visible even while role is loading to avoid empty shell state.
-    final navItems = _buildNavItems(isAdmin == true);
-    final visibleIndex = navItems.indexWhere(
-      (item) => item.branchIndex == navigationShell.currentIndex,
-    );
-    final selectedIndex = visibleIndex >= 0 ? visibleIndex : 0;
+    return AnimatedBuilder(
+      animation: roleListenable,
+      builder: (context, _) {
+        final colorScheme = Theme.of(context).colorScheme;
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        // Keep navigation visible even while role is loading to avoid empty shell state.
+        final navItems = _buildNavItems(readIsAdmin() == true);
+        final visibleIndex = navItems.indexWhere(
+          (item) => item.branchIndex == navigationShell.currentIndex,
+        );
+        final selectedIndex = visibleIndex >= 0 ? visibleIndex : 0;
 
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          border: Border(
-            top: BorderSide(
-              color: isDark
-                  ? colorScheme.outlineVariant.withValues(alpha: 0.3)
-                  : colorScheme.outlineVariant.withValues(alpha: 0.5),
-              width: 0.5,
+        return Scaffold(
+          body: navigationShell,
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              border: Border(
+                top: BorderSide(
+                  color: isDark
+                      ? colorScheme.outlineVariant.withValues(alpha: 0.3)
+                      : colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  width: 0.5,
+                ),
+              ),
+            ),
+            child: NavigationBar(
+              selectedIndex: selectedIndex,
+              onDestinationSelected: (index) {
+                navigationShell.goBranch(navItems[index].branchIndex);
+              },
+              destinations: [for (final item in navItems) item.destination],
             ),
           ),
-        ),
-        child: NavigationBar(
-          selectedIndex: selectedIndex,
-          onDestinationSelected: (index) {
-            navigationShell.goBranch(navItems[index].branchIndex);
-          },
-          destinations: [for (final item in navItems) item.destination],
-        ),
-      ),
+        );
+      },
     );
   }
 

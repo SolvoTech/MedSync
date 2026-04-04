@@ -69,8 +69,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       StatefulShellRoute.indexedStack(
-        builder: (_, _, shell) =>
-            AppShell(navigationShell: shell, isAdmin: authNotifier.isAdmin),
+        builder: (_, _, shell) => AppShell(
+          navigationShell: shell,
+          roleListenable: authNotifier,
+          readIsAdmin: () => authNotifier.isAdmin,
+        ),
         branches: [
           StatefulShellBranch(
             routes: [

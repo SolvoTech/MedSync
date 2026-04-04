@@ -18,7 +18,7 @@ class AppearanceScreen extends ConsumerStatefulWidget {
 
 class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
   String _themeMode = 'light'; // 'light', 'dark', 'system'
-  String _languageCode = 'en';
+  String _languageCode = 'id';
   bool _loaded = false;
 
   static String _toRaw(ThemeMode mode) {

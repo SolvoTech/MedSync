@@ -1,7 +1,7 @@
 class AppStrings {
   const AppStrings._();
 
-  static String _languageCode = 'en';
+  static String _languageCode = 'id';
 
   static void setLanguageCode(String value) {
     _languageCode = value == 'id' ? 'id' : 'en';
@@ -378,12 +378,31 @@ class AppStrings {
   static String get adminCreateArticleTitle =>
       _t('Create Article', 'Buat Artikel');
   static String get adminEditArticleTitle => _t('Edit Article', 'Edit Artikel');
+  static String get adminCreateArticleEditorSubtitle => _t(
+    'Craft educational content with a polished layout and cover image.',
+    'Susun konten edukasi dengan tampilan rapi dan gambar sampul.',
+  );
+  static String get adminEditArticleEditorSubtitle => _t(
+    'Refine article details and keep your content up to date.',
+    'Perbarui detail artikel agar konten selalu relevan.',
+  );
   static String get adminArticleTitleRequiredMessage =>
       _t('Title and content are required.', 'Judul dan konten wajib diisi.');
   static String get adminArticleCreatedSuccess =>
       _t('Article created.', 'Artikel berhasil dibuat.');
   static String get adminArticleUpdatedSuccess =>
       _t('Article updated.', 'Artikel berhasil diperbarui.');
+  static String get adminArticleSlugAlreadyUsedMessage => _t(
+    'This slug is already used by another article.',
+    'Slug ini sudah digunakan artikel lain.',
+  );
+  static String get adminArticleDiscardChangesTitle =>
+      _t('Discard unsaved changes?', 'Buang perubahan yang belum disimpan?');
+  static String get adminArticleDiscardChangesMessage => _t(
+    'Your latest edits will be lost if you leave now.',
+    'Perubahan terakhir Anda akan hilang jika keluar sekarang.',
+  );
+  static String get adminArticleDiscardChangesAction => _t('Discard', 'Buang');
   static String get adminUnpublishArticleTitle =>
       _t('Unpublish article?', 'Batalkan publikasi artikel?');
   static String get adminPublishArticleTitle =>
@@ -416,10 +435,38 @@ class AppStrings {
   static String get adminArticleFieldTitleLabel => _t('Title', 'Judul');
   static String get adminArticleFieldSlugOptionalLabel =>
       _t('Slug (optional)', 'Slug (opsional)');
+  static String get adminArticleSlugAutoGenerateHint => _t(
+    'Leave blank to auto-generate from title.',
+    'Biarkan kosong untuk dibuat otomatis dari judul.',
+  );
   static String get adminArticleFieldCategoryOptionalLabel =>
       _t('Category (optional)', 'Kategori (opsional)');
   static String get adminArticleFieldCoverUrlOptionalLabel =>
-      _t('Cover URL (optional)', 'Cover URL (opsional)');
+      _t('Cover Image (optional)', 'Gambar Sampul (opsional)');
+  static String get adminArticleCoverFieldTitle =>
+      _t('Cover Image', 'Gambar Sampul');
+  static String get adminArticleCoverSelectGalleryAction =>
+      _t('Gallery', 'Galeri');
+  static String get adminArticleCoverUseCameraAction => _t('Camera', 'Kamera');
+  static String get adminArticleCoverRemoveAction => _t('Remove', 'Hapus');
+  static String get adminArticleCoverEmptyHint => _t(
+    'Add a cover image to make the article more engaging.',
+    'Tambahkan gambar sampul agar artikel lebih menarik.',
+  );
+  static String get adminArticleCoverPreviewUnavailable =>
+      _t('Preview unavailable', 'Pratinjau tidak tersedia');
+  static String get adminArticleCoverUploadOnSaveHint => _t(
+    'JPG, PNG, or WebP. Cover will be uploaded when you tap Save.',
+    'JPG, PNG, atau WebP. Sampul akan diunggah saat menekan Simpan.',
+  );
+  static String get adminArticleCoverUploadFailedMessage => _t(
+    'Failed to upload cover image. Please try again.',
+    'Gagal mengunggah gambar sampul. Silakan coba lagi.',
+  );
+  static String adminArticleCoverTooLargeMessage(int maxMb) => _t(
+    'Image is too large. Maximum file size is ${maxMb}MB.',
+    'Ukuran gambar terlalu besar. Maksimal ${maxMb}MB.',
+  );
   static String get adminArticleFieldSummaryOptionalLabel =>
       _t('Summary (optional)', 'Ringkasan (opsional)');
   static String get adminArticleFieldContentLabel => _t('Content', 'Konten');

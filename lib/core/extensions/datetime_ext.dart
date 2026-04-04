@@ -3,8 +3,14 @@ import 'package:intl/intl.dart';
 import '../constants/app_strings.dart';
 
 extension DateTimeExt on DateTime {
-  String get _activeLocale =>
-      AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+  String get _activeLocale {
+    final preferred = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+    try {
+      return DateFormat.localeExists(preferred) ? preferred : 'en_US';
+    } catch (_) {
+      return 'en_US';
+    }
+  }
 
   /// "17 Maret 2025"
   String toIndonesianDate() {

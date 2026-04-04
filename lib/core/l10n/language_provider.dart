@@ -26,8 +26,9 @@ class AppLanguageNotifier extends Notifier<Locale> {
       case 'id':
         return const Locale('id');
       case 'en':
-      default:
         return const Locale('en');
+      default:
+        return const Locale('id');
     }
   }
 

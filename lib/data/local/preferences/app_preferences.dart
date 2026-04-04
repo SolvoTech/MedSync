@@ -27,7 +27,7 @@ class AppPreferences {
 
   // ─── Language ───────────────────────────────────
   static const _keyLanguageCode = 'language_code';
-  static String get languageCode => _prefs.getString(_keyLanguageCode) ?? 'en';
+  static String get languageCode => _prefs.getString(_keyLanguageCode) ?? 'id';
   static Future<void> setLanguageCode(String value) =>
       _prefs.setString(_keyLanguageCode, value);
 
