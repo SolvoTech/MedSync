@@ -176,6 +176,38 @@ class AppStrings {
     'Activate, suspend, or reset user access securely.',
     'Aktifkan, nonaktifkan, atau reset akses pengguna dengan aman.',
   );
+  static String get adminUserFilterTitle =>
+      _t('Filter Users', 'Filter Pengguna');
+  static String get adminUserSearchHint => _t(
+    'Search by name, username, or internal email',
+    'Cari berdasarkan nama, username, atau email internal',
+  );
+  static String get adminUserFilterStatusLabel =>
+      _t('Account Status', 'Status Akun');
+  static String get adminUserFilterRoleLabel => _t('Role', 'Peran');
+  static String get adminUserFilterAllLabel => _t('All', 'Semua');
+  static String get adminUserFilterActiveLabel => _t('Active', 'Aktif');
+  static String get adminUserFilterSuspendedLabel =>
+      _t('Suspended', 'Dinonaktifkan');
+  static String get adminUserFilterAdminLabel => _t('Admin', 'Admin');
+  static String get adminUserFilterUserLabel => _t('User', 'Pengguna');
+  static String adminUserFilterResultSummary({
+    required int shown,
+    required int total,
+  }) => _t(
+    'Showing $shown of $total users.',
+    'Menampilkan $shown dari $total pengguna.',
+  );
+  static String get adminNoFilteredUserMessage => _t(
+    'No users match the current filter.',
+    'Tidak ada pengguna yang sesuai dengan filter saat ini.',
+  );
+  static String get adminNoFilteredUserSubtitle => _t(
+    'Adjust search or filter chips to view users.',
+    'Ubah kata kunci atau chip filter untuk menampilkan pengguna.',
+  );
+  static String adminLastSyncLabel(String dateTimeLabel) =>
+      _t('Last synced: $dateTimeLabel', 'Sinkron terakhir: $dateTimeLabel');
   static String get adminContentManagementTitle =>
       _t('Content Management', 'Manajemen Konten');
   static String get adminContentManagementHint => _t(

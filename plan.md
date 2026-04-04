@@ -49,6 +49,8 @@
 - [x] Hardening backend ditambahkan lewat migration baru: FORCE RLS pada tabel kritikal, RPC guard untuk aksi admin, dan sink monitoring log query failure.
 - [x] Alur admin action di Flutter dialihkan dari mutasi tabel langsung ke RPC server-side agar otorisasi final divalidasi di database.
 - [x] Monitoring kegagalan query role/account status ditambahkan pada beberapa flow utama (router auth sync, role resolver home, auth account-status, dan admin control queries).
+- [x] Dashboard admin kini menampilkan indikator sinkronisasi terakhir agar operator mudah melihat freshness data.
+- [x] Manajemen pengguna admin kini mendukung filter cepat berdasarkan status akun, role, dan pencarian kata kunci.
 
 ## Roadmap Lanjutan (Prioritas)
 
@@ -63,8 +65,8 @@
 - [x] Tambah monitoring log untuk kegagalan query role/account status.
 
 ### P2 - UX dan Operasional (2-4 hari)
-- [ ] Tambah indikator sinkronisasi terakhir di dashboard admin.
-- [ ] Tambah filter user management (status role/account + pencarian cepat).
+- [x] Tambah indikator sinkronisasi terakhir di dashboard admin.
+- [x] Tambah filter user management (status role/account + pencarian cepat).
 - [ ] Tambah bulk action aman (mis. bulk suspend dengan konfirmasi bertingkat).
 
 ### P3 - Performa dan Maintainability (berjalan)
@@ -89,4 +91,5 @@
 - [x] Perbaikan role resolver (bootstrap role, cache singkat, retry error state).
 - [x] Penambahan test spesifik role resolver.
 - [x] Audit RLS dan hardening akses admin sisi backend.
+- [x] Peningkatan UX admin: indikator last sync dan filter cepat user management.
 

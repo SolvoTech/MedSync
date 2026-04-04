@@ -108,6 +108,7 @@ final adminDashboardProvider = FutureProvider.autoDispose<AdminDashboardData>((
       todayTasks: todayTasks,
       todayCompleted: todayCompleted,
       adherencePercent: adherence,
+      fetchedAt: DateTime.now(),
     );
   } catch (error, stackTrace) {
     unawaited(
@@ -160,6 +161,23 @@ final adminUsersProvider = FutureProvider.autoDispose<List<AdminManagedUser>>((
     rethrow;
   }
 });
+
+enum AdminAccountFilter { all, active, suspended }
+
+enum AdminRoleFilter { all, admin, user }
+
+final adminUserSearchQueryProvider = StateProvider.autoDispose<String>(
+  (ref) => '',
+);
+
+final adminUserAccountFilterProvider =
+    StateProvider.autoDispose<AdminAccountFilter>(
+      (ref) => AdminAccountFilter.all,
+    );
+
+final adminUserRoleFilterProvider = StateProvider.autoDispose<AdminRoleFilter>(
+  (ref) => AdminRoleFilter.all,
+);
 
 final adminActionControllerProvider =
     AutoDisposeNotifierProvider<AdminActionController, AsyncValue<void>>(
@@ -261,6 +279,9 @@ class AdminControlScreen extends ConsumerWidget {
         final dashboardState = ref.watch(adminDashboardProvider);
         final usersState = ref.watch(adminUsersProvider);
         final actionState = ref.watch(adminActionControllerProvider);
+        final searchQuery = ref.watch(adminUserSearchQueryProvider);
+        final accountFilter = ref.watch(adminUserAccountFilterProvider);
+        final roleFilter = ref.watch(adminUserRoleFilterProvider);
 
         return Scaffold(
           appBar: AppBar(
@@ -366,26 +387,72 @@ class AdminControlScreen extends ConsumerWidget {
                       );
                     }
 
+                    final filteredUsers = _applyUserFilters(
+                      users: users,
+                      searchQuery: searchQuery,
+                      accountFilter: accountFilter,
+                      roleFilter: roleFilter,
+                    );
+
                     final currentUserId =
                         SupabaseClientRef.maybeClient?.auth.currentUser?.id;
 
                     return Column(
-                      children: users
-                          .map(
-                            (user) => Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: _UserItem(
-                                user: user,
-                                isBusy: actionState.isLoading,
-                                isSelf: currentUserId == user.id,
-                                onToggleStatus: () =>
-                                    _onToggleStatus(context, ref, user),
-                                onResetAccess: () =>
-                                    _onResetAccess(context, ref, user),
-                              ),
-                            ),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _AdminUserFilterPanel(
+                          accountFilter: accountFilter,
+                          roleFilter: roleFilter,
+                          shownCount: filteredUsers.length,
+                          totalCount: users.length,
+                          onSearchChanged: (value) {
+                            ref
+                                    .read(adminUserSearchQueryProvider.notifier)
+                                    .state =
+                                value;
+                          },
+                          onSelectAccountFilter: (value) {
+                            ref
+                                    .read(
+                                      adminUserAccountFilterProvider.notifier,
+                                    )
+                                    .state =
+                                value;
+                          },
+                          onSelectRoleFilter: (value) {
+                            ref
+                                    .read(adminUserRoleFilterProvider.notifier)
+                                    .state =
+                                value;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        if (filteredUsers.isEmpty)
+                          AppEmptyState(
+                            message: AppStrings.adminNoFilteredUserMessage,
+                            subtitle: AppStrings.adminNoFilteredUserSubtitle,
+                            icon: Icons.filter_alt_off_outlined,
                           )
-                          .toList(),
+                        else
+                          Column(
+                            children: filteredUsers
+                                .map(
+                                  (user) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: _UserItem(
+                                      user: user,
+                                      isBusy: actionState.isLoading,
+                                      isSelf: currentUserId == user.id,
+                                      onToggleStatus: () =>
+                                          _onToggleStatus(context, ref, user),
+                                      onResetAccess: () =>
+                                          _onResetAccess(context, ref, user),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                      ],
                     );
                   },
                 ),
@@ -395,6 +462,51 @@ class AdminControlScreen extends ConsumerWidget {
         );
       },
     );
+  }
+
+  List<AdminManagedUser> _applyUserFilters({
+    required List<AdminManagedUser> users,
+    required String searchQuery,
+    required AdminAccountFilter accountFilter,
+    required AdminRoleFilter roleFilter,
+  }) {
+    final normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return users.where((user) {
+      final isAccountMatch = switch (accountFilter) {
+        AdminAccountFilter.all => true,
+        AdminAccountFilter.active => user.accountStatus == 'active',
+        AdminAccountFilter.suspended => user.accountStatus == 'suspended',
+      };
+
+      if (!isAccountMatch) {
+        return false;
+      }
+
+      final isRoleMatch = switch (roleFilter) {
+        AdminRoleFilter.all => true,
+        AdminRoleFilter.admin => user.role == 'admin',
+        AdminRoleFilter.user => user.role == 'user',
+      };
+
+      if (!isRoleMatch) {
+        return false;
+      }
+
+      if (normalizedQuery.isEmpty) {
+        return true;
+      }
+
+      final searchTarget = [
+        user.fullName,
+        user.username,
+        user.internalEmail ?? '',
+        user.role,
+        user.accountStatus,
+      ].join(' ').toLowerCase();
+
+      return searchTarget.contains(normalizedQuery);
+    }).toList();
   }
 
   Future<void> _onToggleStatus(
@@ -492,6 +604,7 @@ class AdminDashboardData {
     required this.todayTasks,
     required this.todayCompleted,
     required this.adherencePercent,
+    required this.fetchedAt,
   });
 
   final int totalUsers;
@@ -501,6 +614,7 @@ class AdminDashboardData {
   final int todayTasks;
   final int todayCompleted;
   final int adherencePercent;
+  final DateTime fetchedAt;
 }
 
 class AdminManagedUser {
@@ -545,6 +659,11 @@ class _DashboardSummary extends StatelessWidget {
   const _DashboardSummary({required this.data});
 
   final AdminDashboardData data;
+
+  String _formatFetchedAt(DateTime value) {
+    final locale = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+    return DateFormat('dd MMM yyyy, HH:mm', locale).format(value.toLocal());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -612,6 +731,23 @@ class _DashboardSummary extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 10),
+        AppCard(
+          child: Row(
+            children: [
+              const Icon(Icons.sync_rounded),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  AppStrings.adminLastSyncLabel(
+                    _formatFetchedAt(data.fetchedAt),
+                  ),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -659,6 +795,135 @@ class _MetricCard extends StatelessWidget {
               color: Theme.of(
                 context,
               ).colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AdminUserFilterPanel extends StatelessWidget {
+  const _AdminUserFilterPanel({
+    required this.accountFilter,
+    required this.roleFilter,
+    required this.shownCount,
+    required this.totalCount,
+    required this.onSearchChanged,
+    required this.onSelectAccountFilter,
+    required this.onSelectRoleFilter,
+  });
+
+  final AdminAccountFilter accountFilter;
+  final AdminRoleFilter roleFilter;
+  final int shownCount;
+  final int totalCount;
+  final ValueChanged<String> onSearchChanged;
+  final ValueChanged<AdminAccountFilter> onSelectAccountFilter;
+  final ValueChanged<AdminRoleFilter> onSelectRoleFilter;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.adminUserFilterTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            onChanged: onSearchChanged,
+            decoration: InputDecoration(
+              hintText: AppStrings.adminUserSearchHint,
+              prefixIcon: const Icon(Icons.search_rounded),
+              isDense: true,
+              filled: true,
+              fillColor: colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.35,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            AppStrings.adminUserFilterStatusLabel,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.65),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                label: Text(AppStrings.adminUserFilterAllLabel),
+                selected: accountFilter == AdminAccountFilter.all,
+                onSelected: (_) =>
+                    onSelectAccountFilter(AdminAccountFilter.all),
+              ),
+              ChoiceChip(
+                label: Text(AppStrings.adminUserFilterActiveLabel),
+                selected: accountFilter == AdminAccountFilter.active,
+                onSelected: (_) =>
+                    onSelectAccountFilter(AdminAccountFilter.active),
+              ),
+              ChoiceChip(
+                label: Text(AppStrings.adminUserFilterSuspendedLabel),
+                selected: accountFilter == AdminAccountFilter.suspended,
+                onSelected: (_) =>
+                    onSelectAccountFilter(AdminAccountFilter.suspended),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            AppStrings.adminUserFilterRoleLabel,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.65),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                label: Text(AppStrings.adminUserFilterAllLabel),
+                selected: roleFilter == AdminRoleFilter.all,
+                onSelected: (_) => onSelectRoleFilter(AdminRoleFilter.all),
+              ),
+              ChoiceChip(
+                label: Text(AppStrings.adminUserFilterUserLabel),
+                selected: roleFilter == AdminRoleFilter.user,
+                onSelected: (_) => onSelectRoleFilter(AdminRoleFilter.user),
+              ),
+              ChoiceChip(
+                label: Text(AppStrings.adminUserFilterAdminLabel),
+                selected: roleFilter == AdminRoleFilter.admin,
+                onSelected: (_) => onSelectRoleFilter(AdminRoleFilter.admin),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            AppStrings.adminUserFilterResultSummary(
+              shown: shownCount,
+              total: totalCount,
+            ),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.65),
             ),
           ),
         ],
