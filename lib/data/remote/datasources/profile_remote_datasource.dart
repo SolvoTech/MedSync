@@ -2,6 +2,31 @@ import '../../../domain/models/user_profile.dart';
 import '../supabase_client.dart';
 
 class ProfileRemoteDataSource {
+  Future<UserProfile?> getProfileById(String userId) async {
+    final client = SupabaseClientRef.maybeClient;
+    if (client == null) {
+      throw Exception(
+        'Supabase belum diinisialisasi. Periksa konfigurasi .env.',
+      );
+    }
+
+    if (userId.trim().isEmpty) {
+      return null;
+    }
+
+    final row = await client
+        .from('profiles')
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (row == null) {
+      return null;
+    }
+
+    return UserProfile.fromMap(row);
+  }
+
   Future<UserProfile?> getCurrentProfile() async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {

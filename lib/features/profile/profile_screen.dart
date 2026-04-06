@@ -28,21 +28,122 @@ final profileDataSourceProvider = Provider<ProfileRemoteDataSource>((ref) {
   return ProfileRemoteDataSource();
 });
 
-final currentProfileProvider = FutureProvider<UserProfile?>((ref) async {
-  return ref.read(profileDataSourceProvider).getCurrentProfile();
+final authUserIdProvider = StreamProvider.autoDispose<String?>((ref) async* {
+  final client = Supabase.instance.client;
+
+  yield client.auth.currentUser?.id;
+  yield* client.auth.onAuthStateChange
+      .map((event) => event.session?.user.id)
+      .distinct();
 });
+
+final _profileByUserIdProvider = FutureProvider.autoDispose
+    .family<UserProfile?, String>((ref, userId) async {
+      return ref.read(profileDataSourceProvider).getProfileById(userId);
+    });
+
+final currentProfileProvider = FutureProvider.autoDispose<UserProfile?>((
+  ref,
+) async {
+  final authUserId = ref.watch(authUserIdProvider).valueOrNull;
+  if (authUserId == null || authUserId.isEmpty) {
+    return null;
+  }
+
+  return ref.watch(_profileByUserIdProvider(authUserId).future);
+});
+
+bool _isGenericDisplayName(String value) {
+  final normalized = value.trim().toLowerCase();
+  return normalized == 'administrator' ||
+      normalized == 'admin' ||
+      normalized == 'pengguna' ||
+      normalized == 'user';
+}
+
+String _formatIdentifierAsName(String value) {
+  final cleaned = value.trim().replaceAll(RegExp(r'[_\-.]+'), ' ');
+  if (cleaned.isEmpty) {
+    return value.trim();
+  }
+
+  final words = cleaned
+      .split(RegExp(r'\s+'))
+      .where((word) => word.isNotEmpty)
+      .map((word) => '${word[0].toUpperCase()}${word.substring(1)}')
+      .toList();
+
+  return words.join(' ');
+}
+
+String? _usernameFromEmail(String? email) {
+  if (email == null) {
+    return null;
+  }
+
+  final normalized = email.trim();
+  if (normalized.isEmpty || !normalized.contains('@')) {
+    return null;
+  }
+
+  final localPart = normalized.split('@').first.trim();
+  if (localPart.isEmpty) {
+    return null;
+  }
+
+  return localPart;
+}
+
+String _resolveDisplayName({
+  required UserProfile? profile,
+  required User? user,
+}) {
+  final fullName = profile?.fullName.trim();
+  if (fullName != null &&
+      fullName.isNotEmpty &&
+      !_isGenericDisplayName(fullName)) {
+    return fullName;
+  }
+
+  final profileUsername = profile?.username?.trim();
+  if (profileUsername != null && profileUsername.isNotEmpty) {
+    return _formatIdentifierAsName(profileUsername);
+  }
+
+  final metadataName = (user?.userMetadata?['full_name'] as String?)?.trim();
+  if (metadataName != null &&
+      metadataName.isNotEmpty &&
+      !_isGenericDisplayName(metadataName)) {
+    return metadataName;
+  }
+
+  final emailUsername =
+      _usernameFromEmail(profile?.internalEmail) ??
+      _usernameFromEmail(user?.email);
+  if (emailUsername != null) {
+    return _formatIdentifierAsName(emailUsername);
+  }
+
+  return AppStrings.tr('User', 'Pengguna');
+}
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(authUserIdProvider);
+
     final profileAsync = ref.watch(currentProfileProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final user = Supabase.instance.client.auth.currentUser;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isAdmin = profileAsync.asData?.value?.role == 'admin';
+    final displayName = _resolveDisplayName(
+      profile: profileAsync.asData?.value,
+      user: user,
+    );
 
     return Scaffold(
       body: ListView(
@@ -156,7 +257,7 @@ class ProfileScreen extends ConsumerWidget {
                           data: (profile) => AppAvatar(
                             size: 64,
                             imageUrl: profile?.avatarUrl,
-                            name: profile?.fullName,
+                            name: displayName,
                             showRing: true,
                           ),
                           loading: () => CircleAvatar(
@@ -168,7 +269,7 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           error: (_, _) => AppAvatar(
                             size: 64,
-                            name: AppStrings.tr('User', 'Pengguna'),
+                            name: displayName,
                             showRing: true,
                           ),
                         ),
@@ -180,17 +281,18 @@ class ProfileScreen extends ConsumerWidget {
                           children: [
                             profileAsync.when(
                               data: (profile) => Text(
-                                profile?.fullName ??
-                                    AppStrings.tr('User', 'Pengguna'),
+                                _resolveDisplayName(
+                                  profile: profile,
+                                  user: user,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              loading: () => const SizedBox.shrink(),
-                              error: (_, _) =>
-                                  Text(AppStrings.tr('User', 'Pengguna')),
+                              loading: () => Text(displayName),
+                              error: (_, _) => Text(displayName),
                             ),
                             const SizedBox(height: 2),
                             Text(

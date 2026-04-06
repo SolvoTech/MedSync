@@ -51,6 +51,12 @@ class AuthController extends AutoDisposeNotifier<AsyncValue<void>> {
         emailRedirectTo: 'io.supabase.medsync://login-callback/',
       );
 
+      await _ensureProfileAfterSignUp(
+        fullName: fullName.trim(),
+        normalizedUsername: normalizedUsername,
+        signedUpUserId: response.user?.id,
+      );
+
       // Keep registration flow explicit: users must log in manually after sign up.
       if (response.session != null ||
           Supabase.instance.client.auth.currentSession != null) {
@@ -93,6 +99,35 @@ class AuthController extends AutoDisposeNotifier<AsyncValue<void>> {
 
   String _internalEmailFromUsername(String username) =>
       '$username@$_internalEmailDomain';
+
+  Future<void> _ensureProfileAfterSignUp({
+    required String fullName,
+    required String normalizedUsername,
+    required String? signedUpUserId,
+  }) async {
+    final client = Supabase.instance.client;
+    final currentUser = client.auth.currentUser;
+
+    // Profile bootstrap is only possible when signUp created an active session.
+    if (currentUser == null) {
+      return;
+    }
+
+    if (signedUpUserId != null && currentUser.id != signedUpUserId) {
+      return;
+    }
+
+    final payload = <String, dynamic>{
+      'id': currentUser.id,
+      'full_name': fullName,
+      'username': normalizedUsername,
+      'internal_email': _internalEmailFromUsername(normalizedUsername),
+    };
+
+    await client
+        .from('profiles')
+        .upsert(payload, onConflict: 'id', ignoreDuplicates: true);
+  }
 
   Future<void> _enforceAccountStatus() async {
     final client = Supabase.instance.client;

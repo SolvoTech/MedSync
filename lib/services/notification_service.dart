@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -158,42 +159,46 @@ class NotificationService {
     String? payload,
     bool repeatDaily = false,
   }) async {
-    final androidSound = _androidSoundForChannel(channelId);
+    NotificationDetails buildDetails({required bool allowCustomSound}) {
+      final androidSound = allowCustomSound
+          ? _androidSoundForChannel(channelId)
+          : null;
 
-    final details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        channelId,
-        _channelName(channelId),
-        channelDescription: _channelDescription(channelId),
-        importance: Importance.high,
-        priority: Priority.high,
-        playSound: true,
-        sound: androidSound,
-        audioAttributesUsage: channelId == medicineReminderChannelId
-            ? AudioAttributesUsage.alarm
-            : AudioAttributesUsage.notification,
-        actions: _supportsTaskDoneAction(channelId)
-            ? const <AndroidNotificationAction>[
-                AndroidNotificationAction(
-                  markDoneActionId,
-                  'Selesai ✓',
-                  showsUserInterface: true,
-                  cancelNotification: true,
-                ),
-              ]
-            : null,
-      ),
-      iOS: DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      ),
-      macOS: DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      ),
-    );
+      return NotificationDetails(
+        android: AndroidNotificationDetails(
+          channelId,
+          _channelName(channelId),
+          channelDescription: _channelDescription(channelId),
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: true,
+          sound: androidSound,
+          audioAttributesUsage: channelId == medicineReminderChannelId
+              ? AudioAttributesUsage.alarm
+              : AudioAttributesUsage.notification,
+          actions: _supportsTaskDoneAction(channelId)
+              ? const <AndroidNotificationAction>[
+                  AndroidNotificationAction(
+                    markDoneActionId,
+                    'Selesai',
+                    showsUserInterface: true,
+                    cancelNotification: true,
+                  ),
+                ]
+              : null,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+        macOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      );
+    }
 
     final scheduleDate = tz.TZDateTime.from(scheduledAt, tz.local);
     final now = tz.TZDateTime.now(tz.local);
@@ -214,16 +219,39 @@ class NotificationService {
       return;
     }
 
-    await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduleDate,
-      details,
-      payload: payload,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: repeatDaily ? DateTimeComponents.time : null,
-    );
+    try {
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduleDate,
+        buildDetails(allowCustomSound: true),
+        payload: payload,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        matchDateTimeComponents: repeatDaily ? DateTimeComponents.time : null,
+      );
+    } on PlatformException catch (error) {
+      if (!_isInvalidSoundError(error)) {
+        rethrow;
+      }
+
+      if (kDebugMode) {
+        debugPrint(
+          '[NotificationService] Fallback to default sound: ${error.message}',
+        );
+      }
+
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduleDate,
+        buildDetails(allowCustomSound: false),
+        payload: payload,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        matchDateTimeComponents: repeatDaily ? DateTimeComponents.time : null,
+      );
+    }
 
     if (kDebugMode) {
       debugPrint('[Notification]   ✅ Scheduled successfully');
@@ -452,6 +480,19 @@ class NotificationService {
       );
     }
     return null;
+  }
+
+  bool _isInvalidSoundError(Object error) {
+    if (error is! PlatformException) {
+      return false;
+    }
+
+    final code = error.code.toLowerCase();
+    final message = (error.message ?? '').toLowerCase();
+    return code.contains('invalid_sound') ||
+        message.contains('invalid_sound') ||
+        (message.contains('resource') &&
+            message.contains('could not be found'));
   }
 
   Future<void> _onNotificationResponse(NotificationResponse response) async {

@@ -1,6 +1,9 @@
 import 'dart:io';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../core/errors/app_exception.dart';
 import '../../../data/remote/datasources/medicine_remote_datasource.dart';
 import '../../../data/remote/supabase_client.dart';
 import '../../../data/repositories/medicine_repository_impl.dart';
@@ -39,9 +42,97 @@ final medicineSchedulesProvider =
     });
 
 class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
+  static const int _maxMedicinePhotoBytes = 5 * 1024 * 1024;
+
   @override
   Future<List<Medicine>> build() async {
     return _fetch();
+  }
+
+  String _detectImageExtension(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.png')) {
+      return 'png';
+    }
+    if (lower.endsWith('.webp')) {
+      return 'webp';
+    }
+    return 'jpg';
+  }
+
+  String _contentTypeForExtension(String extension) {
+    switch (extension) {
+      case 'png':
+        return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'image/jpeg';
+    }
+  }
+
+  String _medicinePhotoStorageErrorMessage(StorageException error) {
+    final lower = error.message.toLowerCase();
+
+    if (lower.contains('bucket') && lower.contains('not found')) {
+      return 'Penyimpanan foto obat belum dikonfigurasi. Silakan hubungi admin.';
+    }
+
+    if (lower.contains('permission') || lower.contains('row-level security')) {
+      return 'Anda tidak memiliki izin untuk mengunggah foto obat.';
+    }
+
+    if (lower.contains('mime') ||
+        lower.contains('content type') ||
+        (lower.contains('invalid') && lower.contains('image'))) {
+      return 'Format foto obat tidak didukung. Gunakan JPG, PNG, atau WEBP.';
+    }
+
+    if (lower.contains('size') ||
+        lower.contains('too large') ||
+        lower.contains('payload') ||
+        lower.contains('limit')) {
+      final maxMb = (_maxMedicinePhotoBytes / (1024 * 1024)).round();
+      return 'Ukuran foto obat terlalu besar. Maksimal $maxMb MB.';
+    }
+
+    return 'Gagal mengunggah foto obat. Silakan coba lagi.';
+  }
+
+  Future<String> _uploadMedicinePhoto({
+    required SupabaseClient client,
+    required String userId,
+    required File photoFile,
+    required int uniqueId,
+  }) async {
+    final bytes = await photoFile.readAsBytes();
+    if (bytes.isEmpty) {
+      throw const AppException(
+        'File foto obat kosong. Silakan pilih ulang foto.',
+      );
+    }
+
+    if (bytes.lengthInBytes > _maxMedicinePhotoBytes) {
+      final maxMb = (_maxMedicinePhotoBytes / (1024 * 1024)).round();
+      throw AppException('Ukuran foto obat terlalu besar. Maksimal $maxMb MB.');
+    }
+
+    final extension = _detectImageExtension(photoFile.path);
+    final contentType = _contentTypeForExtension(extension);
+    final path = '$userId/medicine_${uniqueId}_photo.$extension';
+
+    try {
+      await client.storage
+          .from('medicine-photos')
+          .uploadBinary(
+            path,
+            bytes,
+            fileOptions: FileOptions(contentType: contentType, upsert: true),
+          );
+      return client.storage.from('medicine-photos').getPublicUrl(path);
+    } on StorageException catch (error) {
+      throw AppException(_medicinePhotoStorageErrorMessage(error));
+    }
   }
 
   Future<List<Medicine>> _fetch() {
@@ -81,9 +172,12 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
       final uniqueId = DateTime.now().millisecondsSinceEpoch;
 
       if (photoFile != null) {
-        final path = '$userId/medicine_${uniqueId}_photo.jpg';
-        await client.storage.from('medicine-photos').upload(path, photoFile);
-        photoUrl = client.storage.from('medicine-photos').getPublicUrl(path);
+        photoUrl = await _uploadMedicinePhoto(
+          client: client,
+          userId: userId,
+          photoFile: photoFile,
+          uniqueId: uniqueId,
+        );
       }
 
       await ref
