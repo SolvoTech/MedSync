@@ -89,6 +89,9 @@ class AppBottomSheet extends StatelessWidget {
                 ),
                 trailing ??
                     IconButton(
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).closeButtonTooltip,
                       onPressed: () => Navigator.pop(context),
                       icon: Container(
                         padding: const EdgeInsets.all(4),

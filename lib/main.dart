@@ -37,11 +37,24 @@ Future<void> main() async {
 
 Future<void> _initializeNotificationsSafely() async {
   final notificationService = NotificationService();
+  var initialized = false;
 
   try {
     await notificationService.initialize().timeout(const Duration(seconds: 12));
+    initialized = true;
   } catch (error) {
     debugPrint('[main] Notification initialization skipped: $error');
+  }
+
+  try {
+    await notificationService
+        .cancelStaleTaskNotificationsForActiveSession()
+        .timeout(const Duration(seconds: 8));
+  } catch (error) {
+    debugPrint('[main] Notification stale cleanup skipped: $error');
+  }
+
+  if (!initialized) {
     return;
   }
 

@@ -167,7 +167,7 @@ class TodayTaskCard extends StatelessWidget {
                               ? OutlinedButton(
                                   onPressed: onSkip,
                                   style: OutlinedButton.styleFrom(
-                                    minimumSize: Size(0, compact ? 38 : 40),
+                                    minimumSize: const Size(0, 44),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                     ),
@@ -181,7 +181,7 @@ class TodayTaskCard extends StatelessWidget {
                                     size: compact ? 16 : 18,
                                   ),
                                   style: OutlinedButton.styleFrom(
-                                    minimumSize: Size(0, compact ? 38 : 40),
+                                    minimumSize: const Size(0, 44),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                     ),
@@ -195,7 +195,7 @@ class TodayTaskCard extends StatelessWidget {
                               ? FilledButton(
                                   onPressed: onDone,
                                   style: FilledButton.styleFrom(
-                                    minimumSize: Size(0, compact ? 38 : 40),
+                                    minimumSize: const Size(0, 44),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                     ),
@@ -209,7 +209,7 @@ class TodayTaskCard extends StatelessWidget {
                                     size: compact ? 16 : 18,
                                   ),
                                   style: FilledButton.styleFrom(
-                                    minimumSize: Size(0, compact ? 38 : 40),
+                                    minimumSize: const Size(0, 44),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                     ),

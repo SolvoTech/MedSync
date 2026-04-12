@@ -1,5 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/observability/app_monitoring.dart';
+import '../../data/remote/datasources/measurement_remote_datasource.dart';
+import '../../data/remote/datasources/physical_activity_remote_datasource.dart';
 import '../../data/remote/datasources/task_log_remote_datasource.dart';
 import '../../domain/models/task_log.dart';
 import '../../services/notification_service.dart';
@@ -9,6 +13,17 @@ final taskLogRemoteDataSourceProvider = Provider<TaskLogRemoteDataSource>((
 ) {
   return TaskLogRemoteDataSource();
 });
+
+final homeMeasurementDataSourceProvider = Provider<MeasurementRemoteDataSource>(
+  (ref) {
+    return MeasurementRemoteDataSource();
+  },
+);
+
+final homeActivityDataSourceProvider =
+    Provider<PhysicalActivityRemoteDataSource>((ref) {
+      return PhysicalActivityRemoteDataSource();
+    });
 
 final todayTasksProvider =
     AutoDisposeAsyncNotifierProvider<HomeController, List<TaskLog>>(
@@ -21,8 +36,55 @@ class HomeController extends AutoDisposeAsyncNotifier<List<TaskLog>> {
     return _fetch();
   }
 
-  Future<List<TaskLog>> _fetch() {
+  Future<List<TaskLog>> _fetch() async {
+    await _ensureSupplementalReminderTaskLogs();
     return ref.read(taskLogRemoteDataSourceProvider).getTodayTasks();
+  }
+
+  Future<void> _ensureSupplementalReminderTaskLogs() async {
+    try {
+      await ref
+          .read(homeMeasurementDataSourceProvider)
+          .ensureTaskLogsForActiveReminders();
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint(
+          'Failed to ensure measurement supplemental task logs: $error',
+        );
+      }
+
+      await AppMonitoring.logQueryFailure(
+        source: 'home_controller',
+        event: 'ensure_measurement_supplemental_task_logs_failed',
+        error: error,
+        stackTrace: stackTrace,
+        metadata: {
+          'task_type': 'measurement',
+          'operation': 'ensure_task_logs_for_active_reminders',
+        },
+      );
+    }
+
+    try {
+      await ref
+          .read(homeActivityDataSourceProvider)
+          .ensureTaskLogsForActiveReminders();
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('Failed to ensure activity supplemental task logs: $error');
+      }
+
+      await AppMonitoring.logQueryFailure(
+        source: 'home_controller',
+        event: 'ensure_activity_supplemental_task_logs_failed',
+        error: error,
+        stackTrace: stackTrace,
+        metadata: {
+          'task_type': 'physical_activity',
+          'operation': 'ensure_task_logs_for_active_reminders',
+        },
+      );
+    }
   }
 
   Future<void> refresh() async {

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/app_exception.dart';
+import '../../../data/local/preferences/app_preferences.dart';
 import '../../../data/remote/datasources/medicine_remote_datasource.dart';
 import '../../../data/remote/supabase_client.dart';
 import '../../../data/repositories/medicine_repository_impl.dart';
@@ -236,6 +237,22 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
   }
 
   Future<void> deleteMedicine(String medicineId) async {
+    final bundles = await ref
+        .read(medicineRemoteDataSourceProvider)
+        .getSchedulesForMedicine(medicineId);
+
+    for (final bundle in bundles) {
+      for (final slot in bundle.slots) {
+        await ref
+            .read(notificationServiceProvider)
+            .cancelTaskNotification(
+              taskType: 'medicine',
+              referenceId: bundle.schedule.id,
+              timeOfDay: slot.timeOfDay,
+            );
+      }
+    }
+
     await ref.read(medicineRepositoryProvider).deleteMedicine(medicineId);
     await refresh();
   }
@@ -347,6 +364,10 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     required String medicineId,
     required MedicineScheduleBundle bundle,
   }) async {
+    if (!AppPreferences.notifMedicine) {
+      return;
+    }
+
     final notificationService = ref.read(notificationServiceProvider);
     final now = DateTime.now();
 

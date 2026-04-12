@@ -208,8 +208,6 @@ class ReportScreen extends ConsumerWidget {
               child: SegmentedButton<ReportPeriod>(
                 showSelectedIcon: false,
                 style: ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   padding: const WidgetStatePropertyAll(
                     EdgeInsets.symmetric(horizontal: 8, vertical: 10),
                   ),

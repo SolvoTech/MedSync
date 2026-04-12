@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/extensions/context_ext.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_dialog.dart';
+import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../domain/models/medicine.dart';
 import '../../../../domain/models/medicine_schedule.dart';
 import '../schedule_controller.dart';
@@ -29,8 +31,17 @@ class MedicineTab extends ConsumerWidget {
             if (medicines.isEmpty) {
               return ListView(
                 children: [
-                  SizedBox(height: 120),
-                  Center(child: Text(AppStrings.noMedicineData)),
+                  const SizedBox(height: 90),
+                  AppEmptyState(
+                    message: AppStrings.noMedicineData,
+                    subtitle: AppStrings.tr(
+                      'Add your first medicine schedule to start reminders.',
+                      'Tambahkan jadwal obat pertama untuk memulai pengingat.',
+                    ),
+                    icon: Icons.medication_outlined,
+                    actionLabel: AppStrings.addMedicine,
+                    onAction: () => showAddMedicineSheet(context, ref),
+                  ),
                 ],
               );
             }
@@ -311,11 +322,30 @@ class MedicineTab extends ConsumerWidget {
                         if (medicine.photoUrl != null)
                           ClipRRect(
                             borderRadius: BorderRadius.circular(16),
-                            child: Image.network(
-                              medicine.photoUrl!,
+                            child: CachedNetworkImage(
+                              imageUrl: medicine.photoUrl!,
                               width: 56,
                               height: 56,
                               fit: BoxFit.cover,
+                              placeholder: (context, imageUrl) => Container(
+                                width: 56,
+                                height: 56,
+                                color: colorScheme.primaryContainer.withValues(
+                                  alpha: 0.4,
+                                ),
+                              ),
+                              errorWidget: (context, imageUrl, error) =>
+                                  Container(
+                                    width: 56,
+                                    height: 56,
+                                    color: colorScheme.primaryContainer
+                                        .withValues(alpha: 0.4),
+                                    child: Icon(
+                                      Icons.medication_rounded,
+                                      color: colorScheme.primary,
+                                      size: 26,
+                                    ),
+                                  ),
                             ),
                           )
                         else
@@ -350,6 +380,7 @@ class MedicineTab extends ConsumerWidget {
                             backgroundColor: colorScheme.surfaceContainerHighest
                                 .withValues(alpha: 0.5),
                           ),
+                          tooltip: AppStrings.tr('Close', 'Tutup'),
                           icon: const Icon(Icons.close),
                           onPressed: () => Navigator.pop(context),
                         ),

@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/type_labels.dart';
+import '../../core/observability/app_monitoring.dart';
+import '../../data/local/preferences/app_preferences.dart';
 import '../../data/remote/datasources/physical_activity_remote_datasource.dart';
 import '../../domain/models/physical_activity_reminder.dart';
 import '../../services/notification_service.dart';
@@ -64,18 +67,20 @@ class ActivityController
       timeOfDay: timeOfDay,
     );
 
-    await ref
-        .read(notificationServiceProvider)
-        .scheduleTaskNotification(
-          taskType: 'physical_activity',
-          referenceId: reminder.id,
-          timeOfDay: timeOfDay,
-          channelId: 'activity_reminders',
-          title: 'Pengingat Aktivitas',
-          body:
-              'Saatnya melakukan aktivitas ${activityTypeLabel(activityType)}.',
-          scheduledAt: scheduleAt,
-        );
+    if (AppPreferences.notifActivity) {
+      await ref
+          .read(notificationServiceProvider)
+          .scheduleTaskNotification(
+            taskType: 'physical_activity',
+            referenceId: reminder.id,
+            timeOfDay: timeOfDay,
+            channelId: NotificationService.activityReminderChannelId,
+            title: 'Pengingat Aktivitas',
+            body:
+                'Saatnya melakukan aktivitas ${activityTypeLabel(activityType)}.',
+            scheduledAt: scheduleAt,
+          );
+    }
     await refresh();
   }
 
@@ -116,34 +121,33 @@ class ActivityController
       timeOfDay: timeOfDay,
     );
 
-    await ref
-        .read(notificationServiceProvider)
-        .scheduleTaskNotification(
-          taskType: 'physical_activity',
-          referenceId: reminderId,
-          timeOfDay: timeOfDay,
-          channelId: 'activity_reminders',
-          title: 'Pengingat Aktivitas',
-          body:
-              'Saatnya melakukan aktivitas ${activityTypeLabel(activityType)}.',
-          scheduledAt: scheduleAt,
-        );
+    if (AppPreferences.notifActivity) {
+      await ref
+          .read(notificationServiceProvider)
+          .scheduleTaskNotification(
+            taskType: 'physical_activity',
+            referenceId: reminderId,
+            timeOfDay: timeOfDay,
+            channelId: NotificationService.activityReminderChannelId,
+            title: 'Pengingat Aktivitas',
+            body:
+                'Saatnya melakukan aktivitas ${activityTypeLabel(activityType)}.',
+            scheduledAt: scheduleAt,
+          );
+    }
     await refresh();
   }
 
   Future<void> deactivateReminder(String reminderId) async {
-    try {
-      final oldReminder = (state.valueOrNull ?? []).firstWhere(
-        (r) => r.id == reminderId,
+    final oldReminder = _findReminderById(reminderId);
+    if (oldReminder != null) {
+      await _cancelReminderNotificationWithRetry(
+        reminderId: reminderId,
+        timeOfDay: oldReminder.timeOfDay,
+        operation: 'deactivate',
       );
-      await ref
-          .read(notificationServiceProvider)
-          .cancelTaskNotification(
-            taskType: 'physical_activity',
-            referenceId: reminderId,
-            timeOfDay: oldReminder.timeOfDay,
-          );
-    } catch (_) {}
+    }
+
     await ref
         .read(activityRemoteDataSourceProvider)
         .deactivateReminder(reminderId);
@@ -151,20 +155,73 @@ class ActivityController
   }
 
   Future<void> deleteReminder(String reminderId) async {
-    try {
-      final oldReminder = (state.valueOrNull ?? []).firstWhere(
-        (r) => r.id == reminderId,
+    final oldReminder = _findReminderById(reminderId);
+    if (oldReminder != null) {
+      await _cancelReminderNotificationWithRetry(
+        reminderId: reminderId,
+        timeOfDay: oldReminder.timeOfDay,
+        operation: 'delete',
       );
-      await ref
-          .read(notificationServiceProvider)
-          .cancelTaskNotification(
-            taskType: 'physical_activity',
-            referenceId: reminderId,
-            timeOfDay: oldReminder.timeOfDay,
-          );
-    } catch (_) {}
+    }
+
     await ref.read(activityRemoteDataSourceProvider).deleteReminder(reminderId);
     await refresh();
+  }
+
+  PhysicalActivityReminder? _findReminderById(String reminderId) {
+    for (final reminder
+        in state.valueOrNull ?? const <PhysicalActivityReminder>[]) {
+      if (reminder.id == reminderId) {
+        return reminder;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _cancelReminderNotificationWithRetry({
+    required String reminderId,
+    required String timeOfDay,
+    required String operation,
+  }) async {
+    final notificationService = ref.read(notificationServiceProvider);
+    Object? lastError;
+    StackTrace? lastStackTrace;
+
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        await notificationService.cancelTaskNotification(
+          taskType: 'physical_activity',
+          referenceId: reminderId,
+          timeOfDay: timeOfDay,
+        );
+        return;
+      } catch (error, stackTrace) {
+        lastError = error;
+        lastStackTrace = stackTrace;
+
+        if (attempt == 0) {
+          await Future<void>.delayed(const Duration(milliseconds: 250));
+        }
+      }
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+        'Failed to cancel activity reminder notification after retry: $lastError',
+      );
+    }
+
+    await AppMonitoring.logQueryFailure(
+      source: 'activity_controller',
+      event: 'activity_cancel_notification_failed',
+      error: lastError ?? Exception('Unknown cancel notification error'),
+      stackTrace: lastStackTrace,
+      metadata: {
+        'operation': operation,
+        'reference_id': reminderId,
+        'time_of_day': timeOfDay,
+      },
+    );
   }
 
   DateTime _nextScheduleTime({

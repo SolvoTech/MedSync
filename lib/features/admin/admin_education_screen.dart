@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/errors/user_error_message.dart';
 import '../../core/extensions/context_ext.dart';
+import '../../core/services/image_cache_service.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_empty_state.dart';
@@ -552,6 +554,7 @@ class AdminEducationScreen extends ConsumerWidget {
     }
 
     final coverUrl = result.coverUrl?.trim();
+    final previousCoverUrl = article?.coverUrl?.trim();
 
     final input = EducationArticleInput(
       title: result.title.trim(),
@@ -581,6 +584,18 @@ class AdminEducationScreen extends ConsumerWidget {
       context.showErrorSnackBar(
         _buildArticleActionErrorMessage(actionState.error),
       );
+      return;
+    }
+
+    final nextCoverUrl = (coverUrl == null || coverUrl.isEmpty)
+        ? null
+        : coverUrl;
+    if ((previousCoverUrl ?? '') != (nextCoverUrl ?? '')) {
+      await ImageCacheService.evictUrl(previousCoverUrl);
+      await ImageCacheService.evictUrl(nextCoverUrl);
+    }
+
+    if (!context.mounted) {
       return;
     }
 
@@ -1245,14 +1260,21 @@ class _ArticleEditorSheetState extends ConsumerState<_ArticleEditorSheet> {
                                             fit: BoxFit.cover,
                                           )
                                         : ((_coverUrl ?? '').trim().isNotEmpty)
-                                        ? Image.network(
-                                            _coverUrl!,
+                                        ? CachedNetworkImage(
+                                            imageUrl: _coverUrl!,
                                             fit: BoxFit.cover,
-                                            errorBuilder:
+                                            placeholder: (context, imageUrl) =>
+                                                const Center(
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                      ),
+                                                ),
+                                            errorWidget:
                                                 (
-                                                  _,
+                                                  context,
+                                                  imageUrl,
                                                   error,
-                                                  stackTrace,
                                                 ) => Center(
                                                   child: Text(
                                                     AppStrings

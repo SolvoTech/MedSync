@@ -11,6 +11,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/errors/user_error_message.dart';
 import '../../../core/extensions/context_ext.dart';
+import '../../../core/services/image_cache_service.dart';
 import '../../../core/utils/image_helper.dart';
 import '../../../core/widgets/app_dialog.dart';
 
@@ -166,6 +167,13 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
       final user = client.auth.currentUser;
       if (user == null) throw Exception('User not logged in');
 
+      final previousProfile = await client
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+      final previousAvatarUrl = previousProfile?['avatar_url'] as String?;
+
       final file = File(croppedFile.path);
       final uniqueId = DateTime.now().millisecondsSinceEpoch;
       var extension = file.path.toLowerCase().endsWith('.png')
@@ -232,6 +240,9 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
         });
       }
 
+      await ImageCacheService.evictUrl(previousAvatarUrl);
+      await ImageCacheService.evictUrl(publicUrl);
+
       if (mounted) {
         Navigator.pop(context, true);
         context.showSuccessSnackBar(
@@ -272,10 +283,19 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) throw Exception('User not logged in');
 
+      final previousProfile = await Supabase.instance.client
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+      final previousAvatarUrl = previousProfile?['avatar_url'] as String?;
+
       await Supabase.instance.client
           .from('profiles')
           .update({'avatar_url': null})
           .eq('id', user.id);
+
+      await ImageCacheService.evictUrl(previousAvatarUrl);
 
       if (mounted) {
         Navigator.pop(context, true);

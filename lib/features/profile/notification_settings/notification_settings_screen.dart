@@ -1,8 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/alarm_ringtones.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/extensions/context_ext.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../data/local/preferences/app_preferences.dart';
+import '../../../services/notification_service.dart';
 
 class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -14,13 +20,214 @@ class NotificationSettingsScreen extends ConsumerStatefulWidget {
 
 class _NotificationSettingsScreenState
     extends ConsumerState<NotificationSettingsScreen> {
-  // Default: all enabled
+  // Default fallback values before SharedPreferences are loaded.
   bool _medicineEnabled = true;
   bool _measurementEnabled = true;
   bool _activityEnabled = true;
   bool _stockWarningEnabled = true;
   bool _streakEnabled = true;
   bool _dailySummaryEnabled = true;
+
+  String _medicineRingtoneId = AlarmRingtones.defaultReminderRingtoneId;
+  String _measurementRingtoneId = AlarmRingtones.defaultReminderRingtoneId;
+  String _activityRingtoneId = AlarmRingtones.defaultReminderRingtoneId;
+
+  bool _isApplyingTone = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFromPreferences();
+  }
+
+  void _loadFromPreferences() {
+    _medicineEnabled = AppPreferences.notifMedicine;
+    _measurementEnabled = AppPreferences.notifMeasurement;
+    _activityEnabled = AppPreferences.notifActivity;
+    _stockWarningEnabled = AppPreferences.notifStock;
+    _streakEnabled = AppPreferences.notifStreak;
+    _dailySummaryEnabled = AppPreferences.notifDailySummary;
+
+    _medicineRingtoneId = AppPreferences.notifMedicineRingtoneId;
+    _measurementRingtoneId = AppPreferences.notifMeasurementRingtoneId;
+    _activityRingtoneId = AppPreferences.notifActivityRingtoneId;
+  }
+
+  void _onMedicineToggleChanged(bool value) {
+    setState(() => _medicineEnabled = value);
+    unawaited(
+      _persistReminderPreference(
+        savePreference: () => AppPreferences.setNotifMedicine(value),
+      ),
+    );
+  }
+
+  void _onMeasurementToggleChanged(bool value) {
+    setState(() => _measurementEnabled = value);
+    unawaited(
+      _persistReminderPreference(
+        savePreference: () => AppPreferences.setNotifMeasurement(value),
+      ),
+    );
+  }
+
+  void _onActivityToggleChanged(bool value) {
+    setState(() => _activityEnabled = value);
+    unawaited(
+      _persistReminderPreference(
+        savePreference: () => AppPreferences.setNotifActivity(value),
+      ),
+    );
+  }
+
+  Future<void> _persistReminderPreference({
+    required Future<void> Function() savePreference,
+  }) async {
+    try {
+      await savePreference();
+      await ref
+          .read(notificationServiceProvider)
+          .syncTaskNotificationsWithCurrentPreferences();
+    } catch (_) {
+      if (mounted) {
+        context.showErrorSnackBar(AppStrings.settingsSaveFailed);
+      }
+    }
+  }
+
+  void _onStockToggleChanged(bool value) {
+    setState(() => _stockWarningEnabled = value);
+    unawaited(AppPreferences.setNotifStock(value));
+  }
+
+  void _onStreakToggleChanged(bool value) {
+    setState(() => _streakEnabled = value);
+    unawaited(AppPreferences.setNotifStreak(value));
+  }
+
+  void _onDailySummaryToggleChanged(bool value) {
+    setState(() => _dailySummaryEnabled = value);
+    unawaited(AppPreferences.setNotifDailySummary(value));
+  }
+
+  Future<void> _onReminderToneChanged({
+    required String reminderType,
+    required String ringtoneId,
+  }) async {
+    if (_isApplyingTone) {
+      return;
+    }
+
+    setState(() {
+      if (reminderType == 'medicine') {
+        _medicineRingtoneId = ringtoneId;
+      } else if (reminderType == 'measurement') {
+        _measurementRingtoneId = ringtoneId;
+      } else if (reminderType == 'physical_activity') {
+        _activityRingtoneId = ringtoneId;
+      }
+      _isApplyingTone = true;
+    });
+
+    try {
+      if (reminderType == 'medicine') {
+        await AppPreferences.setNotifMedicineRingtoneId(ringtoneId);
+      } else if (reminderType == 'measurement') {
+        await AppPreferences.setNotifMeasurementRingtoneId(ringtoneId);
+      } else if (reminderType == 'physical_activity') {
+        await AppPreferences.setNotifActivityRingtoneId(ringtoneId);
+      }
+
+      await ref
+          .read(notificationServiceProvider)
+          .applyRingtonePreferenceChanges();
+
+      if (mounted) {
+        context.showSuccessSnackBar(AppStrings.alarmToneUpdated);
+      }
+    } catch (_) {
+      if (mounted) {
+        context.showErrorSnackBar(AppStrings.settingsSaveFailed);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isApplyingTone = false);
+      }
+    }
+  }
+
+  String _ringtoneLabel(String ringtoneId) {
+    switch (ringtoneId) {
+      case AlarmRingtones.cc0ChimeNotification:
+        return AppStrings.ringtoneCc0ChimeNotification;
+      case AlarmRingtones.cc0PhoneChime:
+        return AppStrings.ringtoneCc0PhoneChime;
+      case AlarmRingtones.cc0SoftBell:
+        return AppStrings.ringtoneCc0SoftBell;
+      case AlarmRingtones.medSyncClassic:
+        return AppStrings.ringtoneMedsyncClassic;
+      case AlarmRingtones.systemDefault:
+        return AppStrings.ringtoneSystemDefault;
+      default:
+        return AppStrings.ringtoneCc0ChimeNotification;
+    }
+  }
+
+  Widget _buildRingtonePicker({
+    required String selectedId,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(56, 0, 16, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.alarmToneLabel,
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            AppStrings.alarmToneSubtitle,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: selectedId,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            ),
+            items: AlarmRingtones.options.map((option) {
+              return DropdownMenuItem<String>(
+                value: option.id,
+                child: Text(
+                  _ringtoneLabel(option.id),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }).toList(),
+            onChanged: _isApplyingTone
+                ? null
+                : (value) {
+                    if (value == null || value == selectedId) {
+                      return;
+                    }
+                    onChanged(value);
+                  },
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,8 +259,16 @@ class _NotificationSettingsScreenState
                   title: Text(AppStrings.medicineReminderTitle),
                   subtitle: Text(AppStrings.medicineReminderSubtitle),
                   value: _medicineEnabled,
-                  onChanged: (v) => setState(() => _medicineEnabled = v),
+                  onChanged: _onMedicineToggleChanged,
                 ),
+                if (_medicineEnabled)
+                  _buildRingtonePicker(
+                    selectedId: _medicineRingtoneId,
+                    onChanged: (value) => _onReminderToneChanged(
+                      reminderType: 'medicine',
+                      ringtoneId: value,
+                    ),
+                  ),
                 const Divider(height: 1, indent: 56),
                 SwitchListTile(
                   secondary: Icon(
@@ -63,8 +278,16 @@ class _NotificationSettingsScreenState
                   title: Text(AppStrings.measurementReminderTitle),
                   subtitle: Text(AppStrings.measurementReminderSubtitle),
                   value: _measurementEnabled,
-                  onChanged: (v) => setState(() => _measurementEnabled = v),
+                  onChanged: _onMeasurementToggleChanged,
                 ),
+                if (_measurementEnabled)
+                  _buildRingtonePicker(
+                    selectedId: _measurementRingtoneId,
+                    onChanged: (value) => _onReminderToneChanged(
+                      reminderType: 'measurement',
+                      ringtoneId: value,
+                    ),
+                  ),
                 const Divider(height: 1, indent: 56),
                 SwitchListTile(
                   secondary: Icon(
@@ -74,8 +297,16 @@ class _NotificationSettingsScreenState
                   title: Text(AppStrings.activityReminderTitle),
                   subtitle: Text(AppStrings.activityReminderSubtitle),
                   value: _activityEnabled,
-                  onChanged: (v) => setState(() => _activityEnabled = v),
+                  onChanged: _onActivityToggleChanged,
                 ),
+                if (_activityEnabled)
+                  _buildRingtonePicker(
+                    selectedId: _activityRingtoneId,
+                    onChanged: (value) => _onReminderToneChanged(
+                      reminderType: 'physical_activity',
+                      ringtoneId: value,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -101,7 +332,7 @@ class _NotificationSettingsScreenState
                   title: Text(AppStrings.lowStockAlertTitle),
                   subtitle: Text(AppStrings.lowStockAlertSubtitle),
                   value: _stockWarningEnabled,
-                  onChanged: (v) => setState(() => _stockWarningEnabled = v),
+                  onChanged: _onStockToggleChanged,
                 ),
               ],
             ),
@@ -128,7 +359,7 @@ class _NotificationSettingsScreenState
                   title: Text(AppStrings.streakNotificationTitle),
                   subtitle: Text(AppStrings.streakNotificationSubtitle),
                   value: _streakEnabled,
-                  onChanged: (v) => setState(() => _streakEnabled = v),
+                  onChanged: _onStreakToggleChanged,
                 ),
                 const Divider(height: 1, indent: 56),
                 SwitchListTile(
@@ -139,7 +370,7 @@ class _NotificationSettingsScreenState
                   title: Text(AppStrings.dailySummaryTitle),
                   subtitle: Text(AppStrings.dailySummarySubtitle),
                   value: _dailySummaryEnabled,
-                  onChanged: (v) => setState(() => _dailySummaryEnabled = v),
+                  onChanged: _onDailySummaryToggleChanged,
                 ),
               ],
             ),

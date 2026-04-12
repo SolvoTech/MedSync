@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/type_labels.dart';
+import '../../core/observability/app_monitoring.dart';
+import '../../data/local/preferences/app_preferences.dart';
 import '../../data/remote/datasources/measurement_remote_datasource.dart';
 import '../../domain/models/measurement_reminder.dart';
 import '../../services/notification_service.dart';
@@ -64,18 +67,20 @@ class MeasurementController
       timeOfDay: timeOfDay,
     );
 
-    await ref
-        .read(notificationServiceProvider)
-        .scheduleTaskNotification(
-          taskType: 'measurement',
-          referenceId: reminder.id,
-          timeOfDay: timeOfDay,
-          channelId: 'measurement_reminders',
-          title: 'Pengingat Pengukuran',
-          body:
-              'Saatnya melakukan pengukuran ${measurementTypeLabel(measurementType)}.',
-          scheduledAt: scheduleAt,
-        );
+    if (AppPreferences.notifMeasurement) {
+      await ref
+          .read(notificationServiceProvider)
+          .scheduleTaskNotification(
+            taskType: 'measurement',
+            referenceId: reminder.id,
+            timeOfDay: timeOfDay,
+            channelId: NotificationService.measurementReminderChannelId,
+            title: 'Pengingat Pengukuran',
+            body:
+                'Saatnya melakukan pengukuran ${measurementTypeLabel(measurementType)}.',
+            scheduledAt: scheduleAt,
+          );
+    }
     await refresh();
   }
 
@@ -116,34 +121,33 @@ class MeasurementController
       timeOfDay: timeOfDay,
     );
 
-    await ref
-        .read(notificationServiceProvider)
-        .scheduleTaskNotification(
-          taskType: 'measurement',
-          referenceId: reminderId,
-          timeOfDay: timeOfDay,
-          channelId: 'measurement_reminders',
-          title: 'Pengingat Pengukuran',
-          body:
-              'Saatnya melakukan pengukuran ${measurementTypeLabel(measurementType)}.',
-          scheduledAt: scheduleAt,
-        );
+    if (AppPreferences.notifMeasurement) {
+      await ref
+          .read(notificationServiceProvider)
+          .scheduleTaskNotification(
+            taskType: 'measurement',
+            referenceId: reminderId,
+            timeOfDay: timeOfDay,
+            channelId: NotificationService.measurementReminderChannelId,
+            title: 'Pengingat Pengukuran',
+            body:
+                'Saatnya melakukan pengukuran ${measurementTypeLabel(measurementType)}.',
+            scheduledAt: scheduleAt,
+          );
+    }
     await refresh();
   }
 
   Future<void> deactivateReminder(String reminderId) async {
-    try {
-      final oldReminder = (state.valueOrNull ?? []).firstWhere(
-        (r) => r.id == reminderId,
+    final oldReminder = _findReminderById(reminderId);
+    if (oldReminder != null) {
+      await _cancelReminderNotificationWithRetry(
+        reminderId: reminderId,
+        timeOfDay: oldReminder.timeOfDay,
+        operation: 'deactivate',
       );
-      await ref
-          .read(notificationServiceProvider)
-          .cancelTaskNotification(
-            taskType: 'measurement',
-            referenceId: reminderId,
-            timeOfDay: oldReminder.timeOfDay,
-          );
-    } catch (_) {}
+    }
+
     await ref
         .read(measurementRemoteDataSourceProvider)
         .deactivateReminder(reminderId);
@@ -151,22 +155,74 @@ class MeasurementController
   }
 
   Future<void> deleteReminder(String reminderId) async {
-    try {
-      final oldReminder = (state.valueOrNull ?? []).firstWhere(
-        (r) => r.id == reminderId,
+    final oldReminder = _findReminderById(reminderId);
+    if (oldReminder != null) {
+      await _cancelReminderNotificationWithRetry(
+        reminderId: reminderId,
+        timeOfDay: oldReminder.timeOfDay,
+        operation: 'delete',
       );
-      await ref
-          .read(notificationServiceProvider)
-          .cancelTaskNotification(
-            taskType: 'measurement',
-            referenceId: reminderId,
-            timeOfDay: oldReminder.timeOfDay,
-          );
-    } catch (_) {}
+    }
+
     await ref
         .read(measurementRemoteDataSourceProvider)
         .deleteReminder(reminderId);
     await refresh();
+  }
+
+  MeasurementReminder? _findReminderById(String reminderId) {
+    for (final reminder in state.valueOrNull ?? const <MeasurementReminder>[]) {
+      if (reminder.id == reminderId) {
+        return reminder;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _cancelReminderNotificationWithRetry({
+    required String reminderId,
+    required String timeOfDay,
+    required String operation,
+  }) async {
+    final notificationService = ref.read(notificationServiceProvider);
+    Object? lastError;
+    StackTrace? lastStackTrace;
+
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        await notificationService.cancelTaskNotification(
+          taskType: 'measurement',
+          referenceId: reminderId,
+          timeOfDay: timeOfDay,
+        );
+        return;
+      } catch (error, stackTrace) {
+        lastError = error;
+        lastStackTrace = stackTrace;
+
+        if (attempt == 0) {
+          await Future<void>.delayed(const Duration(milliseconds: 250));
+        }
+      }
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+        'Failed to cancel measurement reminder notification after retry: $lastError',
+      );
+    }
+
+    await AppMonitoring.logQueryFailure(
+      source: 'measurement_controller',
+      event: 'measurement_cancel_notification_failed',
+      error: lastError ?? Exception('Unknown cancel notification error'),
+      stackTrace: lastStackTrace,
+      metadata: {
+        'operation': operation,
+        'reference_id': reminderId,
+        'time_of_day': timeOfDay,
+      },
+    );
   }
 
   DateTime _nextScheduleTime({

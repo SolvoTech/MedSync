@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/errors/user_error_message.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/app_error_widget.dart';
+import '../../core/widgets/app_loading_skeleton.dart';
 import 'education_providers.dart';
 
 String _resolvedDateLocale() {
@@ -31,7 +33,28 @@ class EducationDetailScreen extends ConsumerWidget {
         title: Text(AppStrings.tr('Article Detail', 'Detail Edukasi')),
       ),
       body: state.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+          children: const [
+            AppLoadingSkeleton(
+              width: double.infinity,
+              height: 240,
+              borderRadius: 20,
+            ),
+            SizedBox(height: 14),
+            AppLoadingSkeleton(width: 120, height: 24, borderRadius: 999),
+            SizedBox(height: 10),
+            AppLoadingSkeleton(width: double.infinity, height: 32),
+            SizedBox(height: 8),
+            AppLoadingSkeleton(width: 180, height: 18),
+            SizedBox(height: 18),
+            AppLoadingSkeleton(width: double.infinity, height: 16),
+            SizedBox(height: 8),
+            AppLoadingSkeleton(width: double.infinity, height: 16),
+            SizedBox(height: 8),
+            AppLoadingSkeleton(width: double.infinity, height: 16),
+          ],
+        ),
         error: (error, _) => AppErrorWidget(message: toUserErrorMessage(error)),
         data: (article) {
           if (article == null) {
@@ -144,20 +167,13 @@ class _DetailCover extends StatelessWidget {
       return _fallback(context);
     }
 
-    return Image.network(
-      url!,
+    return CachedNetworkImage(
+      imageUrl: url!,
       width: double.infinity,
       height: 240,
       fit: BoxFit.cover,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) {
-          return child;
-        }
-        return _fallback(context);
-      },
-      errorBuilder: (context, error, stackTrace) {
-        return _fallback(context);
-      },
+      placeholder: (context, imageUrl) => _fallback(context),
+      errorWidget: (context, imageUrl, error) => _fallback(context),
     );
   }
 

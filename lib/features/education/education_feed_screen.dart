@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/errors/user_error_message.dart';
@@ -87,6 +88,9 @@ class EducationFeedScreen extends ConsumerWidget {
                       'Cek kembali nanti untuk konten kesehatan terbaru.',
                     ),
                     icon: Icons.menu_book_outlined,
+                    actionLabel: AppStrings.tr('Refresh', 'Muat Ulang'),
+                    onAction: () =>
+                        ref.invalidate(publishedEducationArticlesProvider),
                   ),
                 ],
               );
@@ -331,20 +335,15 @@ class _ArticleCover extends StatelessWidget {
 
     Widget image;
     if (hasUrl) {
-      image = Image.network(
-        url!,
+      image = CachedNetworkImage(
+        imageUrl: url!,
         width: width ?? double.infinity,
         height: height,
         fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) {
-            return child;
-          }
-          return _coverFallback(context, width: width, height: height);
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return _coverFallback(context, width: width, height: height);
-        },
+        placeholder: (context, imageUrl) =>
+            _coverFallback(context, width: width, height: height),
+        errorWidget: (context, imageUrl, error) =>
+            _coverFallback(context, width: width, height: height),
       );
     } else {
       image = _coverFallback(context, width: width, height: height);

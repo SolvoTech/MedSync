@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
@@ -30,23 +31,26 @@ class AppAvatar extends StatelessWidget {
     required String primaryUrl,
     required String fallbackUrl,
   }) {
-    return Image.network(
-      primaryUrl,
+    return CachedNetworkImage(
+      imageUrl: primaryUrl,
       width: size,
       height: size,
       fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
+      placeholder: (context, imageUrl) =>
+          const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      errorWidget: (context, imageUrl, error) {
         if (primaryUrl == fallbackUrl) {
           return const Icon(Icons.person);
         }
 
-        return Image.network(
-          fallbackUrl,
+        return CachedNetworkImage(
+          imageUrl: fallbackUrl,
           width: size,
           height: size,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.person),
+          placeholder: (context, imageUrl) =>
+              const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          errorWidget: (context, imageUrl, error) => const Icon(Icons.person),
         );
       },
     );

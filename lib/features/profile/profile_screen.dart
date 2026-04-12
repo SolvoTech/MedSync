@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_gradients.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/services/image_cache_service.dart';
 import '../../core/widgets/app_avatar.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_dialog.dart';
@@ -249,6 +250,7 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                           );
                           if (updated == true) {
+                            await ImageCacheService.clearAll();
                             ref.invalidate(currentProfileProvider);
                           }
                         },
@@ -366,6 +368,7 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                           );
                           if (updated == true) {
+                            await ImageCacheService.clearAll();
                             ref.invalidate(currentProfileProvider);
                           }
                         },

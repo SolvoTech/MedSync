@@ -698,6 +698,9 @@ class AdminControlScreen extends ConsumerWidget {
                                           selected: value ?? false,
                                         );
                                       },
+                                      onViewActivity: () => context.push(
+                                        AppRoutes.adminUserActivity(user.id),
+                                      ),
                                       onToggleStatus: () =>
                                           _onToggleStatus(context, ref, user),
                                       onResetAccess: () =>
@@ -1434,6 +1437,7 @@ class _UserItem extends StatelessWidget {
     required this.isSelected,
     required this.canResetAccess,
     required this.onSelectionChanged,
+    required this.onViewActivity,
     required this.onToggleStatus,
     required this.onResetAccess,
   });
@@ -1444,6 +1448,7 @@ class _UserItem extends StatelessWidget {
   final bool isSelected;
   final bool canResetAccess;
   final ValueChanged<bool?> onSelectionChanged;
+  final VoidCallback onViewActivity;
   final VoidCallback onToggleStatus;
   final VoidCallback onResetAccess;
 
@@ -1573,6 +1578,22 @@ class _UserItem extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
+                        onPressed: onViewActivity,
+                        icon: const Icon(Icons.timeline_outlined, size: 18),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(0, 40),
+                        ),
+                        label: Text(
+                          AppStrings.adminViewActivityButton,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
                         onPressed: isBusy || !canManage || !canResetAccess
                             ? null
                             : onResetAccess,
@@ -1616,6 +1637,21 @@ class _UserItem extends StatelessWidget {
 
               return Row(
                 children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onViewActivity,
+                      icon: const Icon(Icons.timeline_outlined, size: 18),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 42),
+                      ),
+                      label: Text(
+                        AppStrings.adminViewActivityButton,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: isBusy || !canManage || !canResetAccess

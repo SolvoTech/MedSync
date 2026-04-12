@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/admin/admin_control_screen.dart';
 import '../../features/admin/admin_education_screen.dart';
+import '../../features/admin/admin_user_activity_screen.dart';
 import '../../features/auth/login/login_screen.dart';
 import '../../features/auth/onboarding_profile/onboarding_profile_screen.dart';
 import '../../features/auth/register/register_screen.dart';
@@ -116,6 +117,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.adminControl,
                 builder: (_, _) => const AdminControlScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'user/:userId',
+                    builder: (_, state) {
+                      final userId = state.pathParameters['userId'] ?? '';
+                      return AdminUserActivityScreen(userId: userId);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -144,6 +154,7 @@ String? resolveAppRedirect({
       matchedLocation == AppRoutes.register;
   final isAdminRoute =
       matchedLocation == AppRoutes.adminControl ||
+      matchedLocation.startsWith('${AppRoutes.adminControl}/') ||
       matchedLocation == AppRoutes.adminEducation;
   final isUserFeatureRoute =
       matchedLocation == AppRoutes.schedule ||

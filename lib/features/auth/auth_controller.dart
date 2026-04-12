@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/observability/app_monitoring.dart';
+import '../../core/services/image_cache_service.dart';
+import '../../services/notification_service.dart';
 
 final authControllerProvider =
     AutoDisposeNotifierProvider<AuthController, AsyncValue<void>>(
@@ -79,6 +81,8 @@ class AuthController extends AutoDisposeNotifier<AsyncValue<void>> {
   Future<void> signOut() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
+      await ref.read(notificationServiceProvider).cancelAllTaskNotifications();
+      await ImageCacheService.clearAll();
       await Supabase.instance.client.auth.signOut();
     });
   }

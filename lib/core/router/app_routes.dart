@@ -14,8 +14,11 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String healthConnect = '/health-connect';
   static const String adminControl = '/admin-control';
+  static const String adminUserActivityBase = '/admin-control/user';
   static const String adminEducation = '/admin-education';
   static const String education = '/education';
 
+  static String adminUserActivity(String userId) =>
+      '$adminUserActivityBase/$userId';
   static String educationDetail(String articleId) => '/education/$articleId';
 }

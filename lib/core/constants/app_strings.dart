@@ -345,6 +345,84 @@ class AppStrings {
   static String get adminStatusSuspended => _t('SUSPENDED', 'DINONAKTIFKAN');
   static String get adminStatusActive => _t('ACTIVE', 'AKTIF');
   static String get adminResetAccessButton => _t('Reset Access', 'Reset Akses');
+  static String get adminViewActivityButton =>
+      _t('View Activity', 'Lihat Aktivitas');
+  static String get adminUserActivityTitle =>
+      _t('User Activity Detail', 'Detail Aktivitas Pengguna');
+  static String get adminUserActivityInvalidUser =>
+      _t('Invalid user selected.', 'Pengguna yang dipilih tidak valid.');
+  static String get adminUserActivityInvalidUserHint => _t(
+    'Please return to user list and choose a valid account.',
+    'Silakan kembali ke daftar pengguna dan pilih akun yang valid.',
+  );
+  static String adminUserActivityProfileSubtitle({
+    required String username,
+    required String status,
+  }) => _t(
+    '@$username • Account status: $status',
+    '@$username • Status akun: $status',
+  );
+  static String get adminUserActivityPeriodSectionTitle =>
+      _t('Adherence Period', 'Periode Kepatuhan');
+  static String get adminAdherenceStrictHint => _t(
+    'Strict adherence uses done / total schedule.',
+    'Kepatuhan strict memakai selesai / total jadwal.',
+  );
+  static String get adminPeriodToday => _t('Today', 'Hari Ini');
+  static String get adminPeriodLast7Days => _t('Last 7 Days', '7 Hari');
+  static String get adminPeriodLast30Days => _t('Last 30 Days', '30 Hari');
+  static String adminUserActivityRangeLabel(String range) =>
+      _t('Range: $range', 'Rentang: $range');
+  static String get adminUserActivityOverallAdherence =>
+      _t('Overall', 'Keseluruhan');
+  static String get adminUserActivityMedicineAdherence =>
+      _t('Medicine', 'Obat');
+  static String get adminUserActivityMeasurementAdherence =>
+      _t('Measurement', 'Pengukuran');
+  static String get adminUserActivityActivityAdherence =>
+      _t('Activity', 'Aktivitas');
+  static String adminUserActivityDoneOfTotal({
+    required int done,
+    required int total,
+  }) => _t('$done done of $total', '$done selesai dari $total');
+  static String get adminUserActivityMedicineSection =>
+      _t('Medicine Schedules', 'Jadwal Obat');
+  static String get adminUserActivityMedicineSectionHint => _t(
+    'Monitor medicine schedule adherence per plan.',
+    'Pantau kepatuhan jadwal obat per rencana.',
+  );
+  static String get adminUserActivityMeasurementSection =>
+      _t('Measurement Schedules', 'Jadwal Pengukuran');
+  static String get adminUserActivityMeasurementSectionHint => _t(
+    'Monitor measurement reminder adherence per schedule.',
+    'Pantau kepatuhan pengingat pengukuran per jadwal.',
+  );
+  static String get adminUserActivityActivitySection =>
+      _t('Activity Schedules', 'Jadwal Aktivitas');
+  static String get adminUserActivityActivitySectionHint => _t(
+    'Monitor physical activity adherence per schedule.',
+    'Pantau kepatuhan aktivitas fisik per jadwal.',
+  );
+  static String get adminUserActivityNoMedicineSchedule => _t(
+    'No medicine schedules found for this user.',
+    'Tidak ada jadwal obat untuk pengguna ini.',
+  );
+  static String get adminUserActivityNoMeasurementSchedule => _t(
+    'No measurement schedules found for this user.',
+    'Tidak ada jadwal pengukuran untuk pengguna ini.',
+  );
+  static String get adminUserActivityNoActivitySchedule => _t(
+    'No activity schedules found for this user.',
+    'Tidak ada jadwal aktivitas untuk pengguna ini.',
+  );
+  static String get adminUserActivityMedicineSubtitle =>
+      _t('Medicine Schedule', 'Jadwal Obat');
+  static String adminUserActivityTimeLabel(String value) =>
+      _t('Time: $value', 'Waktu: $value');
+  static String get adminUserActivityScheduleActive =>
+      _t('Active Schedule', 'Jadwal Aktif');
+  static String get adminUserActivityScheduleInactive =>
+      _t('Inactive Schedule', 'Jadwal Nonaktif');
   static String get adminResetAccessUnavailableHint => _t(
     'Reset access is only available for users with a valid internal account email.',
     'Reset akses hanya tersedia untuk pengguna dengan email akun internal yang valid.',
@@ -833,6 +911,22 @@ class AppStrings {
     'Notification for physical activity schedule',
     'Notifikasi jadwal aktivitas fisik',
   );
+  static String get alarmToneLabel => _t('Alarm Tone', 'Nada Alarm');
+  static String get alarmToneSubtitle => _t(
+    'Select ringtone for this reminder type',
+    'Pilih nada dering untuk tipe pengingat ini',
+  );
+  static String get alarmToneUpdated =>
+      _t('Alarm tone updated successfully.', 'Nada alarm berhasil diperbarui.');
+  static String get ringtoneCc0ChimeNotification =>
+      _t('CC0 Chime Notification', 'CC0 Chime Notification');
+  static String get ringtoneCc0PhoneChime =>
+      _t('CC0 Phone Chime', 'CC0 Phone Chime');
+  static String get ringtoneCc0SoftBell => _t('CC0 Soft Bell', 'CC0 Soft Bell');
+  static String get ringtoneMedsyncClassic =>
+      _t('MedSync Classic', 'Klasik MedSync');
+  static String get ringtoneSystemDefault =>
+      _t('System Default', 'Default Sistem');
   static String get lowStockAlertTitle =>
       _t('Low Stock Alert', 'Peringatan Stok Rendah');
   static String get lowStockAlertSubtitle => _t(

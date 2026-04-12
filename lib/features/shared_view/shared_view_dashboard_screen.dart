@@ -33,6 +33,9 @@ class SharedViewDashboardScreen extends StatelessWidget {
         title: Text(carePerson['display_name'] ?? 'Status Kesehatan'),
         actions: [
           IconButton(
+            tooltip: MaterialLocalizations.of(
+              context,
+            ).refreshIndicatorSemanticLabel,
             icon: const Icon(Icons.refresh),
             onPressed: () {
               // Could re-invoke the edge function here

@@ -297,8 +297,8 @@ class HomeScreen extends ConsumerWidget {
                         message: AppStrings.noTasksToday,
                         icon: Icons.task_alt,
                         subtitle: AppStrings.tr(
-                          'Add medication or activity schedules\nto start tracking your health.',
-                          'Tambahkan jadwal obat atau aktivitas\nuntuk mulai melacak kesehatan Anda.',
+                          'Add medication, measurement, or activity schedules\nto start tracking your health.',
+                          'Tambahkan jadwal obat, pengukuran, atau aktivitas\nuntuk mulai melacak kesehatan Anda.',
                         ),
                       ),
                     ),

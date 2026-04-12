@@ -1,10 +1,14 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../core/constants/alarm_ringtones.dart';
 
 /// SharedPreferences wrapper per spec §2 for local settings.
 class AppPreferences {
   AppPreferences._();
 
   static late SharedPreferences _prefs;
+  static const _guestScope = 'guest';
 
   /// Must call init() in main.dart before using.
   static Future<void> init() async {
@@ -17,6 +21,36 @@ class AppPreferences {
     if (raw == 'system') {
       await _prefs.setString(_keyThemeMode, 'light');
     }
+  }
+
+  static String _activeUserScope() {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId != null && userId.isNotEmpty) {
+        return userId;
+      }
+    } catch (_) {}
+    return _guestScope;
+  }
+
+  static String _scopedKey(String baseKey, {String? scope}) {
+    return '${baseKey}__${scope ?? _activeUserScope()}';
+  }
+
+  static bool _getScopedBool(String baseKey, {required bool defaultValue}) {
+    return _prefs.getBool(_scopedKey(baseKey)) ?? defaultValue;
+  }
+
+  static Future<void> _setScopedBool(String baseKey, bool value) {
+    return _prefs.setBool(_scopedKey(baseKey), value);
+  }
+
+  static String? _getScopedString(String baseKey) {
+    return _prefs.getString(_scopedKey(baseKey));
+  }
+
+  static Future<void> _setScopedString(String baseKey, String value) {
+    return _prefs.setString(_scopedKey(baseKey), value);
   }
 
   // ─── Theme ───────────────────────────────────────
@@ -45,42 +79,74 @@ class AppPreferences {
   static const _keyNotifStock = 'notif_stock';
   static const _keyNotifStreak = 'notif_streak';
   static const _keyNotifDailySummary = 'notif_daily_summary';
+  static const _keyNotifMedicineRingtone = 'notif_medicine_ringtone';
+  static const _keyNotifMeasurementRingtone = 'notif_measurement_ringtone';
+  static const _keyNotifActivityRingtone = 'notif_activity_ringtone';
 
-  static bool get notifMedicine => _prefs.getBool(_keyNotifMedicine) ?? true;
+  static bool get notifMedicine =>
+      _getScopedBool(_keyNotifMedicine, defaultValue: true);
   static Future<void> setNotifMedicine(bool v) =>
-      _prefs.setBool(_keyNotifMedicine, v);
+      _setScopedBool(_keyNotifMedicine, v);
 
   static bool get notifMeasurement =>
-      _prefs.getBool(_keyNotifMeasurement) ?? true;
+      _getScopedBool(_keyNotifMeasurement, defaultValue: true);
   static Future<void> setNotifMeasurement(bool v) =>
-      _prefs.setBool(_keyNotifMeasurement, v);
+      _setScopedBool(_keyNotifMeasurement, v);
 
-  static bool get notifActivity => _prefs.getBool(_keyNotifActivity) ?? true;
+  static bool get notifActivity =>
+      _getScopedBool(_keyNotifActivity, defaultValue: true);
   static Future<void> setNotifActivity(bool v) =>
-      _prefs.setBool(_keyNotifActivity, v);
+      _setScopedBool(_keyNotifActivity, v);
 
-  static bool get notifStock => _prefs.getBool(_keyNotifStock) ?? true;
+  static bool get notifStock =>
+      _getScopedBool(_keyNotifStock, defaultValue: true);
   static Future<void> setNotifStock(bool v) =>
-      _prefs.setBool(_keyNotifStock, v);
+      _setScopedBool(_keyNotifStock, v);
 
-  static bool get notifStreak => _prefs.getBool(_keyNotifStreak) ?? true;
+  static bool get notifStreak =>
+      _getScopedBool(_keyNotifStreak, defaultValue: true);
   static Future<void> setNotifStreak(bool v) =>
-      _prefs.setBool(_keyNotifStreak, v);
+      _setScopedBool(_keyNotifStreak, v);
 
   static bool get notifDailySummary =>
-      _prefs.getBool(_keyNotifDailySummary) ?? true;
+      _getScopedBool(_keyNotifDailySummary, defaultValue: true);
   static Future<void> setNotifDailySummary(bool v) =>
-      _prefs.setBool(_keyNotifDailySummary, v);
+      _setScopedBool(_keyNotifDailySummary, v);
+
+  static String get notifMedicineRingtoneId =>
+      AlarmRingtones.normalizeId(_getScopedString(_keyNotifMedicineRingtone));
+  static Future<void> setNotifMedicineRingtoneId(String value) =>
+      _setScopedString(
+        _keyNotifMedicineRingtone,
+        AlarmRingtones.normalizeId(value),
+      );
+
+  static String get notifMeasurementRingtoneId => AlarmRingtones.normalizeId(
+    _getScopedString(_keyNotifMeasurementRingtone),
+  );
+  static Future<void> setNotifMeasurementRingtoneId(String value) =>
+      _setScopedString(
+        _keyNotifMeasurementRingtone,
+        AlarmRingtones.normalizeId(value),
+      );
+
+  static String get notifActivityRingtoneId =>
+      AlarmRingtones.normalizeId(_getScopedString(_keyNotifActivityRingtone));
+  static Future<void> setNotifActivityRingtoneId(String value) =>
+      _setScopedString(
+        _keyNotifActivityRingtone,
+        AlarmRingtones.normalizeId(value),
+      );
 
   // ─── Last Sync ───────────────────────────────────
   static const _keyLastSync = 'last_sync';
   static DateTime? get lastSync {
-    final raw = _prefs.getString(_keyLastSync);
+    final raw = _getScopedString(_keyLastSync);
     return raw != null ? DateTime.tryParse(raw) : null;
   }
 
   static Future<void> setLastSync(DateTime value) =>
-      _prefs.setString(_keyLastSync, value.toIso8601String());
+      _setScopedString(_keyLastSync, value.toIso8601String());
 
   // ─── General helpers ─────────────────────────────
   static bool getBool(String key, {bool defaultValue = false}) =>
