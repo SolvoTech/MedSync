@@ -514,13 +514,37 @@ class _TodayTaskSectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+
+    Widget description() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.todayTasks,
+            style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            AppStrings.tr(
+              'Complete your scheduled tasks to keep your streak stable.',
+              'Selesaikan tugas terjadwal agar streak tetap stabil.',
+            ),
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.62),
+            ),
+          ),
+        ],
+      );
+    }
 
     return AppCard(
       color: colorScheme.surfaceContainerLow,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isVerySmall = constraints.maxWidth < 320 || textScale > 1.1;
+
+          final leadingIcon = Container(
             width: 40,
             height: 40,
             decoration: BoxDecoration(
@@ -532,61 +556,94 @@ class _TodayTaskSectionHeader extends StatelessWidget {
               color: colorScheme.primary,
               size: 21,
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
+          );
+
+          final pendingBadge = _PendingTaskBadge(
+            total: total,
+            pending: pending,
+          );
+
+          if (!isVerySmall) {
+            return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  AppStrings.todayTasks,
-                  style: textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  AppStrings.tr(
-                    'Complete your scheduled tasks to keep your streak stable.',
-                    'Selesaikan tugas terjadwal agar streak tetap stabil.',
-                  ),
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.62),
-                  ),
-                ),
+                leadingIcon,
+                const SizedBox(width: 12),
+                Expanded(child: description()),
+                const SizedBox(width: 8),
+                pendingBadge,
               ],
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  leadingIcon,
+                  const SizedBox(width: 12),
+                  Expanded(child: description()),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Align(alignment: Alignment.centerRight, child: pendingBadge),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PendingTaskBadge extends StatelessWidget {
+  const _PendingTaskBadge({required this.total, required this.pending});
+
+  final int total;
+  final int pending;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 78, maxWidth: 130),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: colorScheme.primary.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '$pending',
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.fade,
+              style: textTheme.titleSmall?.copyWith(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
+            Text(
+              total == 0
+                  ? AppStrings.tr('No task', 'Tidak ada')
+                  : AppStrings.tr('pending', 'menunggu'),
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.labelSmall?.copyWith(
+                color: colorScheme.primary.withValues(alpha: 0.88),
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '$pending',
-                  style: textTheme.titleSmall?.copyWith(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                Text(
-                  total == 0
-                      ? AppStrings.tr('No task', 'Tidak ada')
-                      : AppStrings.tr('pending', 'menunggu'),
-                  style: textTheme.labelSmall?.copyWith(
-                    color: colorScheme.primary.withValues(alpha: 0.88),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

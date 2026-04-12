@@ -32,6 +32,7 @@ class AppDateField extends StatelessWidget {
         isEmpty: !hasValue,
         decoration: InputDecoration(
           labelText: label,
+          floatingLabelBehavior: FloatingLabelBehavior.always,
           prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
           suffixIcon: const Icon(Icons.calendar_month),
         ),

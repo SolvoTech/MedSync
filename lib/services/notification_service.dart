@@ -21,18 +21,30 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 class NotificationService {
   NotificationService();
 
+  static const MethodChannel _systemSettingsChannel = MethodChannel(
+    'med_syn/system_settings',
+  );
+
   static const String markDoneActionId = 'mark_done';
-  static const String medicineReminderChannelId = 'medicine_reminders_v3';
-  static const String legacyMedicineReminderChannelId = 'medicine_reminders_v2';
-  static const String legacyMedicineReminderChannelIdV1 = 'medicine_reminders';
-  static const String measurementReminderChannelId = 'measurement_reminders_v3';
+  // v4 is intentionally new to recover from stale Android channels that may
+  // persist silent sound settings from previous installs/updates.
+  static const String medicineReminderChannelId = 'medicine_reminders_v4';
+  static const String legacyMedicineReminderChannelId = 'medicine_reminders_v3';
+  static const String legacyMedicineReminderChannelIdV1 =
+      'medicine_reminders_v2';
+  static const String legacyMedicineReminderChannelIdV0 = 'medicine_reminders';
+  static const String measurementReminderChannelId = 'measurement_reminders_v4';
   static const String legacyMeasurementReminderChannelId =
-      'measurement_reminders_v2';
+      'measurement_reminders_v3';
   static const String legacyMeasurementReminderChannelIdV1 =
+      'measurement_reminders_v2';
+  static const String legacyMeasurementReminderChannelIdV0 =
       'measurement_reminders';
-  static const String activityReminderChannelId = 'activity_reminders_v3';
-  static const String legacyActivityReminderChannelId = 'activity_reminders_v2';
-  static const String legacyActivityReminderChannelIdV1 = 'activity_reminders';
+  static const String activityReminderChannelId = 'activity_reminders_v4';
+  static const String legacyActivityReminderChannelId = 'activity_reminders_v3';
+  static const String legacyActivityReminderChannelIdV1 =
+      'activity_reminders_v2';
+  static const String legacyActivityReminderChannelIdV0 = 'activity_reminders';
   static const String stockWarningChannelId = 'stock_warnings';
   static const String streakChannelId = 'streak_notifications';
   static const String dailySummaryChannelId = 'daily_summary';
@@ -140,6 +152,28 @@ class NotificationService {
     await macos?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
+  Future<bool> openAndroidNotificationSettings() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return false;
+    }
+
+    try {
+      final opened =
+          await _systemSettingsChannel.invokeMethod<bool>(
+            'openNotificationSettings',
+          ) ??
+          false;
+      return opened;
+    } on PlatformException catch (error) {
+      if (kDebugMode) {
+        debugPrint(
+          '[NotificationService] Failed to open Android notification settings: ${error.code} ${error.message}',
+        );
+      }
+      return false;
+    }
+  }
+
   Future<void> scheduleNotification({
     required int id,
     required String channelId,
@@ -148,6 +182,7 @@ class NotificationService {
     required DateTime scheduledAt,
     String? payload,
     bool repeatDaily = false,
+    int snoozeIndex = 0,
   }) async {
     final baseChannelId = _baseChannelId(channelId);
     final ringtoneId = _ringtoneIdForBaseChannel(baseChannelId);
@@ -225,38 +260,81 @@ class NotificationService {
       return;
     }
 
-    try {
-      await _plugin.zonedSchedule(
-        id,
-        title,
-        body,
-        scheduleDate,
-        buildDetails(allowCustomSound: true),
-        payload: payload,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        matchDateTimeComponents: repeatDaily ? DateTimeComponents.time : null,
-      );
-    } on PlatformException catch (error) {
-      if (!_isInvalidSoundError(error)) {
-        rethrow;
-      }
+    final modeCandidates = _androidScheduleModeCandidates(
+      baseChannelId: baseChannelId,
+      snoozeIndex: snoozeIndex,
+    );
 
-      if (kDebugMode) {
-        debugPrint(
-          '[NotificationService] Fallback to default sound: ${error.message}',
+    PlatformException? lastPlatformError;
+    var scheduled = false;
+
+    for (final mode in modeCandidates) {
+      try {
+        await _plugin.zonedSchedule(
+          id,
+          title,
+          body,
+          scheduleDate,
+          buildDetails(allowCustomSound: true),
+          payload: payload,
+          androidScheduleMode: mode,
+          matchDateTimeComponents: repeatDaily ? DateTimeComponents.time : null,
         );
-      }
+        scheduled = true;
+        if (kDebugMode) {
+          debugPrint('[Notification]   mode=$mode');
+        }
+        break;
+      } on PlatformException catch (error) {
+        if (_isInvalidSoundError(error)) {
+          if (kDebugMode) {
+            debugPrint(
+              '[NotificationService] Fallback to default sound: ${error.message}',
+            );
+          }
 
-      await _plugin.zonedSchedule(
-        id,
-        title,
-        body,
-        scheduleDate,
-        buildDetails(allowCustomSound: false),
-        payload: payload,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        matchDateTimeComponents: repeatDaily ? DateTimeComponents.time : null,
-      );
+          try {
+            await _plugin.zonedSchedule(
+              id,
+              title,
+              body,
+              scheduleDate,
+              buildDetails(allowCustomSound: false),
+              payload: payload,
+              androidScheduleMode: mode,
+              matchDateTimeComponents: repeatDaily
+                  ? DateTimeComponents.time
+                  : null,
+            );
+            scheduled = true;
+            if (kDebugMode) {
+              debugPrint(
+                '[Notification]   mode=$mode (default sound fallback)',
+              );
+            }
+            break;
+          } on PlatformException catch (fallbackError) {
+            lastPlatformError = fallbackError;
+            if (kDebugMode) {
+              debugPrint(
+                '[NotificationService] Scheduling retry failed with mode=$mode: ${fallbackError.code} ${fallbackError.message}',
+              );
+            }
+            continue;
+          }
+        }
+
+        lastPlatformError = error;
+        if (kDebugMode) {
+          debugPrint(
+            '[NotificationService] Scheduling failed with mode=$mode: ${error.code} ${error.message}',
+          );
+        }
+      }
+    }
+
+    if (!scheduled && lastPlatformError != null) {
+      throw lastPlatformError;
     }
 
     if (kDebugMode) {
@@ -291,6 +369,7 @@ class NotificationService {
       scheduledAt: scheduledAt,
       payload: '$basePayload|0',
       repeatDaily: true,
+      snoozeIndex: 0,
     );
 
     // Schedule 6 snooze notifications (5 minutes apart, up to 30 mins)
@@ -304,6 +383,7 @@ class NotificationService {
         scheduledAt: snoozeTime,
         payload: '$basePayload|$i',
         repeatDaily: true,
+        snoozeIndex: i,
       );
     }
   }
@@ -804,6 +884,8 @@ class NotificationService {
       return;
     }
 
+    await _deleteLegacyReminderChannels(android);
+
     await _createAndroidChannel(
       android: android,
       baseChannelId: medicineReminderChannelId,
@@ -893,6 +975,39 @@ class NotificationService {
     );
   }
 
+  Future<void> _deleteLegacyReminderChannels(
+    AndroidFlutterLocalNotificationsPlugin android,
+  ) async {
+    final legacyBaseChannelIds = <String>{
+      legacyMedicineReminderChannelId,
+      legacyMedicineReminderChannelIdV1,
+      legacyMedicineReminderChannelIdV0,
+      legacyMeasurementReminderChannelId,
+      legacyMeasurementReminderChannelIdV1,
+      legacyMeasurementReminderChannelIdV0,
+      legacyActivityReminderChannelId,
+      legacyActivityReminderChannelIdV1,
+      legacyActivityReminderChannelIdV0,
+    };
+
+    final allLegacyChannelIds = <String>{...legacyBaseChannelIds};
+    for (final baseChannelId in legacyBaseChannelIds) {
+      for (final option in AlarmRingtones.options) {
+        allLegacyChannelIds.add(
+          '${baseChannelId}__${_safeChannelSuffix(option.id)}',
+        );
+      }
+    }
+
+    for (final channelId in allLegacyChannelIds) {
+      try {
+        await android.deleteNotificationChannel(channelId);
+      } catch (_) {
+        // Best-effort cleanup only.
+      }
+    }
+  }
+
   Importance _channelImportance(String baseChannelId) {
     switch (baseChannelId) {
       case medicineReminderChannelId:
@@ -964,26 +1079,33 @@ class NotificationService {
     return channelId == medicineReminderChannelId ||
         channelId == legacyMedicineReminderChannelId ||
         channelId == legacyMedicineReminderChannelIdV1 ||
+        channelId == legacyMedicineReminderChannelIdV0 ||
         channelId.startsWith('${medicineReminderChannelId}__') ||
-        channelId.startsWith('${legacyMedicineReminderChannelId}__');
+        channelId.startsWith('${legacyMedicineReminderChannelId}__') ||
+        channelId.startsWith('${legacyMedicineReminderChannelIdV1}__') ||
+        channelId.startsWith('${legacyMedicineReminderChannelIdV0}__');
   }
 
   bool _isMeasurementRequestedChannel(String channelId) {
     return channelId == measurementReminderChannelId ||
         channelId == legacyMeasurementReminderChannelId ||
         channelId == legacyMeasurementReminderChannelIdV1 ||
+        channelId == legacyMeasurementReminderChannelIdV0 ||
         channelId.startsWith('${measurementReminderChannelId}__') ||
         channelId.startsWith('${legacyMeasurementReminderChannelId}__') ||
-        channelId.startsWith('${legacyMeasurementReminderChannelIdV1}__');
+        channelId.startsWith('${legacyMeasurementReminderChannelIdV1}__') ||
+        channelId.startsWith('${legacyMeasurementReminderChannelIdV0}__');
   }
 
   bool _isActivityRequestedChannel(String channelId) {
     return channelId == activityReminderChannelId ||
         channelId == legacyActivityReminderChannelId ||
         channelId == legacyActivityReminderChannelIdV1 ||
+        channelId == legacyActivityReminderChannelIdV0 ||
         channelId.startsWith('${activityReminderChannelId}__') ||
         channelId.startsWith('${legacyActivityReminderChannelId}__') ||
-        channelId.startsWith('${legacyActivityReminderChannelIdV1}__');
+        channelId.startsWith('${legacyActivityReminderChannelIdV1}__') ||
+        channelId.startsWith('${legacyActivityReminderChannelIdV0}__');
   }
 
   String? _channelIdForTaskType(String taskType) {
@@ -997,6 +1119,23 @@ class NotificationService {
       default:
         return null;
     }
+  }
+
+  List<AndroidScheduleMode> _androidScheduleModeCandidates({
+    required String baseChannelId,
+    required int snoozeIndex,
+  }) {
+    final candidates = <AndroidScheduleMode>[];
+
+    // Snooze notifications should stay reliable while the app is closed.
+    if (_isReminderBaseChannel(baseChannelId) && snoozeIndex > 0) {
+      candidates.add(AndroidScheduleMode.alarmClock);
+    }
+
+    candidates.add(AndroidScheduleMode.exactAllowWhileIdle);
+    candidates.add(AndroidScheduleMode.inexactAllowWhileIdle);
+
+    return candidates;
   }
 
   bool _isInvalidSoundError(Object error) {

@@ -33,6 +33,7 @@ class _NotificationSettingsScreenState
   String _activityRingtoneId = AlarmRingtones.defaultReminderRingtoneId;
 
   bool _isApplyingTone = false;
+  bool _isOpeningSystemSettings = false;
 
   @override
   void initState() {
@@ -156,6 +157,37 @@ class _NotificationSettingsScreenState
     }
   }
 
+  Future<void> _openSystemNotificationSettings() async {
+    if (_isOpeningSystemSettings) {
+      return;
+    }
+
+    setState(() => _isOpeningSystemSettings = true);
+
+    try {
+      final opened = await ref
+          .read(notificationServiceProvider)
+          .openAndroidNotificationSettings();
+
+      if (!opened && mounted) {
+        context.showErrorSnackBar(
+          AppStrings.tr(
+            'Unable to open notification settings.',
+            'Tidak dapat membuka pengaturan notifikasi.',
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        context.showErrorSnackBar(AppStrings.settingsSaveFailed);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isOpeningSystemSettings = false);
+      }
+    }
+  }
+
   String _ringtoneLabel(String ringtoneId) {
     switch (ringtoneId) {
       case AlarmRingtones.cc0ChimeNotification:
@@ -239,6 +271,35 @@ class _NotificationSettingsScreenState
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppStrings.tr(
+                    'Still no ringtone? Check Android notification sound settings for this app.',
+                    'Nada dering masih tidak muncul? Periksa pengaturan suara notifikasi Android untuk aplikasi ini.',
+                  ),
+                  style: textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 10),
+                FilledButton.icon(
+                  onPressed: _isOpeningSystemSettings
+                      ? null
+                      : _openSystemNotificationSettings,
+                  icon: const Icon(Icons.settings_suggest_outlined),
+                  label: Text(
+                    AppStrings.tr(
+                      'Open Notification Settings',
+                      'Buka Pengaturan Notifikasi',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
           Text(
             AppStrings.remindersSection,
             style: textTheme.labelMedium?.copyWith(

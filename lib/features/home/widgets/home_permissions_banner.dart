@@ -18,6 +18,8 @@ class _HomePermissionsBannerState extends ConsumerState<HomePermissionsBanner>
   bool _needsNotification = false;
   bool _needsAlarm = false;
   bool _needsBatteryOpt = false;
+  bool _needsActivityRecognition = false;
+  bool _needsBodySensors = false;
   bool _isLoading = true;
 
   @override
@@ -46,12 +48,17 @@ class _HomePermissionsBannerState extends ConsumerState<HomePermissionsBanner>
     final notifStatus = await Permission.notification.status;
     final alarmStatus = await Permission.scheduleExactAlarm.status;
     final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
+    final activityRecognitionStatus =
+        await Permission.activityRecognition.status;
+    final sensorsStatus = await Permission.sensors.status;
 
     if (mounted) {
       setState(() {
         _needsNotification = !notifStatus.isGranted;
         _needsAlarm = !alarmStatus.isGranted;
         _needsBatteryOpt = !batteryStatus.isGranted;
+        _needsActivityRecognition = !activityRecognitionStatus.isGranted;
+        _needsBodySensors = !sensorsStatus.isGranted;
         _isLoading = false;
       });
     }
@@ -61,6 +68,10 @@ class _HomePermissionsBannerState extends ConsumerState<HomePermissionsBanner>
     if (_needsNotification) await Permission.notification.request();
     if (_needsAlarm) await Permission.scheduleExactAlarm.request();
     if (_needsBatteryOpt) await Permission.ignoreBatteryOptimizations.request();
+    if (_needsActivityRecognition) {
+      await Permission.activityRecognition.request();
+    }
+    if (_needsBodySensors) await Permission.sensors.request();
     await _checkPermissions();
   }
 
@@ -79,6 +90,14 @@ class _HomePermissionsBannerState extends ConsumerState<HomePermissionsBanner>
       missingPermissions.add(
         AppStrings.tr('Battery Optimization Exemption', 'Pengecualian Baterai'),
       );
+    }
+    if (_needsActivityRecognition) {
+      missingPermissions.add(
+        AppStrings.tr('Physical Activity', 'Aktivitas fisik'),
+      );
+    }
+    if (_needsBodySensors) {
+      missingPermissions.add(AppStrings.tr('Body Sensors', 'Sensor tubuh'));
     }
 
     if (missingPermissions.isEmpty) return const SizedBox.shrink();
