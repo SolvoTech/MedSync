@@ -26,22 +26,30 @@ class NotificationService {
   );
 
   static const String markDoneActionId = 'mark_done';
-  // v4 is intentionally new to recover from stale Android channels that may
+  // v5 is intentionally new to recover from stale Android channels that may
   // persist silent sound settings from previous installs/updates.
-  static const String medicineReminderChannelId = 'medicine_reminders_v4';
-  static const String legacyMedicineReminderChannelId = 'medicine_reminders_v3';
+  // Bumped from v4 → v5 to force recreation of channels after audio files
+  // were extended to ≥ 1 second (fixes silent alarm bug).
+  static const String medicineReminderChannelId = 'medicine_reminders_v5';
+  static const String legacyMedicineReminderChannelId = 'medicine_reminders_v4';
+  static const String legacyMedicineReminderChannelIdV2 =
+      'medicine_reminders_v3';
   static const String legacyMedicineReminderChannelIdV1 =
       'medicine_reminders_v2';
   static const String legacyMedicineReminderChannelIdV0 = 'medicine_reminders';
-  static const String measurementReminderChannelId = 'measurement_reminders_v4';
+  static const String measurementReminderChannelId = 'measurement_reminders_v5';
   static const String legacyMeasurementReminderChannelId =
+      'measurement_reminders_v4';
+  static const String legacyMeasurementReminderChannelIdV2 =
       'measurement_reminders_v3';
   static const String legacyMeasurementReminderChannelIdV1 =
       'measurement_reminders_v2';
   static const String legacyMeasurementReminderChannelIdV0 =
       'measurement_reminders';
-  static const String activityReminderChannelId = 'activity_reminders_v4';
-  static const String legacyActivityReminderChannelId = 'activity_reminders_v3';
+  static const String activityReminderChannelId = 'activity_reminders_v5';
+  static const String legacyActivityReminderChannelId = 'activity_reminders_v4';
+  static const String legacyActivityReminderChannelIdV2 =
+      'activity_reminders_v3';
   static const String legacyActivityReminderChannelIdV1 =
       'activity_reminders_v2';
   static const String legacyActivityReminderChannelIdV0 = 'activity_reminders';
@@ -960,6 +968,15 @@ class NotificationService {
     required String resolvedChannelId,
     String? ringtoneId,
   }) async {
+    // Android does NOT allow updating the `sound` of an existing notification
+    // channel. To guarantee the correct ringtone is always applied, we delete
+    // the channel first and then recreate it fresh.
+    try {
+      await android.deleteNotificationChannel(resolvedChannelId);
+    } catch (_) {
+      // Best-effort: ignore if channel didn't exist.
+    }
+
     await android.createNotificationChannel(
       AndroidNotificationChannel(
         resolvedChannelId,
@@ -980,12 +997,15 @@ class NotificationService {
   ) async {
     final legacyBaseChannelIds = <String>{
       legacyMedicineReminderChannelId,
+      legacyMedicineReminderChannelIdV2,
       legacyMedicineReminderChannelIdV1,
       legacyMedicineReminderChannelIdV0,
       legacyMeasurementReminderChannelId,
+      legacyMeasurementReminderChannelIdV2,
       legacyMeasurementReminderChannelIdV1,
       legacyMeasurementReminderChannelIdV0,
       legacyActivityReminderChannelId,
+      legacyActivityReminderChannelIdV2,
       legacyActivityReminderChannelIdV1,
       legacyActivityReminderChannelIdV0,
     };
@@ -1078,10 +1098,12 @@ class NotificationService {
   bool _isMedicineRequestedChannel(String channelId) {
     return channelId == medicineReminderChannelId ||
         channelId == legacyMedicineReminderChannelId ||
+        channelId == legacyMedicineReminderChannelIdV2 ||
         channelId == legacyMedicineReminderChannelIdV1 ||
         channelId == legacyMedicineReminderChannelIdV0 ||
         channelId.startsWith('${medicineReminderChannelId}__') ||
         channelId.startsWith('${legacyMedicineReminderChannelId}__') ||
+        channelId.startsWith('${legacyMedicineReminderChannelIdV2}__') ||
         channelId.startsWith('${legacyMedicineReminderChannelIdV1}__') ||
         channelId.startsWith('${legacyMedicineReminderChannelIdV0}__');
   }
@@ -1089,10 +1111,12 @@ class NotificationService {
   bool _isMeasurementRequestedChannel(String channelId) {
     return channelId == measurementReminderChannelId ||
         channelId == legacyMeasurementReminderChannelId ||
+        channelId == legacyMeasurementReminderChannelIdV2 ||
         channelId == legacyMeasurementReminderChannelIdV1 ||
         channelId == legacyMeasurementReminderChannelIdV0 ||
         channelId.startsWith('${measurementReminderChannelId}__') ||
         channelId.startsWith('${legacyMeasurementReminderChannelId}__') ||
+        channelId.startsWith('${legacyMeasurementReminderChannelIdV2}__') ||
         channelId.startsWith('${legacyMeasurementReminderChannelIdV1}__') ||
         channelId.startsWith('${legacyMeasurementReminderChannelIdV0}__');
   }
@@ -1100,10 +1124,12 @@ class NotificationService {
   bool _isActivityRequestedChannel(String channelId) {
     return channelId == activityReminderChannelId ||
         channelId == legacyActivityReminderChannelId ||
+        channelId == legacyActivityReminderChannelIdV2 ||
         channelId == legacyActivityReminderChannelIdV1 ||
         channelId == legacyActivityReminderChannelIdV0 ||
         channelId.startsWith('${activityReminderChannelId}__') ||
         channelId.startsWith('${legacyActivityReminderChannelId}__') ||
+        channelId.startsWith('${legacyActivityReminderChannelIdV2}__') ||
         channelId.startsWith('${legacyActivityReminderChannelIdV1}__') ||
         channelId.startsWith('${legacyActivityReminderChannelIdV0}__');
   }
