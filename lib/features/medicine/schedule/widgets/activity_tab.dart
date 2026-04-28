@@ -6,6 +6,8 @@ import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/constants/type_labels.dart';
 import '../../../../data/remote/datasources/task_log_remote_datasource.dart';
 import '../../../../domain/models/physical_activity_reminder.dart';
+import '../../../../services/notification_service.dart';
+import '../../../../services/task_completion_service.dart';
 import '../../../physical_activity/activity_controller.dart';
 import 'reminder_common.dart';
 import 'schedule_form_options.dart';
@@ -123,11 +125,15 @@ class ActivityTab extends ConsumerWidget {
       context: context,
       action: action,
       onEdit: () => _openActivityEditor(context, ref, existing: item),
-      onMarkDone: () => TaskLogRemoteDataSource().markReminderDoneByReference(
-        taskType: 'physical_activity',
-        referenceId: item.id,
-        timeOfDay: item.timeOfDay,
-      ),
+      onMarkDone: () =>
+          TaskCompletionService(
+            taskLogStore: TaskLogRemoteDataSource(),
+            reminderScheduler: ref.read(notificationServiceProvider),
+          ).markReminderDoneAndSilence(
+            taskType: 'physical_activity',
+            referenceId: item.id,
+            timeOfDay: item.timeOfDay,
+          ),
       doneMessage: AppStrings.tr(
         'Activity marked as done.',
         'Aktivitas ditandai selesai.',

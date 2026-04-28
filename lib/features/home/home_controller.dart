@@ -7,6 +7,7 @@ import '../../data/remote/datasources/physical_activity_remote_datasource.dart';
 import '../../data/remote/datasources/task_log_remote_datasource.dart';
 import '../../domain/models/task_log.dart';
 import '../../services/notification_service.dart';
+import '../../services/task_completion_service.dart';
 
 final taskLogRemoteDataSourceProvider = Provider<TaskLogRemoteDataSource>((
   ref,
@@ -93,37 +94,52 @@ class HomeController extends AutoDisposeAsyncNotifier<List<TaskLog>> {
   }
 
   Future<void> markDone(String taskLogId) async {
-    await ref
-        .read(taskLogRemoteDataSourceProvider)
-        .updateTaskStatus(taskLogId: taskLogId, status: 'done');
-    await _advanceSnoozes(taskLogId);
+    final task = _findTaskById(taskLogId);
+    if (task == null) {
+      await ref
+          .read(taskLogRemoteDataSourceProvider)
+          .updateTaskStatus(taskLogId: taskLogId, status: 'done');
+      await refresh();
+      return;
+    }
+
+    await _taskCompletionService().markTaskStatusAndSilence(
+      task: task,
+      status: 'done',
+    );
     await refresh();
   }
 
   Future<void> markSkipped(String taskLogId) async {
-    await ref
-        .read(taskLogRemoteDataSourceProvider)
-        .updateTaskStatus(taskLogId: taskLogId, status: 'skipped');
-    await _advanceSnoozes(taskLogId);
+    final task = _findTaskById(taskLogId);
+    if (task == null) {
+      await ref
+          .read(taskLogRemoteDataSourceProvider)
+          .updateTaskStatus(taskLogId: taskLogId, status: 'skipped');
+      await refresh();
+      return;
+    }
+
+    await _taskCompletionService().markTaskStatusAndSilence(
+      task: task,
+      status: 'skipped',
+    );
     await refresh();
   }
 
-  Future<void> _advanceSnoozes(String taskLogId) async {
-    final taskList = state.valueOrNull ?? [];
-    try {
-      final task = taskList.firstWhere((t) => t.id == taskLogId);
-      final notificationService = ref.read(notificationServiceProvider);
+  TaskCompletionService _taskCompletionService() {
+    return TaskCompletionService(
+      taskLogStore: ref.read(taskLogRemoteDataSourceProvider),
+      reminderScheduler: ref.read(notificationServiceProvider),
+    );
+  }
 
-      final h = task.scheduledAt.hour.toString().padLeft(2, '0');
-      final m = task.scheduledAt.minute.toString().padLeft(2, '0');
-
-      await notificationService.advanceScheduleToTomorrow(
-        taskType: task.taskType,
-        referenceId: task.referenceId,
-        timeOfDay: '$h:$m',
-      );
-    } catch (_) {
-      // Ignore if task not found in memory
+  TaskLog? _findTaskById(String taskLogId) {
+    for (final task in state.valueOrNull ?? const <TaskLog>[]) {
+      if (task.id == taskLogId) {
+        return task;
+      }
     }
+    return null;
   }
 }

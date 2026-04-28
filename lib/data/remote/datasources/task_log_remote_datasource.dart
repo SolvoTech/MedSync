@@ -1,7 +1,10 @@
+import '../../../core/utils/reminder_time.dart';
 import '../../../domain/models/task_log.dart';
+import '../../../services/task_completion_service.dart';
+import 'task_log_completion_policy.dart';
 import '../supabase_client.dart';
 
-class TaskLogRemoteDataSource {
+class TaskLogRemoteDataSource implements TaskLogCompletionStore {
   Future<List<TaskLog>> getTodayTasks() async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
@@ -80,8 +83,52 @@ class TaskLogRemoteDataSource {
     final now = DateTime.now();
     final start = DateTime(now.year, now.month, now.day);
     final end = start.add(const Duration(days: 1));
+    final scheduledAt = _scheduledAtForToday(now: now, timeOfDay: timeOfDay);
 
-    var query = client
+    if (scheduledAt != null) {
+      final exactRows = await client
+          .from('task_logs')
+          .select('id, status')
+          .eq('owner_id', user.id)
+          .eq('task_type', taskType)
+          .eq('reference_id', referenceId)
+          .eq('scheduled_at', scheduledAt.toIso8601String());
+
+      final exactDecision = decideExactReminderCompletion(
+        (exactRows as List<dynamic>)
+            .map(
+              (row) => ExactReminderTaskLogMatch.fromMap(
+                row as Map<String, dynamic>,
+              ),
+            )
+            .toList(),
+      );
+
+      if (exactDecision.action == ExactReminderCompletionAction.noOp) {
+        return;
+      }
+
+      if (exactDecision.action ==
+          ExactReminderCompletionAction.updateExisting) {
+        await updateTaskStatus(
+          taskLogId: exactDecision.taskLogId!,
+          status: 'done',
+        );
+        return;
+      }
+
+      await client.from('task_logs').insert({
+        'owner_id': user.id,
+        'task_type': taskType,
+        'reference_id': referenceId,
+        'scheduled_at': scheduledAt.toIso8601String(),
+        'status': 'done',
+        'completed_at': now.toIso8601String(),
+      });
+      return;
+    }
+
+    final pendingRows = await client
         .from('task_logs')
         .select('id')
         .eq('owner_id', user.id)
@@ -89,16 +136,7 @@ class TaskLogRemoteDataSource {
         .eq('reference_id', referenceId)
         .eq('status', 'pending')
         .gte('scheduled_at', start.toIso8601String())
-        .lt('scheduled_at', end.toIso8601String());
-
-    // When timeOfDay is available, filter to the exact scheduled time
-    // so we mark the correct task (e.g. 22:46, not 22:41).
-    if (timeOfDay != null && timeOfDay.isNotEmpty) {
-      final exactTime = _scheduledAtForToday(now: now, timeOfDay: timeOfDay);
-      query = query.eq('scheduled_at', exactTime.toIso8601String());
-    }
-
-    final pendingRows = await query
+        .lt('scheduled_at', end.toIso8601String())
         .order('scheduled_at', ascending: true)
         .limit(1);
 
@@ -123,30 +161,17 @@ class TaskLogRemoteDataSource {
       return;
     }
 
-    final scheduledAt = _scheduledAtForToday(now: now, timeOfDay: timeOfDay);
     await client.from('task_logs').insert({
       'owner_id': user.id,
       'task_type': taskType,
       'reference_id': referenceId,
-      'scheduled_at': scheduledAt.toIso8601String(),
+      'scheduled_at': (scheduledAt ?? now).toIso8601String(),
       'status': 'done',
       'completed_at': now.toIso8601String(),
     });
   }
 
-  DateTime _scheduledAtForToday({required DateTime now, String? timeOfDay}) {
-    if (timeOfDay == null || timeOfDay.isEmpty) {
-      return now;
-    }
-
-    final parts = timeOfDay.split(':');
-    final hour = parts.isNotEmpty ? int.tryParse(parts[0]) : null;
-    final minute = parts.length > 1 ? int.tryParse(parts[1]) : null;
-
-    if (hour == null || minute == null) {
-      return now;
-    }
-
-    return DateTime(now.year, now.month, now.day, hour, minute);
+  DateTime? _scheduledAtForToday({required DateTime now, String? timeOfDay}) {
+    return reminderScheduledAtForDay(day: now, timeOfDay: timeOfDay);
   }
 }

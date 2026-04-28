@@ -65,4 +65,12 @@ Future<void> _initializeNotificationsSafely() async {
   } catch (error) {
     debugPrint('[main] Notification permission request skipped: $error');
   }
+
+  try {
+    await notificationService
+        .syncTaskNotificationsWithCurrentPreferences()
+        .timeout(const Duration(seconds: 20));
+  } catch (error) {
+    debugPrint('[main] Notification startup resync skipped: $error');
+  }
 }

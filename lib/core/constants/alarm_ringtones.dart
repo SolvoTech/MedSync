@@ -28,7 +28,7 @@ class AlarmRingtones {
     id: cc0ChimeNotification,
     labelEn: 'CC0 Chime Notification',
     labelId: 'CC0 Chime Notification',
-    androidResourceName: 'fs_cc0_chime_notification',
+    androidResourceName: 'fs_cc0_chime_notification_pcm',
   );
 
   static const List<AlarmRingtoneOption> options = [
@@ -37,13 +37,13 @@ class AlarmRingtones {
       id: cc0PhoneChime,
       labelEn: 'CC0 Phone Chime',
       labelId: 'CC0 Phone Chime',
-      androidResourceName: 'fs_cc0_phone_chime',
+      androidResourceName: 'fs_cc0_phone_chime_pcm',
     ),
     AlarmRingtoneOption(
       id: cc0SoftBell,
       labelEn: 'CC0 Soft Bell',
       labelId: 'CC0 Soft Bell',
-      androidResourceName: 'fs_cc0_soft_bell',
+      androidResourceName: 'fs_cc0_soft_bell_pcm',
     ),
     AlarmRingtoneOption(
       id: medSyncClassic,
