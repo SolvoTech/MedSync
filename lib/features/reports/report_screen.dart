@@ -146,7 +146,9 @@ class ReportScreen extends ConsumerWidget {
     final reportState = ref.watch(reportDataProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final appBarTitleStyle = textTheme.headlineMedium?.copyWith(
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 360;
+    final appBarTitleStyle = textTheme.headlineSmall?.copyWith(
       fontWeight: FontWeight.w700,
       color: colorScheme.onSurface,
     );
@@ -155,7 +157,12 @@ class ReportScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.reportTitle, style: appBarTitleStyle),
+        title: Text(
+          AppStrings.reportTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: appBarTitleStyle,
+        ),
         actions: [
           reportState.maybeWhen(
             data: (data) {
@@ -202,38 +209,70 @@ class ReportScreen extends ConsumerWidget {
         children: [
           // Period filter bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: EdgeInsets.fromLTRB(
+              compact ? 12 : 16,
+              8,
+              compact ? 12 : 16,
+              0,
+            ),
             child: SizedBox(
               width: double.infinity,
-              child: SegmentedButton<ReportPeriod>(
-                showSelectedIcon: false,
-                style: ButtonStyle(
-                  padding: const WidgetStatePropertyAll(
-                    EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                  ),
-                  textStyle: const WidgetStatePropertyAll(
-                    TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.55),
                   ),
                 ),
-                segments: [
-                  ButtonSegment(
-                    value: ReportPeriod.daily,
-                    label: Text(AppStrings.dailyLabel, maxLines: 1),
+                child: SegmentedButton<ReportPeriod>(
+                  showSelectedIcon: false,
+                  style: ButtonStyle(
+                    padding: WidgetStatePropertyAll(
+                      EdgeInsets.symmetric(
+                        horizontal: compact ? 6 : 8,
+                        vertical: compact ? 9 : 10,
+                      ),
+                    ),
+                    textStyle: WidgetStatePropertyAll(
+                      TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                  ButtonSegment(
-                    value: ReportPeriod.weekly,
-                    label: Text(AppStrings.weeklyLabel, maxLines: 1),
-                  ),
-                  ButtonSegment(
-                    value: ReportPeriod.monthly,
-                    label: Text(AppStrings.monthlyLabel, maxLines: 1),
-                  ),
-                ],
-                selected: {period},
-                onSelectionChanged: (selected) {
-                  ref.read(reportPeriodProvider.notifier).state =
-                      selected.first;
-                },
+                  segments: [
+                    ButtonSegment(
+                      value: ReportPeriod.daily,
+                      label: Text(
+                        AppStrings.dailyLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    ButtonSegment(
+                      value: ReportPeriod.weekly,
+                      label: Text(
+                        AppStrings.weeklyLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    ButtonSegment(
+                      value: ReportPeriod.monthly,
+                      label: Text(
+                        AppStrings.monthlyLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                  selected: {period},
+                  onSelectionChanged: (selected) {
+                    ref.read(reportPeriodProvider.notifier).state =
+                        selected.first;
+                  },
+                ),
               ),
             ),
           ),
@@ -254,7 +293,7 @@ class ReportScreen extends ConsumerWidget {
                 return RefreshIndicator(
                   onRefresh: () async => ref.invalidate(reportDataProvider),
                   child: ListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(compact ? 12 : 16),
                     children: [
                       // Adherence overview
                       AppCard(
@@ -268,8 +307,8 @@ class ReportScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 16),
                             SizedBox(
-                              width: 130,
-                              height: 130,
+                              width: compact ? 116 : 130,
+                              height: compact ? 116 : 130,
                               child: Stack(
                                 fit: StackFit.expand,
                                 children: [
@@ -309,8 +348,10 @@ class ReportScreen extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 8,
+                              runSpacing: 8,
                               children: [
                                 _StatPill(
                                   label: AppStrings.completedLabel,
@@ -372,7 +413,7 @@ class ReportScreen extends ConsumerWidget {
                       child: AppLoadingSkeleton(
                         width: double.infinity,
                         height: 80,
-                        borderRadius: 20,
+                        borderRadius: 12,
                       ),
                     ),
                   ),
@@ -403,31 +444,38 @@ class _StatPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark ? 0.15 : 0.08),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: color,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 72, maxWidth: 96),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.5),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -460,7 +508,7 @@ class _CategoryCard extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: color.withValues(alpha: isDark ? 0.2 : 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 22),
           ),
@@ -471,6 +519,8 @@ class _CategoryCard extends StatelessWidget {
               children: [
                 Text(
                   label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -493,6 +543,8 @@ class _CategoryCard extends StatelessWidget {
           const SizedBox(width: 14),
           Text(
             '$done/$total',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: color,

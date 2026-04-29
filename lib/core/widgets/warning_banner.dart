@@ -27,32 +27,14 @@ class WarningBanner extends StatelessWidget {
         color: colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: colorScheme.error.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: colorScheme.onErrorContainer, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onErrorContainer,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          TextButton(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 300;
+          final action = TextButton(
             onPressed: onAction,
             style: TextButton.styleFrom(
               foregroundColor: colorScheme.onErrorContainer,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               shape: RoundedRectangleBorder(
@@ -61,10 +43,61 @@ class WarningBanner extends StatelessWidget {
             ),
             child: Text(
               actionLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
-          ),
-        ],
+          );
+
+          final leading = Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: colorScheme.error.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: colorScheme.onErrorContainer, size: 18),
+          );
+
+          final body = Text(
+            message,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colorScheme.onErrorContainer,
+              fontWeight: FontWeight.w500,
+              height: 1.25,
+            ),
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    leading,
+                    const SizedBox(width: 10),
+                    Expanded(child: body),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Align(alignment: Alignment.centerRight, child: action),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              leading,
+              const SizedBox(width: 12),
+              Expanded(child: body),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 96),
+                child: action,
+              ),
+            ],
+          );
+        },
       ),
     );
   }

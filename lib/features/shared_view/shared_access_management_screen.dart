@@ -36,16 +36,33 @@ class SharedAccessManagementScreen extends ConsumerWidget {
     final tokensState = ref.watch(sharedTokensProvider);
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 390;
+    final xxs = width < 340;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.tr('Shared Access', 'Akses Dibagikan')),
+        title: Text(
+          AppStrings.tr('Shared Access', 'Akses Dibagikan'),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.add),
-        label: Text(AppStrings.tr('Create Access', 'Buat Akses')),
-        onPressed: () => _createToken(context, ref),
-      ),
+      floatingActionButton: xxs
+          ? FloatingActionButton(
+              tooltip: AppStrings.tr('Create Access', 'Buat Akses'),
+              onPressed: () => _createToken(context, ref),
+              child: const Icon(Icons.add),
+            )
+          : FloatingActionButton.extended(
+              icon: const Icon(Icons.add),
+              label: Text(
+                AppStrings.tr('Create Access', 'Buat Akses'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onPressed: () => _createToken(context, ref),
+            ),
       body: tokensState.when(
         data: (tokens) {
           if (tokens.isEmpty) {
@@ -63,7 +80,7 @@ class SharedAccessManagementScreen extends ConsumerWidget {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(compact ? 12 : 16),
             itemCount: tokens.length,
             itemBuilder: (context, index) {
               final token = tokens[index];
@@ -91,13 +108,17 @@ class SharedAccessManagementScreen extends ConsumerWidget {
                             color: colorScheme.primary,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            displayName,
-                            style: textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
+                          Expanded(
+                            child: Text(
+                              displayName,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                          const Spacer(),
+                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -112,6 +133,8 @@ class SharedAccessManagementScreen extends ConsumerWidget {
                               isActive
                                   ? AppStrings.statusActive
                                   : AppStrings.statusInactive,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: textTheme.labelSmall?.copyWith(
                                 color: isActive ? Colors.green : Colors.grey,
                                 fontWeight: FontWeight.w600,
@@ -123,64 +146,86 @@ class SharedAccessManagementScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       Text(
                         tokenDisplay,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: textTheme.titleMedium?.copyWith(
                           fontFamily: 'monospace',
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
+                          letterSpacing: 0,
                         ),
                       ),
                       if (lastAccessed != null) ...[
                         const SizedBox(height: 4),
                         Text(
                           '${AppStrings.tr('Last viewed', 'Terakhir dilihat')}: ${_formatRelative(lastAccessed)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: textTheme.labelSmall?.copyWith(
                             color: colorScheme.onSurface.withValues(alpha: 0.4),
                           ),
                         ),
                       ],
                       const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              icon: const Icon(Icons.copy, size: 16),
-                              label: Text(AppStrings.tr('Copy', 'Salin')),
-                              onPressed: () {
-                                Clipboard.setData(
-                                  ClipboardData(text: tokenDisplay),
-                                );
-                                context.showInfoSnackBar(
-                                  AppStrings.tr(
-                                    'Code copied.',
-                                    'Kode disalin.',
-                                  ),
-                                );
-                              },
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final stackActions = constraints.maxWidth < 280;
+                          final copyButton = OutlinedButton.icon(
+                            icon: const Icon(Icons.copy, size: 16),
+                            label: Text(
+                              AppStrings.tr('Copy', 'Salin'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              icon: Icon(
-                                isActive
-                                    ? Icons.block
-                                    : Icons.check_circle_outline,
-                                size: 16,
-                              ),
-                              label: Text(
-                                isActive
-                                    ? AppStrings.disableAction
-                                    : AppStrings.reactivate,
-                              ),
-                              onPressed: () => _toggleActive(
-                                context,
-                                ref,
-                                token['id'] as String,
-                                isActive,
-                              ),
+                            onPressed: () {
+                              Clipboard.setData(
+                                ClipboardData(text: tokenDisplay),
+                              );
+                              context.showInfoSnackBar(
+                                AppStrings.tr('Code copied.', 'Kode disalin.'),
+                              );
+                            },
+                          );
+                          final toggleButton = OutlinedButton.icon(
+                            icon: Icon(
+                              isActive
+                                  ? Icons.block
+                                  : Icons.check_circle_outline,
+                              size: 16,
                             ),
-                          ),
-                        ],
+                            label: Text(
+                              isActive
+                                  ? AppStrings.disableAction
+                                  : AppStrings.reactivate,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            onPressed: () => _toggleActive(
+                              context,
+                              ref,
+                              token['id'] as String,
+                              isActive,
+                            ),
+                          );
+
+                          if (stackActions) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                copyButton,
+                                const SizedBox(height: 8),
+                                toggleButton,
+                              ],
+                            );
+                          }
+
+                          return Row(
+                            children: [
+                              Expanded(child: copyButton),
+                              const SizedBox(width: 8),
+                              Expanded(child: toggleButton),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),

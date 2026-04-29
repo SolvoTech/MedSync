@@ -33,9 +33,16 @@ class HealthConnectScreen extends ConsumerWidget {
     final stepsAsync = ref.watch(todayStepsProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Health Connect')),
+      appBar: AppBar(
+        title: const Text(
+          'Health Connect',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: availableAsync.when(
         data: (available) {
           if (!available) {
@@ -48,55 +55,88 @@ class HealthConnectScreen extends ConsumerWidget {
           }
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(compact ? 12 : 16),
             children: [
               // Status card
               AppCard(
-                child: Row(
-                  children: [
-                    Icon(
-                      authorized ? Icons.check_circle : Icons.info_outline,
-                      color: authorized ? Colors.green : colorScheme.primary,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            authorized ? 'Terhubung' : 'Belum Terhubung',
-                            style: textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            authorized
-                                ? 'Data kesehatan tersinkronisasi.'
-                                : 'Hubungkan untuk akses data kesehatan.',
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.5,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final stackButton = constraints.maxWidth < 300;
+                    final statusContent = Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          authorized ? Icons.check_circle : Icons.info_outline,
+                          color: authorized
+                              ? Colors.green
+                              : colorScheme.primary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                authorized ? 'Terhubung' : 'Belum Terhubung',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
+                              Text(
+                                authorized
+                                    ? 'Data kesehatan tersinkronisasi.'
+                                    : 'Hubungkan untuk akses data kesehatan.',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
+                      ],
+                    );
+                    final connectButton = AppButton(
+                      label: 'Hubungkan',
+                      isFullWidth: stackButton,
+                      onPressed: () async {
+                        final ok =
+                            await HealthConnectService.requestAuthorization();
+                        ref
+                                .read(healthConnectAuthorizedProvider.notifier)
+                                .state =
+                            ok;
+                      },
+                    );
+
+                    if (authorized) {
+                      return statusContent;
+                    }
+
+                    if (stackButton) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          statusContent,
+                          const SizedBox(height: 12),
+                          connectButton,
                         ],
-                      ),
-                    ),
-                    if (!authorized)
-                      AppButton(
-                        label: 'Hubungkan',
-                        onPressed: () async {
-                          final ok =
-                              await HealthConnectService.requestAuthorization();
-                          ref
-                                  .read(
-                                    healthConnectAuthorizedProvider.notifier,
-                                  )
-                                  .state =
-                              ok;
-                        },
-                      ),
-                  ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        Expanded(child: statusContent),
+                        const SizedBox(width: 12),
+                        connectButton,
+                      ],
+                    );
+                  },
                 ),
               ),
 
@@ -107,7 +147,7 @@ class HealthConnectScreen extends ConsumerWidget {
                   'DATA HARI INI',
                   style: textTheme.labelMedium?.copyWith(
                     color: colorScheme.onSurface.withValues(alpha: 0.5),
-                    letterSpacing: 1.2,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -133,6 +173,8 @@ class HealthConnectScreen extends ConsumerWidget {
                             stepsAsync.when(
                               data: (steps) => Text(
                                 '$steps langkah',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: colorScheme.primary,
@@ -160,6 +202,8 @@ class HealthConnectScreen extends ConsumerWidget {
                     children: [
                       Text(
                         'Data yang Didukung',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -205,7 +249,17 @@ class _DataChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Chip(
       avatar: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
+      label: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.5,
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 12),
+        ),
+      ),
       visualDensity: VisualDensity.compact,
     );
   }

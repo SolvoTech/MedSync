@@ -103,11 +103,18 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final strength = _passwordStrength();
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.changePassword)),
+      appBar: AppBar(
+        title: Text(
+          AppStrings.changePassword,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(compact ? 16 : 20),
         child: Form(
           key: _formKey,
           autovalidateMode: _hasAttemptedSubmit
@@ -153,12 +160,16 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Text(
-                      _strengthLabel(strength),
-                      style: TextStyle(
-                        color: _strengthColor(strength),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
+                    Flexible(
+                      child: Text(
+                        _strengthLabel(strength),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: _strengthColor(strength),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ],
@@ -169,6 +180,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     'Min 8 characters, uppercase letter, and number',
                     'Min 8 karakter, huruf besar, angka',
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(
                       context,

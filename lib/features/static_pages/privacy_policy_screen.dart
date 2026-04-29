@@ -93,6 +93,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
         style: Theme.of(
           context,
         ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),

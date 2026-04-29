@@ -28,7 +28,7 @@ class TodayTaskCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final accentColor = _colorForTaskType(task.taskType);
     final timeLabel = _timeLabel();
-    final radius = compact ? 18.0 : 20.0;
+    final radius = compact ? 10.0 : 12.0;
 
     Widget buildTimeChip() {
       return Container(
@@ -51,6 +51,8 @@ class TodayTaskCard extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               timeLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: textTheme.labelMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -86,9 +88,7 @@ class TodayTaskCard extends StatelessWidget {
                         height: compact ? 36 : 40,
                         decoration: BoxDecoration(
                           color: accentColor.withValues(alpha: 0.13),
-                          borderRadius: BorderRadius.circular(
-                            compact ? 10 : 11,
-                          ),
+                          borderRadius: BorderRadius.circular(compact ? 8 : 9),
                         ),
                         child: Icon(
                           _iconForTaskType(task.taskType),
@@ -103,6 +103,8 @@ class TodayTaskCard extends StatelessWidget {
                           children: [
                             Text(
                               _labelForTaskType(task.taskType),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 height: 1.15,
@@ -172,7 +174,11 @@ class TodayTaskCard extends StatelessWidget {
                                       horizontal: 10,
                                     ),
                                   ),
-                                  child: Text(AppStrings.skip),
+                                  child: Text(
+                                    AppStrings.skip,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 )
                               : OutlinedButton.icon(
                                   onPressed: onSkip,
@@ -186,7 +192,11 @@ class TodayTaskCard extends StatelessWidget {
                                       horizontal: 10,
                                     ),
                                   ),
-                                  label: Text(AppStrings.skip),
+                                  label: Text(
+                                    AppStrings.skip,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                         ),
                         SizedBox(width: compact ? 8 : 9),
@@ -200,7 +210,11 @@ class TodayTaskCard extends StatelessWidget {
                                       horizontal: 10,
                                     ),
                                   ),
-                                  child: Text(AppStrings.done),
+                                  child: Text(
+                                    AppStrings.done,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 )
                               : FilledButton.icon(
                                   onPressed: onDone,
@@ -214,7 +228,11 @@ class TodayTaskCard extends StatelessWidget {
                                       horizontal: 10,
                                     ),
                                   ),
-                                  label: Text(AppStrings.done),
+                                  label: Text(
+                                    AppStrings.done,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                         ),
                       ],

@@ -8,10 +8,10 @@ class AppTheme {
   const AppTheme._();
 
   // ─── Border Radii ──────────────────────────────────
-  static const double radiusSm = 12;
-  static const double radiusMd = 16;
-  static const double radiusLg = 20;
-  static const double radiusXl = 24;
+  static const double radiusSm = 8;
+  static const double radiusMd = 12;
+  static const double radiusLg = 12;
+  static const double radiusXl = 16;
   static const double radiusFull = 100;
 
   // ═══════════════════════════════════════════════════
@@ -69,6 +69,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLg),
+          side: const BorderSide(color: AppColors.divider),
         ),
         margin: EdgeInsets.zero,
       ),
@@ -76,7 +77,7 @@ class AppTheme {
       // ─── Navigation Bar ──────────────────────────
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
-        height: 72,
+        height: 68,
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         indicatorColor: AppColors.primary.withValues(alpha: 0.12),
@@ -155,7 +156,7 @@ class AppTheme {
       // ─── Input Decoration ────────────────────────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceTint,
+        fillColor: AppColors.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
@@ -192,7 +193,7 @@ class AppTheme {
         hintStyle: AppTextStyles.bodyMedium.copyWith(
           color: AppColors.textDisabled,
         ),
-        prefixIconColor: AppColors.primary,
+        prefixIconColor: AppColors.textTertiary,
       ),
 
       // ─── Tabs ────────────────────────────────────
@@ -233,7 +234,7 @@ class AppTheme {
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
         ),
         dragHandleColor: AppColors.divider,
         dragHandleSize: const Size(40, 4),
@@ -350,6 +351,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLg),
+          side: BorderSide(color: AppColors.darkDivider.withValues(alpha: 0.8)),
         ),
         margin: EdgeInsets.zero,
       ),
@@ -357,7 +359,7 @@ class AppTheme {
       // ─── Navigation Bar (Dark) ───────────────────
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
-        height: 72,
+        height: 68,
         backgroundColor: AppColors.darkSurface,
         surfaceTintColor: Colors.transparent,
         indicatorColor: AppColors.primaryLight.withValues(alpha: 0.15),
@@ -442,7 +444,7 @@ class AppTheme {
       // ─── Input Decoration (Dark) ─────────────────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.darkSurfaceTint,
+        fillColor: AppColors.darkSurface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
@@ -482,7 +484,7 @@ class AppTheme {
         hintStyle: AppTextStyles.bodyMedium.copyWith(
           color: AppColors.darkTextTertiary,
         ),
-        prefixIconColor: AppColors.primaryLight,
+        prefixIconColor: AppColors.darkTextTertiary,
       ),
 
       // ─── Tabs (Dark) ─────────────────────────────
@@ -523,7 +525,7 @@ class AppTheme {
         backgroundColor: AppColors.darkSurface,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
         ),
         dragHandleColor: AppColors.darkDivider,
         dragHandleSize: const Size(40, 4),

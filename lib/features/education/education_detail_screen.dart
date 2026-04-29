@@ -30,31 +30,47 @@ class EducationDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.tr('Article Detail', 'Detail Edukasi')),
+        title: Text(
+          AppStrings.tr('Article Detail', 'Detail Edukasi'),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
       body: state.when(
-        loading: () => ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-          children: const [
-            AppLoadingSkeleton(
-              width: double.infinity,
-              height: 240,
-              borderRadius: 20,
+        loading: () {
+          final compact = MediaQuery.sizeOf(context).width < 340;
+          return ListView(
+            padding: EdgeInsets.fromLTRB(
+              compact ? 12 : 16,
+              12,
+              compact ? 12 : 16,
+              28,
             ),
-            SizedBox(height: 14),
-            AppLoadingSkeleton(width: 120, height: 24, borderRadius: 999),
-            SizedBox(height: 10),
-            AppLoadingSkeleton(width: double.infinity, height: 32),
-            SizedBox(height: 8),
-            AppLoadingSkeleton(width: 180, height: 18),
-            SizedBox(height: 18),
-            AppLoadingSkeleton(width: double.infinity, height: 16),
-            SizedBox(height: 8),
-            AppLoadingSkeleton(width: double.infinity, height: 16),
-            SizedBox(height: 8),
-            AppLoadingSkeleton(width: double.infinity, height: 16),
-          ],
-        ),
+            children: [
+              AppLoadingSkeleton(
+                width: double.infinity,
+                height: compact ? 176 : 240,
+                borderRadius: 12,
+              ),
+              const SizedBox(height: 14),
+              const AppLoadingSkeleton(
+                width: 120,
+                height: 24,
+                borderRadius: 999,
+              ),
+              const SizedBox(height: 10),
+              const AppLoadingSkeleton(width: double.infinity, height: 32),
+              const SizedBox(height: 8),
+              const AppLoadingSkeleton(width: 180, height: 18),
+              const SizedBox(height: 18),
+              const AppLoadingSkeleton(width: double.infinity, height: 16),
+              const SizedBox(height: 8),
+              const AppLoadingSkeleton(width: double.infinity, height: 16),
+              const SizedBox(height: 8),
+              const AppLoadingSkeleton(width: double.infinity, height: 16),
+            ],
+          );
+        },
         error: (error, _) => AppErrorWidget(message: toUserErrorMessage(error)),
         data: (article) {
           if (article == null) {
@@ -79,32 +95,49 @@ class EducationDetailScreen extends ConsumerWidget {
                 ).format(article.publishedAt!.toLocal())
               : '-';
 
+          final compact = MediaQuery.sizeOf(context).width < 340;
+
           return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+            padding: EdgeInsets.fromLTRB(
+              compact ? 12 : 16,
+              12,
+              compact ? 12 : 16,
+              28,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: _DetailCover(url: article.coverUrl),
+                  borderRadius: BorderRadius.circular(12),
+                  child: _DetailCover(
+                    url: article.coverUrl,
+                    height: compact ? 176 : 240,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 if ((article.category ?? '').trim().isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.sizeOf(context).width * 0.75,
                     ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      article.category!,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        article.category!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -155,9 +188,10 @@ class EducationDetailScreen extends ConsumerWidget {
 }
 
 class _DetailCover extends StatelessWidget {
-  const _DetailCover({required this.url});
+  const _DetailCover({required this.url, required this.height});
 
   final String? url;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
@@ -170,7 +204,7 @@ class _DetailCover extends StatelessWidget {
     return CachedNetworkImage(
       imageUrl: url!,
       width: double.infinity,
-      height: 240,
+      height: height,
       fit: BoxFit.cover,
       placeholder: (context, imageUrl) => _fallback(context),
       errorWidget: (context, imageUrl, error) => _fallback(context),
@@ -180,7 +214,7 @@ class _DetailCover extends StatelessWidget {
   Widget _fallback(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 240,
+      height: height,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,

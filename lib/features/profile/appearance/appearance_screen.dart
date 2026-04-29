@@ -90,18 +90,25 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
     _initFromProfile();
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.appearance)),
+      appBar: AppBar(
+        title: Text(
+          AppStrings.appearance,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(compact ? 12 : 16),
         children: [
           // Theme mode section
           Text(
             AppStrings.themeSectionTitle,
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
-              letterSpacing: 1.2,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 8),
@@ -118,20 +125,48 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
               child: Column(
                 children: [
                   RadioListTile<String>(
-                    title: Text(AppStrings.followSystem),
-                    subtitle: Text(AppStrings.followSystemSubtitle),
+                    dense: compact,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: compact ? 8 : 16,
+                    ),
+                    title: Text(
+                      AppStrings.followSystem,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      AppStrings.followSystemSubtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     secondary: const Icon(Icons.settings_brightness),
                     value: 'system',
                   ),
                   const Divider(height: 1, indent: 56),
                   RadioListTile<String>(
-                    title: Text(AppStrings.lightMode),
+                    dense: compact,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: compact ? 8 : 16,
+                    ),
+                    title: Text(
+                      AppStrings.lightMode,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     secondary: const Icon(Icons.light_mode),
                     value: 'light',
                   ),
                   const Divider(height: 1, indent: 56),
                   RadioListTile<String>(
-                    title: Text(AppStrings.darkMode),
+                    dense: compact,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: compact ? 8 : 16,
+                    ),
+                    title: Text(
+                      AppStrings.darkMode,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     secondary: const Icon(Icons.dark_mode),
                     value: 'dark',
                   ),
@@ -147,7 +182,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
             AppStrings.languageSectionTitle,
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
-              letterSpacing: 1.2,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 8),
@@ -162,16 +197,40 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
               child: Column(
                 children: [
                   RadioListTile<String>(
+                    dense: compact,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: compact ? 8 : 16,
+                    ),
                     secondary: const Icon(Icons.language),
-                    title: Text(AppStrings.tr('English', 'English')),
-                    subtitle: Text(AppStrings.defaultLabel),
+                    title: Text(
+                      AppStrings.tr('English', 'English'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      AppStrings.defaultLabel,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     value: 'en',
                   ),
                   const Divider(height: 1, indent: 56),
                   RadioListTile<String>(
+                    dense: compact,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: compact ? 8 : 16,
+                    ),
                     secondary: const Icon(Icons.translate),
-                    title: Text(AppStrings.indonesianLanguage),
-                    subtitle: Text(AppStrings.indonesianLabel),
+                    title: Text(
+                      AppStrings.indonesianLanguage,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      AppStrings.indonesianLabel,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     value: 'id',
                   ),
                 ],

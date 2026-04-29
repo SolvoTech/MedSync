@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_strings.dart';
-import '../../../core/constants/app_gradients.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../data/local/preferences/app_preferences.dart';
@@ -46,61 +45,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final pages = OnboardingPageModel.pages;
     final isLastPage = _currentPage == pages.length - 1;
 
     return Scaffold(
       body: Stack(
         children: [
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: -36,
-                    left: -24,
-                    child: _BlurDot(
-                      size: 148,
-                      color: colorScheme.primary.withValues(
-                        alpha: isDark ? 0.11 : 0.07,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: MediaQuery.of(context).size.height * 0.28,
-                    right: -30,
-                    child: _BlurDot(
-                      size: 116,
-                      color: colorScheme.tertiary.withValues(
-                        alpha: isDark ? 0.10 : 0.06,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: MediaQuery.of(context).size.height * 0.22,
-                    left: 20,
-                    child: _BlurDot(
-                      size: 84,
-                      color: colorScheme.primary.withValues(
-                        alpha: isDark ? 0.08 : 0.05,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -50,
-                    right: 26,
-                    child: _BlurDot(
-                      size: 174,
-                      color: colorScheme.secondary.withValues(
-                        alpha: isDark ? 0.08 : 0.04,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
           SafeArea(
             child: Column(
               children: [
@@ -121,108 +71,112 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     itemCount: pages.length,
                     itemBuilder: (context, i) {
                       final page = pages[i];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              page.icon,
-                              height: 240,
-                              fit: BoxFit.contain,
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          final compactWidth =
+                              MediaQuery.sizeOf(context).width < 340;
+                          final compactHeight = constraints.maxHeight < 520;
+                          final imageHeight = compactHeight
+                              ? 128.0
+                              : compactWidth
+                              ? 160.0
+                              : 220.0;
+
+                          return SingleChildScrollView(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: compactWidth ? 20 : 32,
                             ),
-                            const SizedBox(height: 48),
-                            Text(
-                              page.title,
-                              textAlign: TextAlign.center,
-                              style: textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minHeight: constraints.maxHeight,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    page.icon,
+                                    height: imageHeight,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  SizedBox(height: compactHeight ? 24 : 40),
+                                  Text(
+                                    page.title,
+                                    textAlign: TextAlign.center,
+                                    style: textTheme.headlineSmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    page.description,
+                                    textAlign: TextAlign.center,
+                                    style: textTheme.bodyLarge?.copyWith(
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.55,
+                                      ),
+                                      height: 1.6,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              page.description,
-                              textAlign: TextAlign.center,
-                              style: textTheme.bodyLarge?.copyWith(
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.55,
-                                ),
-                                height: 1.6,
-                              ),
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       );
                     },
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(32, 0, 32, 40),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(pages.length, (i) {
-                          final isActive = i == _currentPage;
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeOutCubic,
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            width: isActive ? 28 : 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              gradient: isActive ? AppGradients.primary : null,
-                              color: isActive
-                                  ? null
-                                  : colorScheme.primary.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          );
-                        }),
+                Builder(
+                  builder: (context) {
+                    final compact = MediaQuery.sizeOf(context).width < 340;
+                    return Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        compact ? 20 : 32,
+                        0,
+                        compact ? 20 : 32,
+                        compact ? 24 : 40,
                       ),
-                      const SizedBox(height: 32),
-                      AppButton(
-                        label: isLastPage
-                            ? AppStrings.startNow
-                            : AppStrings.next,
-                        onPressed: _onNext,
-                        isFullWidth: true,
-                        useGradient: true,
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(pages.length, (i) {
+                              final isActive = i == _currentPage;
+                              return AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic,
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                width: isActive ? 26 : 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: isActive
+                                      ? colorScheme.primary
+                                      : colorScheme.primary.withValues(
+                                          alpha: 0.15,
+                                        ),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              );
+                            }),
+                          ),
+                          SizedBox(height: compact ? 24 : 32),
+                          AppButton(
+                            label: isLastPage
+                                ? AppStrings.startNow
+                                : AppStrings.next,
+                            onPressed: _onNext,
+                            isFullWidth: true,
+                            useGradient: true,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BlurDot extends StatelessWidget {
-  const _BlurDot({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [color, color.withValues(alpha: 0)],
-          stops: const [0.25, 1],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: color,
-            blurRadius: size * 0.28,
-            spreadRadius: size * 0.02,
           ),
         ],
       ),

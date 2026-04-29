@@ -12,24 +12,27 @@ class AppErrorWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 340;
+    final iconSize = compact ? 64.0 : 80.0;
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(compact ? 20 : 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Tonal error container for icon
             Container(
-              width: 80,
-              height: 80,
+              width: iconSize,
+              height: iconSize,
               decoration: BoxDecoration(
                 color: colorScheme.errorContainer,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.error_outline_rounded,
-                size: 36,
+                size: compact ? 30 : 36,
                 color: colorScheme.error,
               ),
             ),
@@ -48,16 +51,23 @@ class AppErrorWidget extends StatelessWidget {
                 onPressed: onRetry,
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
+                    horizontal: 18,
                     vertical: 12,
                   ),
+                  minimumSize: const Size(0, 46),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.refresh_rounded, size: 18),
                     SizedBox(width: 8),
-                    Text(AppStrings.retry),
+                    Flexible(
+                      child: Text(
+                        AppStrings.retry,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),

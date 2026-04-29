@@ -37,12 +37,14 @@ ReminderAction? parseReminderAction(String value) {
 
 EdgeInsets scheduleTabListPadding(BuildContext context) {
   final height = MediaQuery.sizeOf(context).height;
+  final width = MediaQuery.sizeOf(context).width;
   final compactHeight = height < 760;
   final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
   final bottomInset =
       bottomSafeArea + kBottomNavigationBarHeight + (compactHeight ? 40 : 50);
+  final horizontal = width < 340 ? 10.0 : 16.0;
 
-  return EdgeInsets.fromLTRB(16, 16, 16, bottomInset);
+  return EdgeInsets.fromLTRB(horizontal, 16, horizontal, bottomInset);
 }
 
 EdgeInsets scheduleTabFabPadding(BuildContext context) {
@@ -171,9 +173,11 @@ class ReminderSectionHeader extends StatelessWidget {
         Expanded(
           child: Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
+              letterSpacing: 0,
             ),
           ),
         ),
@@ -398,6 +402,8 @@ Future<void> showReminderEditorSheet({
     builder: (context) {
       return StatefulBuilder(
         builder: (context, setLocalState) {
+          final compact = MediaQuery.sizeOf(context).width < 340;
+
           return AnimatedPadding(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOut,
@@ -407,7 +413,12 @@ Future<void> showReminderEditorSheet({
             child: SafeArea(
               top: false,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                padding: EdgeInsets.fromLTRB(
+                  compact ? 12 : 16,
+                  16,
+                  compact ? 12 : 16,
+                  16,
+                ),
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
                 child: AppFormContainer(
@@ -433,7 +444,11 @@ Future<void> showReminderEditorSheet({
                               .map(
                                 (type) => DropdownMenuItem<String>(
                                   value: type,
-                                  child: Text(typeLabelBuilder(type)),
+                                  child: Text(
+                                    typeLabelBuilder(type),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               )
                               .toList(),
@@ -540,6 +555,8 @@ Future<void> showReminderEditorSheet({
                               isEditing
                                   ? AppStrings.saveChanges
                                   : AppStrings.save,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),

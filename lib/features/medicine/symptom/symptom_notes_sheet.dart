@@ -106,9 +106,15 @@ class _SymptomNotesSheetState extends ConsumerState<SymptomNotesSheet> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      padding: EdgeInsets.fromLTRB(
+        compact ? 14 : 20,
+        16,
+        compact ? 14 : 20,
+        20,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,8 +159,10 @@ class _SymptomNotesSheetState extends ConsumerState<SymptomNotesSheet> {
             style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _MoodChip(
                 emoji: '😊',
@@ -203,23 +211,42 @@ class _SymptomNotesSheetState extends ConsumerState<SymptomNotesSheet> {
           const SizedBox(height: 20),
 
           // Actions
-          Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(AppStrings.skip),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stackActions = constraints.maxWidth < 260;
+              final skipButton = TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(
+                  AppStrings.skip,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: AppButton(
-                  label: AppStrings.save,
-                  onPressed: _save,
-                  isLoading: _isSaving,
-                ),
-              ),
-            ],
+              );
+              final saveButton = AppButton(
+                label: AppStrings.save,
+                onPressed: _save,
+                isLoading: _isSaving,
+              );
+
+              if (stackActions) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    saveButton,
+                    const SizedBox(height: 8),
+                    skipButton,
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(child: skipButton),
+                  const SizedBox(width: 12),
+                  Expanded(child: saveButton),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -243,31 +270,40 @@ class _MoodChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final compact = MediaQuery.sizeOf(context).width < 340;
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? colorScheme.primaryContainer
-              : colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-          border: selected
-              ? Border.all(color: colorScheme.primary, width: 2)
-              : null,
-        ),
-        child: Column(
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 28)),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(width: compact ? 78 : 88),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 10 : 14,
+            vertical: 10,
+          ),
+          decoration: BoxDecoration(
+            color: selected
+                ? colorScheme.primaryContainer
+                : colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(16),
+            border: selected
+                ? Border.all(color: colorScheme.primary, width: 2)
+                : null,
+          ),
+          child: Column(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 28)),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

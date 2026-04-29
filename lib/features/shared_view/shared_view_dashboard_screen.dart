@@ -23,6 +23,9 @@ class SharedViewDashboardScreen extends StatelessWidget {
     final streak = data['streak'] as int? ?? 0;
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 390;
+    final xxs = width < 340;
 
     final done = progress['done'] as int? ?? 0;
     final total = progress['total'] as int? ?? 0;
@@ -30,7 +33,11 @@ class SharedViewDashboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(carePerson['display_name'] ?? 'Status Kesehatan'),
+        title: Text(
+          carePerson['display_name'] ?? 'Status Kesehatan',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           IconButton(
             tooltip: MaterialLocalizations.of(
@@ -45,14 +52,14 @@ class SharedViewDashboardScreen extends StatelessWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(compact ? 12 : 16),
         children: [
           // Care person header
           AppCard(
             child: Row(
               children: [
                 CircleAvatar(
-                  radius: 28,
+                  radius: xxs ? 23 : 28,
                   backgroundColor: colorScheme.primaryContainer,
                   child: Text(
                     _initials(carePerson['display_name'] as String?),
@@ -69,6 +76,8 @@ class SharedViewDashboardScreen extends StatelessWidget {
                     children: [
                       Text(
                         carePerson['display_name'] ?? 'Pengguna',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -76,6 +85,8 @@ class SharedViewDashboardScreen extends StatelessWidget {
                       if (carePerson['relationship'] != null)
                         Text(
                           carePerson['relationship'] as String,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
@@ -84,28 +95,37 @@ class SharedViewDashboardScreen extends StatelessWidget {
                   ),
                 ),
                 if (streak > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('🔥', style: TextStyle(fontSize: 14)),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$streak',
-                          style: textTheme.labelMedium?.copyWith(
-                            color: Colors.orange,
-                            fontWeight: FontWeight.bold,
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: xxs ? 54 : 70),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: xxs ? 8 : 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!xxs) ...[
+                            const Text('🔥', style: TextStyle(fontSize: 14)),
+                            const SizedBox(width: 4),
+                          ],
+                          Flexible(
+                            child: Text(
+                              '$streak',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.labelMedium?.copyWith(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
               ],
@@ -118,17 +138,17 @@ class SharedViewDashboardScreen extends StatelessWidget {
             child: Column(
               children: [
                 SizedBox(
-                  width: 100,
-                  height: 100,
+                  width: xxs ? 86 : 100,
+                  height: xxs ? 86 : 100,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
                       SizedBox(
-                        width: 100,
-                        height: 100,
+                        width: xxs ? 86 : 100,
+                        height: xxs ? 86 : 100,
                         child: CircularProgressIndicator(
                           value: total > 0 ? done / total : 0,
-                          strokeWidth: 10,
+                          strokeWidth: xxs ? 8 : 10,
                           backgroundColor: colorScheme.surfaceContainerHighest,
                           valueColor: AlwaysStoppedAnimation(
                             percent >= 80
@@ -178,7 +198,7 @@ class SharedViewDashboardScreen extends StatelessWidget {
             'TUGAS HARI INI',
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
-              letterSpacing: 1.2,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 8),
@@ -219,26 +239,42 @@ class SharedViewDashboardScreen extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: AppCard(
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(icon, size: 20, color: colorScheme.primary),
-                      const SizedBox(width: 10),
-                      Text(
-                        time,
-                        style: textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          type.replaceAll('_', ' ').toUpperCase(),
-                          style: textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      Row(
+                        children: [
+                          Icon(icon, size: 20, color: colorScheme.primary),
+                          const SizedBox(width: 10),
+                          Text(
+                            time,
+                            style: textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              type.replaceAll('_', ' ').toUpperCase(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.labelSmall?.copyWith(
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (!xxs) StatusChip(status: status),
+                        ],
                       ),
-                      StatusChip(status: status),
+                      if (xxs) ...[
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: StatusChip(status: status),
+                        ),
+                      ],
                     ],
                   ),
                 ),

@@ -325,20 +325,32 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.tr('Edit Profile Photo', 'Ubah Foto Profil')),
+        title: Text(
+          AppStrings.tr('Edit Profile Photo', 'Ubah Foto Profil'),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(compact ? 12 : 16),
         children: [
           Card(
             margin: EdgeInsets.zero,
             child: ListTile(
+              dense: compact,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: compact ? 12 : 16,
+                vertical: 4,
+              ),
               leading: const Icon(Icons.camera_alt_outlined),
               title: Text(
                 AppStrings.tr('Take Photo (Camera)', 'Ambil Foto (Kamera)'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               onTap: () => _pickAndUploadImage(ImageSource.camera),
             ),
@@ -347,9 +359,16 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
           Card(
             margin: EdgeInsets.zero,
             child: ListTile(
+              dense: compact,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: compact ? 12 : 16,
+                vertical: 4,
+              ),
               leading: const Icon(Icons.photo_library_outlined),
               title: Text(
                 AppStrings.tr('Choose from Gallery', 'Pilih dari Galeri'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               onTap: () => _pickAndUploadImage(ImageSource.gallery),
             ),
@@ -358,9 +377,16 @@ class _EditAvatarScreenState extends ConsumerState<EditAvatarScreen> {
           Card(
             margin: EdgeInsets.zero,
             child: ListTile(
+              dense: compact,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: compact ? 12 : 16,
+                vertical: 4,
+              ),
               leading: const Icon(Icons.delete_outline, color: Colors.red),
               title: Text(
                 AppStrings.tr('Delete Profile Photo', 'Hapus Foto Profil'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: Colors.red),
               ),
               onTap: _removeAvatar,

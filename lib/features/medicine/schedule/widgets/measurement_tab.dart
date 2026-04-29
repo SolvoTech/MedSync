@@ -6,6 +6,7 @@ import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/constants/type_labels.dart';
 import '../../../../data/remote/datasources/task_log_remote_datasource.dart';
 import '../../../../domain/models/measurement_reminder.dart';
+import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../services/notification_service.dart';
 import '../../../../services/task_completion_service.dart';
 import '../../../measurement/measurement_controller.dart';
@@ -28,14 +29,21 @@ class MeasurementTab extends ConsumerWidget {
             if (items.isEmpty) {
               return ListView(
                 children: [
-                  SizedBox(height: 120),
-                  Center(
-                    child: Text(
-                      AppStrings.tr(
-                        'No measurement reminders yet.',
-                        'Belum ada pengingat pengukuran.',
-                      ),
+                  const SizedBox(height: 90),
+                  AppEmptyState(
+                    message: AppStrings.tr(
+                      'No measurement reminders yet.',
+                      'Belum ada pengingat pengukuran.',
                     ),
+                    subtitle: AppStrings.tr(
+                      'Add a blood pressure, glucose, or body metric reminder.',
+                      'Tambahkan pengingat tekanan darah, gula darah, atau metrik tubuh.',
+                    ),
+                    icon: Icons.monitor_heart_outlined,
+                    actionLabel: AppStrings.addMeasurement,
+                    actionIcon: Icons.add_alarm_rounded,
+                    onAction: () =>
+                        _openMeasurementEditor(context, ref, existing: null),
                   ),
                 ],
               );
@@ -107,11 +115,23 @@ class MeasurementTab extends ConsumerWidget {
       ),
       floatingActionButton: Padding(
         padding: scheduleTabFabPadding(context),
-        child: FloatingActionButton.extended(
-          onPressed: () => _openMeasurementEditor(context, ref, existing: null),
-          icon: const Icon(Icons.add),
-          label: Text(AppStrings.addMeasurement),
-        ),
+        child: MediaQuery.sizeOf(context).width < 340
+            ? FloatingActionButton(
+                tooltip: AppStrings.addMeasurement,
+                onPressed: () =>
+                    _openMeasurementEditor(context, ref, existing: null),
+                child: const Icon(Icons.add),
+              )
+            : FloatingActionButton.extended(
+                onPressed: () =>
+                    _openMeasurementEditor(context, ref, existing: null),
+                icon: const Icon(Icons.add),
+                label: Text(
+                  AppStrings.addMeasurement,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
       ),
     );
   }

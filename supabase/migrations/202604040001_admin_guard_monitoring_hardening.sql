@@ -73,6 +73,7 @@ end;
 $$;
 
 revoke all on function public.admin_insert_audit_log(text, uuid, jsonb) from public;
+revoke all on function public.admin_insert_audit_log(text, uuid, jsonb) from anon;
 grant execute on function public.admin_insert_audit_log(text, uuid, jsonb) to authenticated;
 
 create or replace function public.admin_set_user_account_status(
@@ -137,6 +138,7 @@ end;
 $$;
 
 revoke all on function public.admin_set_user_account_status(uuid, text, text) from public;
+revoke all on function public.admin_set_user_account_status(uuid, text, text) from anon;
 grant execute on function public.admin_set_user_account_status(uuid, text, text) to authenticated;
 
 create or replace function public.log_client_monitoring_event(
@@ -193,4 +195,5 @@ end;
 $$;
 
 revoke all on function public.log_client_monitoring_event(text, text, text, jsonb) from public;
+revoke all on function public.log_client_monitoring_event(text, text, text, jsonb) from anon;
 grant execute on function public.log_client_monitoring_event(text, text, text, jsonb) to authenticated;

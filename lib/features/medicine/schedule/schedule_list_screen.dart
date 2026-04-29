@@ -23,19 +23,21 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < 390;
-    final tight = width < 360;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final appBarTitleStyle =
-        (compact ? textTheme.headlineSmall : textTheme.headlineMedium)
-            ?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: colorScheme.onSurface,
-            );
+    final appBarTitleStyle = textTheme.headlineSmall?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: colorScheme.onSurface,
+    );
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.scheduleTitle, style: appBarTitleStyle),
+        title: Text(
+          AppStrings.scheduleTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: appBarTitleStyle,
+        ),
       ),
       body: Column(
         children: [
@@ -51,7 +53,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
               child: Container(
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(compact ? 16 : 18),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: colorScheme.outlineVariant.withValues(alpha: 0.45),
                   ),
@@ -63,13 +65,13 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     padding: WidgetStatePropertyAll(
                       EdgeInsets.symmetric(
-                        horizontal: tight ? 6 : 8,
+                        horizontal: compact ? 6 : 8,
                         vertical: compact ? 9 : 10,
                       ),
                     ),
                     textStyle: WidgetStatePropertyAll(
                       TextStyle(
-                        fontSize: tight ? 12 : 13,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

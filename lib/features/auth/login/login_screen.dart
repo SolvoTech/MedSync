@@ -73,6 +73,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenHeight = MediaQuery.sizeOf(context).height;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final compactWidth = screenWidth < 340;
     final headerHeight = screenHeight < 760
         ? screenHeight * 0.43
         : screenHeight * 0.38;
@@ -94,37 +96,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   isDark ? Brightness.dark : Brightness.light,
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(32),
+                  bottom: Radius.circular(16),
                 ),
-              ),
-              child: Stack(
-                children: [
-                  // Decorative circles
-                  Positioned(
-                    top: -40,
-                    right: -30,
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.06),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    left: -20,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.05),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ),
@@ -132,7 +105,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           // Content
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(compactWidth ? 16 : 24),
               child: Form(
                 key: _formKey,
                 autovalidateMode: _hasAttemptedSubmit
@@ -150,7 +123,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: Colors.white.withValues(alpha: 0.2),
                             width: 1,
@@ -160,13 +133,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               color: AppColors.primaryDark.withValues(
                                 alpha: 0.2,
                               ),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
+                              blurRadius: 14,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                           child: Image.asset(
                             'assets/images/app_logo.jpeg',
                             width: 44,
@@ -213,10 +186,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     // Form card
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: EdgeInsets.all(compactWidth ? 18 : 24),
                       decoration: BoxDecoration(
                         color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: isDark
                             ? null
                             : [
@@ -224,8 +197,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   color: const Color(
                                     0xFF0F1419,
                                   ).withValues(alpha: 0.06),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 8),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                         border: isDark
@@ -289,8 +262,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 18),
 
                     // Register link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 2,
                       children: [
                         Text(
                           AppStrings.noAccount,

@@ -38,23 +38,30 @@ class SectionHeader extends StatelessWidget {
               style: textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
-                letterSpacing: 0.5,
+                letterSpacing: 0,
               ),
             ),
           ),
           if (actionLabel != null && onAction != null)
-            TextButton(
-              onPressed: onAction,
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                actionLabel!,
-                style: textTheme.labelMedium?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w600,
+            Flexible(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: onAction,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    actionLabel!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.labelMedium?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -29,7 +29,11 @@ class AdminHomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.adminHomeTitle),
+        title: Text(
+          AppStrings.adminHomeTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           IconButton(
             tooltip: AppStrings.adminRefreshTooltip,
@@ -86,53 +90,68 @@ class AdminHomeScreen extends ConsumerWidget {
                 message: toUserErrorMessage(error),
                 onRetry: () => ref.invalidate(adminDashboardProvider),
               ),
-              data: (dashboard) => Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _OverviewMetric(
-                          title: AppStrings.adminMetricTotalUsers,
-                          value: '${dashboard.totalUsers}',
-                          icon: Icons.groups_2_outlined,
-                          color: const Color(0xFF2B6CB0),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _OverviewMetric(
-                          title: AppStrings.adminMetricActiveUsers,
-                          value: '${dashboard.activeUsers}',
-                          icon: Icons.check_circle_outline,
-                          color: const Color(0xFF2F855A),
-                        ),
-                      ),
-                    ],
+              data: (dashboard) {
+                final xxs = media.size.width < 340;
+                final firstRow = [
+                  _OverviewMetric(
+                    title: AppStrings.adminMetricTotalUsers,
+                    value: '${dashboard.totalUsers}',
+                    icon: Icons.groups_2_outlined,
+                    color: const Color(0xFF2B6CB0),
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _OverviewMetric(
-                          title: AppStrings.adminMetricSuspendedUsers,
-                          value: '${dashboard.suspendedUsers}',
-                          icon: Icons.block_outlined,
-                          color: const Color(0xFFC53030),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _OverviewMetric(
-                          title: AppStrings.adminMetricAdherenceToday,
-                          value: '${dashboard.adherencePercent}%',
-                          icon: Icons.trending_up_rounded,
-                          color: const Color(0xFF805AD5),
-                        ),
-                      ),
-                    ],
+                  _OverviewMetric(
+                    title: AppStrings.adminMetricActiveUsers,
+                    value: '${dashboard.activeUsers}',
+                    icon: Icons.check_circle_outline,
+                    color: const Color(0xFF2F855A),
                   ),
-                ],
-              ),
+                ];
+                final secondRow = [
+                  _OverviewMetric(
+                    title: AppStrings.adminMetricSuspendedUsers,
+                    value: '${dashboard.suspendedUsers}',
+                    icon: Icons.block_outlined,
+                    color: const Color(0xFFC53030),
+                  ),
+                  _OverviewMetric(
+                    title: AppStrings.adminMetricAdherenceToday,
+                    value: '${dashboard.adherencePercent}%',
+                    icon: Icons.trending_up_rounded,
+                    color: const Color(0xFF805AD5),
+                  ),
+                ];
+
+                if (xxs) {
+                  return Column(
+                    children: [
+                      for (final metric in [...firstRow, ...secondRow]) ...[
+                        metric,
+                        const SizedBox(height: 10),
+                      ],
+                    ],
+                  );
+                }
+
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: firstRow[0]),
+                        const SizedBox(width: 10),
+                        Expanded(child: firstRow[1]),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(child: secondRow[0]),
+                        const SizedBox(width: 10),
+                        Expanded(child: secondRow[1]),
+                      ],
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -172,7 +191,7 @@ class _QuickActionCard extends StatelessWidget {
               height: isCompact ? 36 : 40,
               decoration: BoxDecoration(
                 color: colorScheme.primaryContainer.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
@@ -244,13 +263,15 @@ class _OverviewMetric extends StatelessWidget {
             height: isCompact ? 32 : 36,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: isCompact ? 18 : 20),
           ),
           SizedBox(height: isCompact ? 8 : 10),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
@@ -282,13 +303,13 @@ class _OverviewLoading extends StatelessWidget {
         AppLoadingSkeleton(
           width: double.infinity,
           height: 110,
-          borderRadius: 20,
+          borderRadius: 12,
         ),
         SizedBox(height: 10),
         AppLoadingSkeleton(
           width: double.infinity,
           height: 110,
-          borderRadius: 20,
+          borderRadius: 12,
         ),
       ],
     );

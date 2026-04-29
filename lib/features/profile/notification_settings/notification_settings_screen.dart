@@ -209,8 +209,9 @@ class _NotificationSettingsScreenState
     required String selectedId,
     required ValueChanged<String> onChanged,
   }) {
+    final compact = MediaQuery.sizeOf(context).width < 340;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(56, 0, 16, 10),
+      padding: EdgeInsets.fromLTRB(compact ? 16 : 56, 0, 16, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -265,11 +266,25 @@ class _NotificationSettingsScreenState
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final compact = MediaQuery.sizeOf(context).width < 340;
+    final tilePadding = EdgeInsets.symmetric(
+      horizontal: compact ? 10 : 16,
+      vertical: compact ? 2 : 4,
+    );
+    final tileDensity = compact
+        ? const VisualDensity(horizontal: -2, vertical: -1)
+        : VisualDensity.standard;
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.notificationSettings)),
+      appBar: AppBar(
+        title: Text(
+          AppStrings.notificationSettings,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(compact ? 12 : 16),
         children: [
           AppCard(
             child: Column(
@@ -283,15 +298,20 @@ class _NotificationSettingsScreenState
                   style: textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 10),
-                FilledButton.icon(
-                  onPressed: _isOpeningSystemSettings
-                      ? null
-                      : _openSystemNotificationSettings,
-                  icon: const Icon(Icons.settings_suggest_outlined),
-                  label: Text(
-                    AppStrings.tr(
-                      'Open Notification Settings',
-                      'Buka Pengaturan Notifikasi',
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _isOpeningSystemSettings
+                        ? null
+                        : _openSystemNotificationSettings,
+                    icon: const Icon(Icons.settings_suggest_outlined),
+                    label: Text(
+                      AppStrings.tr(
+                        'Open Notification Settings',
+                        'Buka Pengaturan Notifikasi',
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
@@ -304,7 +324,7 @@ class _NotificationSettingsScreenState
             AppStrings.remindersSection,
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
-              letterSpacing: 1.2,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 8),
@@ -313,6 +333,9 @@ class _NotificationSettingsScreenState
             child: Column(
               children: [
                 SwitchListTile(
+                  contentPadding: tilePadding,
+                  dense: compact,
+                  visualDensity: tileDensity,
                   secondary: Icon(
                     Icons.medication,
                     color: const Color(0xFF0077B6),
@@ -332,6 +355,9 @@ class _NotificationSettingsScreenState
                   ),
                 const Divider(height: 1, indent: 56),
                 SwitchListTile(
+                  contentPadding: tilePadding,
+                  dense: compact,
+                  visualDensity: tileDensity,
                   secondary: Icon(
                     Icons.monitor_heart,
                     color: const Color(0xFF16A34A),
@@ -351,6 +377,9 @@ class _NotificationSettingsScreenState
                   ),
                 const Divider(height: 1, indent: 56),
                 SwitchListTile(
+                  contentPadding: tilePadding,
+                  dense: compact,
+                  visualDensity: tileDensity,
                   secondary: Icon(
                     Icons.directions_run,
                     color: const Color(0xFFEA580C),
@@ -377,7 +406,7 @@ class _NotificationSettingsScreenState
             AppStrings.alertsSection,
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
-              letterSpacing: 1.2,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 8),
@@ -386,6 +415,9 @@ class _NotificationSettingsScreenState
             child: Column(
               children: [
                 SwitchListTile(
+                  contentPadding: tilePadding,
+                  dense: compact,
+                  visualDensity: tileDensity,
                   secondary: Icon(
                     Icons.inventory_2_outlined,
                     color: Colors.orange,
@@ -404,7 +436,7 @@ class _NotificationSettingsScreenState
             AppStrings.reportsSection,
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
-              letterSpacing: 1.2,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 8),
@@ -413,6 +445,9 @@ class _NotificationSettingsScreenState
             child: Column(
               children: [
                 SwitchListTile(
+                  contentPadding: tilePadding,
+                  dense: compact,
+                  visualDensity: tileDensity,
                   secondary: const Icon(
                     Icons.local_fire_department,
                     color: Colors.deepOrange,
@@ -424,6 +459,9 @@ class _NotificationSettingsScreenState
                 ),
                 const Divider(height: 1, indent: 56),
                 SwitchListTile(
+                  contentPadding: tilePadding,
+                  dense: compact,
+                  visualDensity: tileDensity,
                   secondary: Icon(
                     Icons.summarize_outlined,
                     color: colorScheme.primary,

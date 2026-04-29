@@ -9,6 +9,7 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return StaticPageScaffold(
       title: 'Tentang MedSync',
@@ -16,10 +17,16 @@ class AboutScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 8),
-          Icon(Icons.medication_rounded, size: 64, color: colorScheme.primary),
+          Icon(
+            Icons.medication_rounded,
+            size: compact ? 52 : 64,
+            color: colorScheme.primary,
+          ),
           const SizedBox(height: 12),
           Text(
             'MedSync',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -72,6 +79,8 @@ class _Section extends StatelessWidget {
       children: [
         Text(
           title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(
             context,
           ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -108,6 +117,8 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(
                   context,
@@ -115,7 +126,16 @@ class _InfoRow extends StatelessWidget {
               ),
             ),
           ),
-          Text(value, style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
         ],
       ),
     );

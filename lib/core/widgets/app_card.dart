@@ -26,7 +26,7 @@ class AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final effectiveRadius = borderRadius ?? 20;
+    final effectiveRadius = borderRadius ?? 12;
     final cardColor = color ?? colorScheme.surface;
 
     Widget card;
@@ -38,23 +38,28 @@ class AppCard extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: gradient,
           borderRadius: BorderRadius.circular(effectiveRadius),
-          boxShadow: hasShadow
+          border: Border.all(
+            color: Colors.white.withValues(alpha: isDark ? 0.08 : 0.24),
+          ),
+          boxShadow: hasShadow && !isDark
               ? [
                   BoxShadow(
-                    color: colorScheme.primary.withValues(alpha: 0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: const Color(0xFF0F1419).withValues(alpha: 0.05),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
                   ),
                 ]
               : null,
         ),
         child: Material(
           color: Colors.transparent,
+          borderRadius: BorderRadius.circular(effectiveRadius),
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(effectiveRadius),
             child: Padding(
-              padding: padding ?? const EdgeInsets.all(16),
+              padding: padding ?? const EdgeInsets.all(14),
               child: child,
             ),
           ),
@@ -67,34 +72,31 @@ class AppCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(effectiveRadius),
-          border: isDark
-              ? Border.all(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-                  width: 1,
-                )
-              : null,
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(
+              alpha: isDark ? 0.38 : 0.75,
+            ),
+            width: 1,
+          ),
           boxShadow: hasShadow && !isDark
               ? [
                   BoxShadow(
-                    color: const Color(0xFF0F1419).withValues(alpha: 0.04),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFF0F1419).withValues(alpha: 0.02),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
+                    color: const Color(0xFF0F1419).withValues(alpha: 0.035),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
                   ),
                 ]
               : null,
         ),
         child: Material(
           color: Colors.transparent,
+          borderRadius: BorderRadius.circular(effectiveRadius),
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(effectiveRadius),
             child: Padding(
-              padding: padding ?? const EdgeInsets.all(16),
+              padding: padding ?? const EdgeInsets.all(14),
               child: child,
             ),
           ),

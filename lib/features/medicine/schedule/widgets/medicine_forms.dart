@@ -20,6 +20,7 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
   final dosageController = TextEditingController();
   final stockController = TextEditingController(text: '0');
   final formKey = GlobalKey<FormState>();
+  final compact = MediaQuery.sizeOf(context).width < 340;
 
   File? photoFile;
 
@@ -35,12 +36,18 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                 leading: const Icon(Icons.photo_library_outlined),
                 title: Text(
                   AppStrings.tr('Choose from Gallery', 'Pilih dari Galeri'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined),
-                title: Text(AppStrings.tr('Take a Photo', 'Ambil Foto')),
+                title: Text(
+                  AppStrings.tr('Take a Photo', 'Ambil Foto'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
               ),
             ],
@@ -65,7 +72,12 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
             child: SafeArea(
               top: false,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                padding: EdgeInsets.fromLTRB(
+                  compact ? 12 : 16,
+                  16,
+                  compact ? 12 : 16,
+                  16,
+                ),
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
                 child: AppFormContainer(
@@ -125,7 +137,7 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                             },
                             child: Container(
                               width: double.infinity,
-                              height: 110,
+                              height: compact ? 92 : 110,
                               decoration: BoxDecoration(
                                 border: Border.all(
                                   color: Theme.of(
@@ -160,6 +172,8 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                                         Text(
                                           AppStrings.medicinePhotoOptional,
                                           textAlign: TextAlign.center,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.grey,
@@ -210,7 +224,11 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                                 }
                               }
                             },
-                            child: Text(AppStrings.save),
+                            child: Text(
+                              AppStrings.save,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ),
                       ],
@@ -317,6 +335,7 @@ Future<void> _showScheduleSheet({
   final formKey = GlobalKey<FormState>();
   DateTime startDate = initialStartDate ?? DateTime.now();
   var repeatType = initialRepeatType ?? 'daily';
+  final compact = MediaQuery.sizeOf(context).width < 340;
 
   await showModalBottomSheet<void>(
     context: context,
@@ -373,7 +392,12 @@ Future<void> _showScheduleSheet({
             child: SafeArea(
               top: false,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                padding: EdgeInsets.fromLTRB(
+                  compact ? 12 : 16,
+                  16,
+                  compact ? 12 : 16,
+                  16,
+                ),
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
                 child: AppFormContainer(
@@ -401,11 +425,19 @@ Future<void> _showScheduleSheet({
                           items: [
                             DropdownMenuItem(
                               value: 'daily',
-                              child: Text(AppStrings.daily),
+                              child: Text(
+                                AppStrings.daily,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             DropdownMenuItem(
                               value: 'weekly',
-                              child: Text(AppStrings.weekly),
+                              child: Text(
+                                AppStrings.weekly,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                           onChanged: (value) {
@@ -448,7 +480,11 @@ Future<void> _showScheduleSheet({
                                 },
                               ),
                             ActionChip(
-                              label: Text(AppStrings.addTime),
+                              label: Text(
+                                AppStrings.addTime,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                               avatar: const Icon(Icons.add_alarm, size: 18),
                               onPressed: pickTime,
                             ),
@@ -503,7 +539,11 @@ Future<void> _showScheduleSheet({
                                 }
                               }
                             },
-                            child: Text(submitLabel),
+                            child: Text(
+                              submitLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ),
                       ],

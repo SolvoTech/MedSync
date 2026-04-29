@@ -53,11 +53,14 @@ class AppBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 340;
+    final horizontalPadding = compact ? 16.0 : 20.0;
 
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -76,8 +79,9 @@ class AppBottomSheet extends StatelessWidget {
           ),
           // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
+            padding: EdgeInsets.fromLTRB(horizontalPadding, 12, 8, 0),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Text(
@@ -85,6 +89,8 @@ class AppBottomSheet extends StatelessWidget {
                     style: textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 trailing ??
@@ -110,13 +116,13 @@ class AppBottomSheet extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Divider(color: colorScheme.outlineVariant),
           ),
           // Content
           Expanded(
             child: Padding(
-              padding: padding ?? const EdgeInsets.all(20),
+              padding: padding ?? EdgeInsets.all(compact ? 16 : 20),
               child: child,
             ),
           ),

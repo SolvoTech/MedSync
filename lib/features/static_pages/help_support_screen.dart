@@ -224,6 +224,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                             },
                             child: Text(
                               AppStrings.tr('Send Report', 'Kirim Laporan'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -284,7 +286,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
           Text(
             AppStrings.popularTopics,
             style: textTheme.labelMedium?.copyWith(
-              letterSpacing: 1.2,
+              letterSpacing: 0,
               color: colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
@@ -314,14 +316,19 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
           Text(
             AppStrings.faqTitle,
             style: textTheme.labelMedium?.copyWith(
-              letterSpacing: 1.2,
+              letterSpacing: 0,
               color: colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 8),
           ..._faqs.map(
             (faq) => ExpansionTile(
-              title: Text(faq.q, style: textTheme.bodyMedium),
+              title: Text(
+                faq.q,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.bodyMedium,
+              ),
               tilePadding: EdgeInsets.zero,
               childrenPadding: const EdgeInsets.only(bottom: 12),
               children: [
@@ -341,7 +348,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
           Text(
             AppStrings.stillNeedHelp,
             style: textTheme.labelMedium?.copyWith(
-              letterSpacing: 1.2,
+              letterSpacing: 0,
               color: colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
@@ -377,7 +384,12 @@ class _TopicChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return ActionChip(
       avatar: Icon(icon, size: 18),
-      label: Text(label),
+      label: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.58,
+        ),
+        child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
       onPressed: () {},
     );
   }
@@ -403,9 +415,13 @@ class _ContactTile extends StatelessWidget {
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: ListTile(
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.sizeOf(context).width < 340 ? 12 : 16,
+          vertical: 2,
+        ),
         leading: Icon(icon),
-        title: Text(label),
-        subtitle: Text(subtitle),
+        title: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
       ),

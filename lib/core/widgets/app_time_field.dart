@@ -32,6 +32,8 @@ class AppTimeField extends StatelessWidget {
         ),
         child: Text(
           _formatTime(value),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodyLarge,
         ),
       ),

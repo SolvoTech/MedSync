@@ -50,9 +50,16 @@ class CarePersonListScreen extends ConsumerWidget {
     final listState = ref.watch(carePersonListProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.carePersons)),
+      appBar: AppBar(
+        title: Text(
+          AppStrings.carePersons,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(carePersonListProvider.notifier).refresh(),
         child: listState.when(
@@ -113,11 +120,15 @@ class CarePersonListScreen extends ConsumerWidget {
                           children: [
                             Text(
                               person.displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: textTheme.titleSmall,
                             ),
                             if (person.relationship != null)
                               Text(
                                 person.relationship!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: textTheme.bodySmall?.copyWith(
                                   color: colorScheme.onSurface.withValues(
                                     alpha: 0.6,
@@ -165,11 +176,17 @@ class CarePersonListScreen extends ConsumerWidget {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openForm(context, ref),
-        icon: const Icon(Icons.person_add),
-        label: Text(AppStrings.addCarePerson),
-      ),
+      floatingActionButton: compact
+          ? FloatingActionButton(
+              tooltip: AppStrings.addCarePerson,
+              onPressed: () => _openForm(context, ref),
+              child: const Icon(Icons.person_add),
+            )
+          : FloatingActionButton.extended(
+              onPressed: () => _openForm(context, ref),
+              icon: const Icon(Icons.person_add),
+              label: Text(AppStrings.addCarePerson),
+            ),
     );
   }
 

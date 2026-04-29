@@ -104,13 +104,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(currentProfileProvider);
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     profileAsync.whenData(_initFromProfile);
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.editProfile)),
+      appBar: AppBar(
+        title: Text(
+          AppStrings.editProfile,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(compact ? 16 : 20),
         child: Form(
           key: _formKey,
           autovalidateMode: _hasAttemptedSubmit

@@ -23,6 +23,7 @@ class MedicineScheduleBundleCard extends StatelessWidget {
     final schedule = bundle.schedule;
     final slots = bundle.slots;
     final colorScheme = Theme.of(context).colorScheme;
+    final compact = MediaQuery.sizeOf(context).width < 340;
     final locale = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
     final startDateLabel = DateFormat(
       'dd MMM yyyy',
@@ -61,22 +62,26 @@ class MedicineScheduleBundleCard extends StatelessWidget {
                     color: Colors.orange.shade800,
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    AppStrings.tr(
-                      'Inactive mode: schedule is view-only',
-                      'Mode nonaktif: jadwal hanya bisa dilihat',
-                    ),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.orange.shade800,
+                  Expanded(
+                    child: Text(
+                      AppStrings.tr(
+                        'Inactive mode: schedule is view-only',
+                        'Mode nonaktif: jadwal hanya bisa dilihat',
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.orange.shade800,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(compact ? 12 : 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -101,6 +106,8 @@ class MedicineScheduleBundleCard extends StatelessWidget {
                       child: Text(
                         schedule.scheduleName ??
                             AppStrings.tr('Daily Schedule', 'Jadwal Harian'),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
@@ -183,7 +190,7 @@ class MedicineScheduleBundleCard extends StatelessWidget {
                             style: Theme.of(context).textTheme.labelLarge
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
+                                  letterSpacing: 0,
                                   color: colorScheme.onSurface,
                                 ),
                           ),
@@ -197,39 +204,29 @@ class MedicineScheduleBundleCard extends StatelessWidget {
                   height: 1,
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today_outlined,
-                      size: 14,
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      AppStrings.tr(
-                        'Start: $startDateLabel',
-                        'Mulai: $startDateLabel',
-                      ),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    Icon(
-                      Icons.repeat_rounded,
-                      size: 14,
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _repeatTypeLabel(schedule.repeatType),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final startLabel = AppStrings.tr(
+                      'Start: $startDateLabel',
+                      'Mulai: $startDateLabel',
+                    );
+                    return Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      children: [
+                        _ScheduleMetaItem(
+                          icon: Icons.calendar_today_outlined,
+                          label: startLabel,
+                          maxWidth: constraints.maxWidth,
+                        ),
+                        _ScheduleMetaItem(
+                          icon: Icons.repeat_rounded,
+                          label: _repeatTypeLabel(schedule.repeatType),
+                          maxWidth: constraints.maxWidth,
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -247,5 +244,48 @@ class MedicineScheduleBundleCard extends StatelessWidget {
       default:
         return AppStrings.daily;
     }
+  }
+}
+
+class _ScheduleMetaItem extends StatelessWidget {
+  const _ScheduleMetaItem({
+    required this.icon,
+    required this.label,
+    required this.maxWidth,
+  });
+
+  final IconData icon;
+  final String label;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

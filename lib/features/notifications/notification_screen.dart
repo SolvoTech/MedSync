@@ -95,16 +95,33 @@ class NotificationScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifState = ref.watch(notificationListProvider);
+    final xxs = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.notificationTitle),
+        title: Text(
+          AppStrings.notificationTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
-          TextButton(
-            onPressed: () =>
-                ref.read(notificationListProvider.notifier).markAllRead(),
-            child: Text(AppStrings.markAllRead),
-          ),
+          if (xxs)
+            IconButton(
+              tooltip: AppStrings.markAllRead,
+              icon: const Icon(Icons.done_all_rounded),
+              onPressed: () =>
+                  ref.read(notificationListProvider.notifier).markAllRead(),
+            )
+          else
+            TextButton(
+              onPressed: () =>
+                  ref.read(notificationListProvider.notifier).markAllRead(),
+              child: Text(
+                AppStrings.markAllRead,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
         ],
       ),
       body: RefreshIndicator(
@@ -114,7 +131,7 @@ class NotificationScreen extends ConsumerWidget {
             if (notifications.isEmpty) {
               return ListView(
                 children: [
-                  SizedBox(height: 100),
+                  SizedBox(height: xxs ? 72 : 100),
                   AppEmptyState(
                     message: AppStrings.noNotifications,
                     icon: Icons.notifications_off_outlined,
@@ -141,7 +158,12 @@ class NotificationScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                      padding: EdgeInsets.fromLTRB(
+                        xxs ? 14 : 20,
+                        16,
+                        xxs ? 14 : 20,
+                        8,
+                      ),
                       child: Row(
                         children: [
                           Container(
@@ -153,14 +175,20 @@ class NotificationScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            groupKey,
-                            style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.5),
-                                  fontWeight: FontWeight.w700,
-                                ),
+                          Expanded(
+                            child: Text(
+                              groupKey,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelLarge
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.5),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
                           ),
                         ],
                       ),
@@ -232,6 +260,7 @@ class _NotificationTile extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accentColor = _typeColor(context);
+    final xxs = MediaQuery.sizeOf(context).width < 340;
 
     return Dismissible(
       key: ValueKey(notif.id),
@@ -266,7 +295,7 @@ class _NotificationTile extends ConsumerWidget {
         }
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        margin: EdgeInsets.symmetric(horizontal: xxs ? 8 : 12, vertical: 2),
         decoration: BoxDecoration(
           color: notif.isRead
               ? Colors.transparent
@@ -276,13 +305,14 @@ class _NotificationTile extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
         ),
         child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
+          dense: xxs,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: xxs ? 12 : 16,
             vertical: 4,
           ),
           leading: Container(
-            width: 42,
-            height: 42,
+            width: xxs ? 36 : 42,
+            height: xxs ? 36 : 42,
             decoration: BoxDecoration(
               color: notif.isRead
                   ? colorScheme.surfaceContainerHighest
@@ -291,7 +321,7 @@ class _NotificationTile extends ConsumerWidget {
             ),
             child: Icon(
               _typeIcon(),
-              size: 20,
+              size: xxs ? 18 : 20,
               color: notif.isRead
                   ? colorScheme.onSurface.withValues(alpha: 0.4)
                   : accentColor,
@@ -299,6 +329,8 @@ class _NotificationTile extends ConsumerWidget {
           ),
           title: Text(
             notif.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: textTheme.bodyMedium?.copyWith(
               fontWeight: notif.isRead ? FontWeight.normal : FontWeight.w600,
             ),
@@ -316,6 +348,8 @@ class _NotificationTile extends ConsumerWidget {
           ),
           trailing: Text(
             notif.scheduledAt.toTimeString(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: textTheme.labelSmall?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.35),
             ),

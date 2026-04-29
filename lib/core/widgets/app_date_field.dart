@@ -38,6 +38,8 @@ class AppDateField extends StatelessWidget {
         ),
         child: Text(
           hasValue ? _formatDate(value!) : emptyText,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
             color: hasValue
                 ? colorScheme.onSurface

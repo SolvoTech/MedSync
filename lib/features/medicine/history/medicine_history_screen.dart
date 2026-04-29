@@ -32,10 +32,9 @@ final medicineHistoryProvider = FutureProvider.autoDispose
         case HistoryPeriod.month:
           startDate = now.subtract(const Duration(days: 30));
         case HistoryPeriod.all:
-          startDate = DateTime(2020); // effectively all
+          startDate = DateTime(2020);
       }
 
-      // Get schedules for this medicine to find reference_ids
       final scheduleRows = await client
           .from('medicine_schedules')
           .select('id')
@@ -73,20 +72,26 @@ class MedicineHistoryScreen extends ConsumerWidget {
     final historyState = ref.watch(medicineHistoryProvider(medicine.id));
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
-      appBar: AppBar(title: Text('Riwayat ${medicine.name}')),
+      appBar: AppBar(
+        title: Text(
+          'Riwayat ${medicine.name}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: Column(
         children: [
-          // Medicine info header
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(compact ? 12 : 16),
             color: colorScheme.primaryContainer.withValues(alpha: 0.3),
             child: Row(
               children: [
                 CircleAvatar(
-                  radius: 24,
+                  radius: compact ? 21 : 24,
                   backgroundColor: colorScheme.primaryContainer,
                   child: Icon(Icons.medication, color: colorScheme.primary),
                 ),
@@ -97,37 +102,49 @@ class MedicineHistoryScreen extends ConsumerWidget {
                     children: [
                       Text(
                         medicine.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       if (medicine.dosage != null)
-                        Text(medicine.dosage!, style: textTheme.bodySmall),
+                        Text(
+                          medicine.dosage!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall,
+                        ),
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('Stok', style: textTheme.labelSmall),
-                    Text(
-                      '${medicine.stockCurrent} ${medicine.stockUnit}',
-                      style: textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: medicine.isStockLow
-                            ? colorScheme.error
-                            : colorScheme.primary,
+                const SizedBox(width: 8),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: compact ? 76 : 96),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('Stok', style: textTheme.labelSmall),
+                      Text(
+                        '${medicine.stockCurrent} ${medicine.stockUnit}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: medicine.isStockLow
+                              ? colorScheme.error
+                              : colorScheme.primary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-
-          // Period filter
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            padding: EdgeInsets.fromLTRB(compact ? 12 : 16, 12, 16, 0),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SegmentedButton<HistoryPeriod>(
@@ -169,8 +186,6 @@ class MedicineHistoryScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
-
-          // History content
           Expanded(
             child: historyState.when(
               data: (logs) {
@@ -182,93 +197,109 @@ class MedicineHistoryScreen extends ConsumerWidget {
                   );
                 }
 
-                // Stats summary
                 final done = logs.where((l) => l.status == 'done').length;
                 final total = logs.length;
                 final adherence = total > 0 ? (done / total * 100).round() : 0;
 
                 return ListView(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(compact ? 12 : 16),
                   children: [
-                    // Adherence summary card
                     AppCard(
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _StatItem(
-                            label: 'Kepatuhan',
-                            value: '$adherence%',
-                            color: adherence >= 80
-                                ? Colors.green
-                                : adherence >= 50
-                                ? Colors.orange
-                                : Colors.red,
+                          Expanded(
+                            child: _StatItem(
+                              label: 'Kepatuhan',
+                              value: '$adherence%',
+                              color: adherence >= 80
+                                  ? Colors.green
+                                  : adherence >= 50
+                                  ? Colors.orange
+                                  : Colors.red,
+                            ),
                           ),
-                          _StatItem(
-                            label: 'Selesai',
-                            value: '$done',
-                            color: Colors.green,
+                          Expanded(
+                            child: _StatItem(
+                              label: 'Selesai',
+                              value: '$done',
+                              color: Colors.green,
+                            ),
                           ),
-                          _StatItem(
-                            label: 'Total',
-                            value: '$total',
-                            color: colorScheme.primary,
+                          Expanded(
+                            child: _StatItem(
+                              label: 'Total',
+                              value: '$total',
+                              color: colorScheme.primary,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 12),
-
-                    // Log items
                     ...logs.map(
                       (log) => Padding(
                         padding: const EdgeInsets.only(bottom: 6),
                         child: AppCard(
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              Row(
                                 children: [
-                                  Text(
-                                    _formatDate(log.scheduledAt),
-                                    style: textTheme.bodySmall?.copyWith(
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _formatDate(log.scheduledAt),
+                                        style: textTheme.bodySmall?.copyWith(
+                                          color: colorScheme.onSurface
+                                              .withValues(alpha: 0.5),
+                                        ),
+                                      ),
+                                      Text(
+                                        _formatTime(log.scheduledAt),
+                                        style: textTheme.titleSmall,
+                                      ),
+                                    ],
+                                  ),
+                                  if (log.completedAt != null) ...[
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.arrow_forward,
+                                      size: 14,
                                       color: colorScheme.onSurface.withValues(
-                                        alpha: 0.5,
+                                        alpha: 0.3,
                                       ),
                                     ),
-                                  ),
-                                  Text(
-                                    _formatTime(log.scheduledAt),
-                                    style: textTheme.titleSmall,
-                                  ),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        _formatTime(log.completedAt!),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: textTheme.bodySmall?.copyWith(
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  const Spacer(),
+                                  if (log.mood != null)
+                                    Text(
+                                      _moodEmoji(log.mood!),
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  if (!compact) ...[
+                                    const SizedBox(width: 8),
+                                    StatusChip(status: log.status),
+                                  ],
                                 ],
                               ),
-                              if (log.completedAt != null) ...[
-                                const SizedBox(width: 8),
-                                Icon(
-                                  Icons.arrow_forward,
-                                  size: 14,
-                                  color: colorScheme.onSurface.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _formatTime(log.completedAt!),
-                                  style: textTheme.bodySmall?.copyWith(
-                                    color: Colors.green,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                              if (compact) ...[
+                                const SizedBox(height: 8),
+                                StatusChip(status: log.status),
                               ],
-                              const Spacer(),
-                              if (log.mood != null)
-                                Text(
-                                  _moodEmoji(log.mood!),
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                              const SizedBox(width: 8),
-                              StatusChip(status: log.status),
                             ],
                           ),
                         ),
@@ -330,7 +361,9 @@ class _StatItem extends StatelessWidget {
     required this.value,
     required this.color,
   });
-  final String label, value;
+
+  final String label;
+  final String value;
   final Color color;
 
   @override
@@ -339,6 +372,8 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: color,
@@ -346,6 +381,8 @@ class _StatItem extends StatelessWidget {
         ),
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
             color: Theme.of(
               context,

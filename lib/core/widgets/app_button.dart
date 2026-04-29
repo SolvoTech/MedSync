@@ -32,6 +32,12 @@ class AppButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final effectiveOnPressed = isLoading ? null : onPressed;
+    final labelWidget = Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      softWrap: false,
+    );
 
     final child = isLoading
         ? SizedBox(
@@ -52,10 +58,10 @@ class AppButton extends StatelessWidget {
             children: [
               Icon(icon, size: 18),
               const SizedBox(width: 8),
-              Text(label),
+              Flexible(child: labelWidget),
             ],
           )
-        : Text(label);
+        : labelWidget;
 
     final destructiveColor = isDestructive ? colorScheme.error : null;
 
@@ -69,7 +75,7 @@ class AppButton extends StatelessWidget {
             gradient: AppGradients.primaryFor(
               isDark ? Brightness.dark : Brightness.light,
             ),
-            borderRadius: 16,
+            borderRadius: 12,
             child: child,
           );
         } else {
@@ -133,9 +139,9 @@ class _GradientButton extends StatelessWidget {
               ? null
               : [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: AppColors.primary.withValues(alpha: 0.16),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
                   ),
                 ],
         ),

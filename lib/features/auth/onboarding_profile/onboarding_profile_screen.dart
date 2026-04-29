@@ -89,11 +89,18 @@ class _OnboardingProfileScreenState
   Widget build(BuildContext context) {
     final saveState = ref.watch(onboardingProfileControllerProvider);
     final isLoading = saveState.isLoading;
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.completeProfileTitle)),
+      appBar: AppBar(
+        title: Text(
+          AppStrings.completeProfileTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(compact ? 12 : 16),
         child: Form(
           key: _formKey,
           autovalidateMode: _hasAttemptedSubmit
@@ -130,6 +137,8 @@ class _OnboardingProfileScreenState
                 onPressed: isLoading ? null : _submit,
                 child: Text(
                   isLoading ? AppStrings.saving : AppStrings.saveProfile,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

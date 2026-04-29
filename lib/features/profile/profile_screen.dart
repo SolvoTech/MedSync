@@ -145,90 +145,65 @@ class ProfileScreen extends ConsumerWidget {
       profile: profileAsync.asData?.value,
       user: user,
     );
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // Gradient header with avatar
           Stack(
             clipBehavior: Clip.none,
             children: [
-              // Gradient background
               Container(
                 width: double.infinity,
-                height: 180,
+                height: compact ? 160 : 170,
                 decoration: BoxDecoration(
                   gradient: AppGradients.primaryFor(
                     isDark ? Brightness.dark : Brightness.light,
                   ),
                   borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(28),
+                    bottom: Radius.circular(16),
                   ),
                 ),
-                child: Stack(
-                  children: [
-                    // Decorative circles
-                    Positioned(
-                      top: -30,
-                      right: -20,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.06),
-                        ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      compact ? 16 : 20,
+                      8,
+                      compact ? 16 : 20,
+                      0,
+                    ),
+                    child: Text(
+                      AppStrings.profileTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    Positioned(
-                      bottom: 20,
-                      left: -15,
-                      child: Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.04),
-                        ),
-                      ),
-                    ),
-                    // Title
-                    SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                        child: Text(
-                          AppStrings.profileTitle,
-                          style: textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
 
-              // Floating avatar card
               Positioned(
-                top: 112,
-                left: 20,
-                right: 20,
+                top: compact ? 100 : 106,
+                left: compact ? 16 : 20,
+                right: compact ? 16 : 20,
                 child: Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(compact ? 12 : 16),
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(12),
                     boxShadow: isDark
                         ? null
                         : [
                             BoxShadow(
                               color: const Color(
                                 0xFF0F1419,
-                              ).withValues(alpha: 0.08),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
+                              ).withValues(alpha: 0.05),
+                              blurRadius: 14,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                     border: isDark
@@ -257,26 +232,26 @@ class ProfileScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(40),
                         child: profileAsync.when(
                           data: (profile) => AppAvatar(
-                            size: 64,
+                            size: compact ? 56 : 64,
                             imageUrl: profile?.avatarUrl,
                             name: displayName,
                             showRing: true,
                           ),
                           loading: () => CircleAvatar(
-                            radius: 32,
+                            radius: compact ? 28 : 32,
                             backgroundColor: colorScheme.primaryContainer,
                             child: const CircularProgressIndicator(
                               strokeWidth: 2,
                             ),
                           ),
                           error: (_, _) => AppAvatar(
-                            size: 64,
+                            size: compact ? 56 : 64,
                             name: displayName,
                             showRing: true,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: compact ? 12 : 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,11 +292,11 @@ class ProfileScreen extends ConsumerWidget {
             ],
           ),
 
-          const SizedBox(height: 56),
+          SizedBox(height: compact ? 52 : 56),
 
           // Menu sections
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -616,14 +591,18 @@ class _SectionHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.5),
-              letterSpacing: 1.2,
-              fontWeight: FontWeight.w700,
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
+                letterSpacing: 0,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -674,12 +653,14 @@ class _MenuItem extends StatelessWidget {
         height: 36,
         decoration: BoxDecoration(
           color: color.withValues(alpha: isDark ? 0.2 : 0.1),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: color, size: 20),
       ),
       title: Text(
         label,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: effectiveTextColor,
           fontWeight: FontWeight.w500,

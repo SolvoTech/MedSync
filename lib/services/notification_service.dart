@@ -61,7 +61,7 @@ class NotificationService implements TaskReminderScheduler {
   static const String _legacyTaskPayloadPrefix = 'task';
   static const String _scopedTaskPayloadPrefix = 'taskv2';
   static const String _fallbackReminderRingtoneId =
-      AlarmRingtones.medSyncClassic;
+      AlarmRingtones.defaultReminderRingtoneId;
 
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -203,10 +203,10 @@ class NotificationService implements TaskReminderScheduler {
       ringtoneId: preferredRingtoneId,
     );
 
-    await _ensureAndroidChannel(
+    final activeChannelConfig = await _ensureAndroidChannelWithFallback(
       baseChannelId: baseChannelId,
-      resolvedChannelId: preferredResolvedChannelId,
-      ringtoneId: preferredRingtoneId,
+      preferredResolvedChannelId: preferredResolvedChannelId,
+      preferredRingtoneId: preferredRingtoneId,
     );
 
     NotificationDetails buildDetails({
@@ -287,8 +287,8 @@ class NotificationService implements TaskReminderScheduler {
           body,
           scheduleDate,
           buildDetails(
-            resolvedChannelId: preferredResolvedChannelId,
-            ringtoneId: preferredRingtoneId,
+            resolvedChannelId: activeChannelConfig.resolvedChannelId,
+            ringtoneId: activeChannelConfig.ringtoneId,
           ),
           payload: payload,
           androidScheduleMode: mode,
@@ -303,7 +303,7 @@ class NotificationService implements TaskReminderScheduler {
         if (_isInvalidSoundError(error)) {
           final fallbackRingtoneId = _fallbackRingtoneIdForBaseChannel(
             baseChannelId,
-            preferredRingtoneId: preferredRingtoneId,
+            preferredRingtoneId: activeChannelConfig.ringtoneId,
           );
           if (kDebugMode) {
             debugPrint(
@@ -317,11 +317,12 @@ class NotificationService implements TaskReminderScheduler {
               ringtoneId: fallbackRingtoneId,
             );
 
-            await _ensureAndroidChannel(
-              baseChannelId: baseChannelId,
-              resolvedChannelId: fallbackResolvedChannelId,
-              ringtoneId: fallbackRingtoneId,
-            );
+            final fallbackChannelConfig =
+                await _ensureAndroidChannelWithFallback(
+                  baseChannelId: baseChannelId,
+                  preferredResolvedChannelId: fallbackResolvedChannelId,
+                  preferredRingtoneId: fallbackRingtoneId,
+                );
 
             try {
               await _plugin.zonedSchedule(
@@ -330,8 +331,8 @@ class NotificationService implements TaskReminderScheduler {
                 body,
                 scheduleDate,
                 buildDetails(
-                  resolvedChannelId: fallbackResolvedChannelId,
-                  ringtoneId: fallbackRingtoneId,
+                  resolvedChannelId: fallbackChannelConfig.resolvedChannelId,
+                  ringtoneId: fallbackChannelConfig.ringtoneId,
                 ),
                 payload: payload,
                 androidScheduleMode: mode,
@@ -435,6 +436,7 @@ class NotificationService implements TaskReminderScheduler {
     }
   }
 
+  @override
   Future<void> advanceScheduleToTomorrow({
     required String taskType,
     required String referenceId,
@@ -976,34 +978,31 @@ class NotificationService implements TaskReminderScheduler {
 
     await _deleteLegacyReminderChannels(android);
 
-    await _createAndroidChannel(
-      android: android,
+    await _ensureAndroidChannelWithFallback(
       baseChannelId: medicineReminderChannelId,
-      resolvedChannelId: _resolvedChannelId(
+      preferredResolvedChannelId: _resolvedChannelId(
         baseChannelId: medicineReminderChannelId,
         ringtoneId: AppPreferences.notifMedicineRingtoneId,
       ),
-      ringtoneId: AppPreferences.notifMedicineRingtoneId,
+      preferredRingtoneId: AppPreferences.notifMedicineRingtoneId,
     );
 
-    await _createAndroidChannel(
-      android: android,
+    await _ensureAndroidChannelWithFallback(
       baseChannelId: measurementReminderChannelId,
-      resolvedChannelId: _resolvedChannelId(
+      preferredResolvedChannelId: _resolvedChannelId(
         baseChannelId: measurementReminderChannelId,
         ringtoneId: AppPreferences.notifMeasurementRingtoneId,
       ),
-      ringtoneId: AppPreferences.notifMeasurementRingtoneId,
+      preferredRingtoneId: AppPreferences.notifMeasurementRingtoneId,
     );
 
-    await _createAndroidChannel(
-      android: android,
+    await _ensureAndroidChannelWithFallback(
       baseChannelId: activityReminderChannelId,
-      resolvedChannelId: _resolvedChannelId(
+      preferredResolvedChannelId: _resolvedChannelId(
         baseChannelId: activityReminderChannelId,
         ringtoneId: AppPreferences.notifActivityRingtoneId,
       ),
-      ringtoneId: AppPreferences.notifActivityRingtoneId,
+      preferredRingtoneId: AppPreferences.notifActivityRingtoneId,
     );
 
     await _createAndroidChannel(
@@ -1021,6 +1020,74 @@ class NotificationService implements TaskReminderScheduler {
       baseChannelId: dailySummaryChannelId,
       resolvedChannelId: dailySummaryChannelId,
     );
+  }
+
+  Future<_AndroidChannelConfig> _ensureAndroidChannelWithFallback({
+    required String baseChannelId,
+    required String preferredResolvedChannelId,
+    required String? preferredRingtoneId,
+  }) async {
+    if (!_isReminderBaseChannel(baseChannelId)) {
+      await _ensureAndroidChannel(
+        baseChannelId: baseChannelId,
+        resolvedChannelId: preferredResolvedChannelId,
+        ringtoneId: preferredRingtoneId,
+      );
+      return _AndroidChannelConfig(
+        resolvedChannelId: preferredResolvedChannelId,
+        ringtoneId: preferredRingtoneId,
+      );
+    }
+
+    PlatformException? lastInvalidSoundError;
+    for (final ringtoneId in _reminderRingtoneFallbackCandidates(
+      preferredRingtoneId,
+    )) {
+      final resolvedChannelId = ringtoneId == preferredRingtoneId
+          ? preferredResolvedChannelId
+          : _resolvedChannelId(
+              baseChannelId: baseChannelId,
+              ringtoneId: ringtoneId,
+            );
+
+      try {
+        await _ensureAndroidChannel(
+          baseChannelId: baseChannelId,
+          resolvedChannelId: resolvedChannelId,
+          ringtoneId: ringtoneId,
+        );
+
+        if (kDebugMode && ringtoneId != preferredRingtoneId) {
+          debugPrint(
+            '[NotificationService] Android sound fallback applied: '
+            '$preferredRingtoneId -> $ringtoneId',
+          );
+        }
+
+        return _AndroidChannelConfig(
+          resolvedChannelId: resolvedChannelId,
+          ringtoneId: ringtoneId,
+        );
+      } on PlatformException catch (error) {
+        if (!_isInvalidSoundError(error)) {
+          rethrow;
+        }
+
+        lastInvalidSoundError = error;
+        if (kDebugMode) {
+          debugPrint(
+            '[NotificationService] Invalid Android sound "$ringtoneId": '
+            '${error.message}',
+          );
+        }
+      }
+    }
+
+    throw lastInvalidSoundError ??
+        PlatformException(
+          code: 'invalid_sound',
+          message: 'No valid Android reminder sound could be resolved.',
+        );
   }
 
   Future<void> _ensureAndroidChannel({
@@ -1164,11 +1231,34 @@ class NotificationService implements TaskReminderScheduler {
     }
 
     final normalizedPreferred = AlarmRingtones.normalizeId(preferredRingtoneId);
+    if (normalizedPreferred == AlarmRingtones.systemDefault) {
+      return null;
+    }
+
     if (normalizedPreferred != _fallbackReminderRingtoneId) {
       return _fallbackReminderRingtoneId;
     }
 
     return AlarmRingtones.systemDefault;
+  }
+
+  List<String> _reminderRingtoneFallbackCandidates(
+    String? preferredRingtoneId,
+  ) {
+    final candidates = <String>[];
+
+    void add(String? ringtoneId) {
+      final normalized = AlarmRingtones.normalizeId(ringtoneId);
+      if (!candidates.contains(normalized)) {
+        candidates.add(normalized);
+      }
+    }
+
+    add(preferredRingtoneId);
+    add(_fallbackReminderRingtoneId);
+    add(AlarmRingtones.systemDefault);
+
+    return candidates;
   }
 
   String _resolvedChannelId({
@@ -1278,6 +1368,16 @@ class NotificationService implements TaskReminderScheduler {
   Future<void> _onNotificationResponse(NotificationResponse response) async {
     await _handleNotificationResponse(response);
   }
+}
+
+class _AndroidChannelConfig {
+  const _AndroidChannelConfig({
+    required this.resolvedChannelId,
+    required this.ringtoneId,
+  });
+
+  final String resolvedChannelId;
+  final String? ringtoneId;
 }
 
 int stableNotificationId(String seed) {

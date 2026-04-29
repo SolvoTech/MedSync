@@ -85,117 +85,71 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             isDark ? Brightness.dark : Brightness.light,
           ),
         ),
-        child: Stack(
-          children: [
-            // Decorative circles
-            Positioned(
-              top: -80,
-              right: -60,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
+        child: AnimatedBuilder(
+          animation: _animController,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _fadeAnim.value,
+              child: SlideTransition(
+                position: _slideAnim,
+                child: Transform.scale(scale: _scaleAnim.value, child: child),
               ),
-            ),
-            Positioned(
-              bottom: -100,
-              left: -40,
-              child: Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.04),
-                ),
-              ),
-            ),
-            Positioned(
-              top: MediaQuery.of(context).size.height * 0.2,
-              left: -30,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.05),
-                ),
-              ),
-            ),
-            // Main content
-            AnimatedBuilder(
-              animation: _animController,
-              builder: (context, child) {
-                return Opacity(
-                  opacity: _fadeAnim.value,
-                  child: SlideTransition(
-                    position: _slideAnim,
-                    child: Transform.scale(
-                      scale: _scaleAnim.value,
-                      child: child,
+            );
+          },
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(22),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryDark.withValues(alpha: 0.22),
+                        blurRadius: 18,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.asset(
+                      'assets/images/app_logo.jpeg',
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.cover,
                     ),
                   ),
-                );
-              },
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // App icon in frosted container
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primaryDark.withValues(alpha: 0.3),
-                            blurRadius: 32,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.asset(
-                          'assets/images/app_logo.jpeg',
-                          width: 64,
-                          height: 64,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    const Text(
-                      'MedSync',
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Pendamping Kesehatan Anda',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
                 ),
-              ),
+                const SizedBox(height: 28),
+                const Text(
+                  'MedSync',
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Pendamping Kesehatan Anda',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withValues(alpha: 0.85),
+                    letterSpacing: 0,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

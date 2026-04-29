@@ -88,11 +88,18 @@ class _SharedViewEntryScreenState extends State<SharedViewEntryScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.tr('View Status', 'Lihat Status'))),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
+      appBar: AppBar(
+        title: Text(
+          AppStrings.tr('View Status', 'Lihat Status'),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(compact ? 16 : 24),
         child: Form(
           key: _formKey,
           autovalidateMode: _hasAttemptedSubmit
@@ -101,15 +108,16 @@ class _SharedViewEntryScreenState extends State<SharedViewEntryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 40),
+              SizedBox(height: compact ? 24 : 40),
               Icon(
                 Icons.share_outlined,
-                size: 64,
+                size: compact ? 52 : 64,
                 color: colorScheme.primary.withValues(alpha: 0.6),
               ),
               const SizedBox(height: 16),
               Text(
                 AppStrings.tr('Enter Access Code', 'Masukkan Kode Akses'),
+                textAlign: TextAlign.center,
                 style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),

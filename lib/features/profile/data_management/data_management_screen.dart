@@ -158,32 +158,48 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.dataManagement)),
+      appBar: AppBar(
+        title: Text(
+          AppStrings.dataManagement,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(compact ? 12 : 16),
         children: [
           Text(
             AppStrings.tr('EXPORT DATA', 'EKSPOR DATA'),
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
-              letterSpacing: 1.2,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 8),
           AppCard(
             padding: EdgeInsets.zero,
             child: ListTile(
+              dense: compact,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: compact ? 12 : 16,
+                vertical: 4,
+              ),
               leading: const Icon(Icons.download),
               title: Text(
                 AppStrings.tr('Export Data JSON', 'Ekspor Data JSON'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               subtitle: Text(
                 AppStrings.tr(
                   'Download all your data in JSON format',
                   'Unduh semua data Anda dalam format JSON',
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               trailing: _isExporting
                   ? const SizedBox(
@@ -202,7 +218,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
             AppStrings.tr('DANGER ZONE', 'ZONA BAHAYA'),
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.error,
-              letterSpacing: 1.2,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 8),
@@ -219,11 +235,15 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                       size: 20,
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      AppStrings.tr('Delete Account', 'Hapus Akun'),
-                      style: textTheme.titleSmall?.copyWith(
-                        color: colorScheme.error,
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Text(
+                        AppStrings.tr('Delete Account', 'Hapus Akun'),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.titleSmall?.copyWith(
+                          color: colorScheme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],

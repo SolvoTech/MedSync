@@ -6,6 +6,7 @@ import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/constants/type_labels.dart';
 import '../../../../data/remote/datasources/task_log_remote_datasource.dart';
 import '../../../../domain/models/physical_activity_reminder.dart';
+import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../services/notification_service.dart';
 import '../../../../services/task_completion_service.dart';
 import '../../../physical_activity/activity_controller.dart';
@@ -28,14 +29,21 @@ class ActivityTab extends ConsumerWidget {
             if (items.isEmpty) {
               return ListView(
                 children: [
-                  SizedBox(height: 120),
-                  Center(
-                    child: Text(
-                      AppStrings.tr(
-                        'No activity reminders yet.',
-                        'Belum ada pengingat aktivitas.',
-                      ),
+                  const SizedBox(height: 90),
+                  AppEmptyState(
+                    message: AppStrings.tr(
+                      'No activity reminders yet.',
+                      'Belum ada pengingat aktivitas.',
                     ),
+                    subtitle: AppStrings.tr(
+                      'Add walking, exercise, or stretching reminders.',
+                      'Tambahkan pengingat jalan kaki, olahraga, atau peregangan.',
+                    ),
+                    icon: Icons.directions_walk_outlined,
+                    actionLabel: AppStrings.addActivity,
+                    actionIcon: Icons.add_alarm_rounded,
+                    onAction: () =>
+                        _openActivityEditor(context, ref, existing: null),
                   ),
                 ],
               );
@@ -106,11 +114,23 @@ class ActivityTab extends ConsumerWidget {
       ),
       floatingActionButton: Padding(
         padding: scheduleTabFabPadding(context),
-        child: FloatingActionButton.extended(
-          onPressed: () => _openActivityEditor(context, ref, existing: null),
-          icon: const Icon(Icons.add),
-          label: Text(AppStrings.addActivity),
-        ),
+        child: MediaQuery.sizeOf(context).width < 340
+            ? FloatingActionButton(
+                tooltip: AppStrings.addActivity,
+                onPressed: () =>
+                    _openActivityEditor(context, ref, existing: null),
+                child: const Icon(Icons.add),
+              )
+            : FloatingActionButton.extended(
+                onPressed: () =>
+                    _openActivityEditor(context, ref, existing: null),
+                icon: const Icon(Icons.add),
+                label: Text(
+                  AppStrings.addActivity,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
       ),
     );
   }

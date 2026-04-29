@@ -79,6 +79,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mediaSize = MediaQuery.sizeOf(context);
+    final compactWidth = mediaSize.width < 340;
+    final compactHeight = mediaSize.height < 700;
 
     return Scaffold(
       body: Stack(
@@ -88,43 +91,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             top: 0,
             left: 0,
             right: 0,
-            height: MediaQuery.of(context).size.height * 0.35,
+            height: mediaSize.height * (compactHeight ? 0.32 : 0.35),
             child: Container(
               decoration: BoxDecoration(
                 gradient: AppGradients.primaryFor(
                   isDark ? Brightness.dark : Brightness.light,
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(32),
+                  bottom: Radius.circular(16),
                 ),
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: -40,
-                    right: -30,
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.06),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    left: -20,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.05),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ),
@@ -133,7 +108,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(compactWidth ? 16 : 24),
                 child: Form(
                   key: _formKey,
                   autovalidateMode: _hasAttemptedSubmit
@@ -143,7 +118,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 12),
+                      SizedBox(height: compactHeight ? 6 : 12),
 
                       // App logo in frosted container
                       Center(
@@ -151,7 +126,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: Colors.white.withValues(alpha: 0.2),
                               width: 1,
@@ -161,13 +136,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 color: AppColors.primaryDark.withValues(
                                   alpha: 0.2,
                                 ),
-                                blurRadius: 24,
-                                offset: const Offset(0, 8),
+                                blurRadius: 14,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(8),
                             child: Image.asset(
                               'assets/images/app_logo.jpeg',
                               width: 44,
@@ -177,11 +152,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: compactHeight ? 8 : 12),
 
                       // Title + subtitle (on gradient)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
+                        padding: EdgeInsets.only(
+                          bottom: compactHeight ? 12 : 20,
+                        ),
                         child: Text(
                           AppStrings.registerTitle,
                           style: textTheme.headlineMedium?.copyWith(
@@ -208,14 +185,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         textAlign: TextAlign.center,
                       ),
 
-                      const SizedBox(height: 36),
+                      SizedBox(height: compactHeight ? 24 : 36),
 
                       // Form card
                       Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all(compactWidth ? 18 : 24),
                         decoration: BoxDecoration(
                           color: colorScheme.surface,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(16),
                           boxShadow: isDark
                               ? null
                               : [
@@ -223,8 +200,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     color: const Color(
                                       0xFF0F1419,
                                     ).withValues(alpha: 0.06),
-                                    blurRadius: 24,
-                                    offset: const Offset(0, 8),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                           border: isDark
@@ -327,8 +304,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       const SizedBox(height: 24),
 
                       // Login link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 2,
                         children: [
                           Text(
                             AppStrings.hasAccount,

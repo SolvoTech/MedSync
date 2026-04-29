@@ -32,7 +32,11 @@ class EducationFeedScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.tr('Health Articles', 'Artikel Kesehatan')),
+        title: Text(
+          AppStrings.tr('Health Articles', 'Artikel Kesehatan'),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           IconButton(
             tooltip: AppStrings.tr('Refresh', 'Muat Ulang'),
@@ -53,19 +57,19 @@ class EducationFeedScreen extends ConsumerWidget {
               AppLoadingSkeleton(
                 width: double.infinity,
                 height: 130,
-                borderRadius: 20,
+                borderRadius: 12,
               ),
               SizedBox(height: 10),
               AppLoadingSkeleton(
                 width: double.infinity,
                 height: 130,
-                borderRadius: 20,
+                borderRadius: 12,
               ),
               SizedBox(height: 10),
               AppLoadingSkeleton(
                 width: double.infinity,
                 height: 130,
-                borderRadius: 20,
+                borderRadius: 12,
               ),
             ],
           ),
@@ -141,23 +145,37 @@ class _FeaturedArticleCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _ArticleCover(url: article.coverUrl, height: 220, showGradient: true),
+          _ArticleCover(
+            url: article.coverUrl,
+            height: MediaQuery.sizeOf(context).width < 340 ? 170 : 220,
+            showGradient: true,
+          ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            padding: EdgeInsets.fromLTRB(
+              MediaQuery.sizeOf(context).width < 340 ? 12 : 16,
+              14,
+              MediaQuery.sizeOf(context).width < 340 ? 12 : 16,
+              16,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     if ((article.category ?? '').trim().isNotEmpty)
-                      _ArticleChip(label: article.category!),
+                      Flexible(child: _ArticleChip(label: article.category!)),
                     const Spacer(),
-                    Text(
-                      publishedAt,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.55),
+                    Flexible(
+                      child: Text(
+                        publishedAt,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.55),
+                        ),
                       ),
                     ),
                   ],
@@ -204,6 +222,7 @@ class _ArticleListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < 390;
+    final xxs = width < 340;
     final hasSummary = (article.summary ?? '').trim().isNotEmpty;
     final cardHeight = hasSummary
         ? (compact ? 150.0 : 162.0)
@@ -217,6 +236,82 @@ class _ArticleListCard extends StatelessWidget {
           ).format(article.publishedAt!.toLocal())
         : '-';
 
+    if (xxs) {
+      return AppCard(
+        padding: EdgeInsets.zero,
+        onTap: () => context.push(AppRoutes.educationDetail(article.id)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
+              child: _ArticleCover(
+                url: article.coverUrl,
+                height: 128,
+                width: double.infinity,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      if ((article.category ?? '').trim().isNotEmpty)
+                        Flexible(
+                          child: _ArticleChip(label: article.category!),
+                        ),
+                      const Spacer(),
+                      Flexible(
+                        child: Text(
+                          publishedAt,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.5),
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    article.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (hasSummary) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      article.summary!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        height: 1.35,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return AppCard(
       padding: EdgeInsets.zero,
       onTap: () => context.push(AppRoutes.educationDetail(article.id)),
@@ -227,8 +322,8 @@ class _ArticleListCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                bottomLeft: Radius.circular(20),
+                topLeft: Radius.circular(12),
+                bottomLeft: Radius.circular(12),
               ),
               child: SizedBox(
                 width: imageWidth,
@@ -274,6 +369,8 @@ class _ArticleListCard extends StatelessWidget {
                     const Spacer(),
                     Text(
                       publishedAt,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: Theme.of(
                           context,
@@ -298,19 +395,26 @@ class _ArticleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.primaryContainer.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(999),
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.sizeOf(context).width * 0.58,
       ),
-      child: Text(
-        label,
-        style: Theme.of(
-          context,
-        ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Theme.of(
+            context,
+          ).colorScheme.primaryContainer.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+        ),
       ),
     );
   }

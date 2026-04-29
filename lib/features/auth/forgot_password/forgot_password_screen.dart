@@ -66,6 +66,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenHeight = MediaQuery.sizeOf(context).height;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final compactWidth = screenWidth < 340;
     final headerHeight = screenHeight < 760
         ? screenHeight * 0.43
         : screenHeight * 0.38;
@@ -86,43 +88,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   isDark ? Brightness.dark : Brightness.light,
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(32),
+                  bottom: Radius.circular(16),
                 ),
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: -40,
-                    right: -30,
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.06),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    left: -20,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.05),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ),
 
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(compactWidth ? 16 : 24),
               child: Form(
                 key: _formKey,
                 autovalidateMode: _hasAttemptedSubmit
@@ -139,7 +113,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: Colors.white.withValues(alpha: 0.2),
                             width: 1,
@@ -149,8 +123,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                               color: AppColors.primaryDark.withValues(
                                 alpha: 0.2,
                               ),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
+                              blurRadius: 14,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
@@ -196,10 +170,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     SizedBox(height: headerToCardSpacing),
 
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: EdgeInsets.all(compactWidth ? 18 : 24),
                       decoration: BoxDecoration(
                         color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: isDark
                             ? null
                             : [
@@ -207,8 +181,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                   color: const Color(
                                     0xFF0F1419,
                                   ).withValues(alpha: 0.06),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 8),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                         border: isDark
@@ -245,8 +219,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
                     const SizedBox(height: 18),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 2,
                       children: [
                         Text(
                           AppStrings.rememberPasswordPrompt,

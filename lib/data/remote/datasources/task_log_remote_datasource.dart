@@ -35,6 +35,7 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
         .toList();
   }
 
+  @override
   Future<void> updateTaskStatus({
     required String taskLogId,
     required String status,
@@ -63,6 +64,7 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
         .eq('owner_id', user.id);
   }
 
+  @override
   Future<void> markReminderDoneByReference({
     required String taskType,
     required String referenceId,

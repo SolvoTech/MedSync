@@ -37,7 +37,7 @@ class AdminIntroCard extends StatelessWidget {
             height: isCompact ? 40 : 44,
             decoration: BoxDecoration(
               color: tone.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: tone, size: isCompact ? 20 : 22),
           ),
@@ -48,9 +48,9 @@ class AdminIntroCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style:
-                      (isCompact ? textTheme.titleSmall : textTheme.titleMedium)
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                  style: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -69,20 +69,26 @@ class AdminIntroCard extends StatelessWidget {
           ),
           if (badge != null) ...[
             const SizedBox(width: 8),
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: isCompact ? 8 : 10,
-                vertical: isCompact ? 4 : 5,
-              ),
-              decoration: BoxDecoration(
-                color: tone.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                badge!,
-                style: textTheme.labelSmall?.copyWith(
-                  color: tone,
-                  fontWeight: FontWeight.w700,
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: isCompact ? 54 : 72),
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isCompact ? 8 : 10,
+                  vertical: isCompact ? 4 : 5,
+                ),
+                decoration: BoxDecoration(
+                  color: tone.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  badge!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: textTheme.labelSmall?.copyWith(
+                    color: tone,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -123,7 +129,7 @@ class AdminSectionTitle extends StatelessWidget {
             height: isCompact ? 24 : 28,
             decoration: BoxDecoration(
               color: colorScheme.primaryContainer.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
               icon,
@@ -138,9 +144,9 @@ class AdminSectionTitle extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style:
-                      (isCompact ? textTheme.titleMedium : textTheme.titleSmall)
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                  style: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

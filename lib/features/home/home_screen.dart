@@ -61,11 +61,10 @@ class HomeScreen extends ConsumerWidget {
         },
         child: CustomScrollView(
           slivers: [
-            // Gradient Hero App Bar
             SliverAppBar(
               floating: true,
-              expandedHeight: 132,
-              toolbarHeight: 64,
+              expandedHeight: 118,
+              toolbarHeight: 60,
               backgroundColor: Colors.transparent,
               foregroundColor: Colors.white,
               actions: [
@@ -85,91 +84,55 @@ class HomeScreen extends ConsumerWidget {
                     isDark ? Brightness.dark : Brightness.light,
                   ),
                   borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(24),
+                    bottom: Radius.circular(16),
                   ),
                 ),
-                child: Stack(
-                  children: [
-                    // Decorative circle
-                    Positioned(
-                      top: -20,
-                      right: -20,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.06),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 10,
-                      left: -15,
-                      child: Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.04),
-                        ),
-                      ),
-                    ),
-                    // Content
-                    SafeArea(
-                      bottom: false,
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isCompact = constraints.maxHeight < 64;
-                          final showDate = constraints.maxHeight >= 76;
+                child: SafeArea(
+                  bottom: false,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isCompact = constraints.maxHeight < 64;
+                      final showDate = constraints.maxHeight >= 76;
 
-                          return Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
-                            child: Align(
-                              alignment: Alignment.bottomLeft,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _greeting(),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style:
-                                        (isCompact
-                                                ? textTheme.titleMedium
-                                                : textTheme.titleLarge)
-                                            ?.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                  ),
-                                  if (showDate) ...[
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      DateFormat(
-                                        'EEEE, d MMMM yyyy',
-                                        AppStrings.languageCode == 'id'
-                                            ? 'id_ID'
-                                            : 'en_US',
-                                      ).format(DateTime.now()),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: textTheme.bodyMedium?.copyWith(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.8,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                        child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _greeting(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: textTheme.titleLarge?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                              if (showDate) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  DateFormat(
+                                    'EEEE, d MMMM yyyy',
+                                    AppStrings.languageCode == 'id'
+                                        ? 'id_ID'
+                                        : 'en_US',
+                                  ).format(DateTime.now()),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.82),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -186,7 +149,7 @@ class HomeScreen extends ConsumerWidget {
                   loading: () => const AppLoadingSkeleton(
                     width: double.infinity,
                     height: 80,
-                    borderRadius: 20,
+                    borderRadius: 12,
                   ),
                   error: (_, _) => const SizedBox.shrink(),
                 ),
@@ -243,7 +206,7 @@ class HomeScreen extends ConsumerWidget {
                   loading: () => const AppLoadingSkeleton(
                     width: double.infinity,
                     height: 64,
-                    borderRadius: 20,
+                    borderRadius: 12,
                   ),
                   error: (_, _) => const SizedBox.shrink(),
                 ),
@@ -274,7 +237,7 @@ class HomeScreen extends ConsumerWidget {
                   child: const AppLoadingSkeleton(
                     width: double.infinity,
                     height: 78,
-                    borderRadius: 20,
+                    borderRadius: 12,
                   ),
                 ),
               ),
@@ -296,6 +259,9 @@ class HomeScreen extends ConsumerWidget {
                       child: AppEmptyState(
                         message: AppStrings.noTasksToday,
                         icon: Icons.task_alt,
+                        actionLabel: AppStrings.scheduleTitle,
+                        actionIcon: Icons.add_alarm_rounded,
+                        onAction: () => context.go(AppRoutes.schedule),
                         subtitle: AppStrings.tr(
                           'Add medication, measurement, or activity schedules\nto start tracking your health.',
                           'Tambahkan jadwal obat, pengukuran, atau aktivitas\nuntuk mulai melacak kesehatan Anda.',
@@ -345,7 +311,7 @@ class HomeScreen extends ConsumerWidget {
                         child: AppLoadingSkeleton(
                           width: double.infinity,
                           height: 72,
-                          borderRadius: 20,
+                          borderRadius: 12,
                         ),
                       ),
                     ),
@@ -380,66 +346,70 @@ class _StreakCard extends StatelessWidget {
     final currentStreak = streak?.currentStreak ?? 0;
     final message = streak?.motivationMessage ?? AppStrings.firstDayMotivation;
     final isHot = currentStreak >= 7;
+    final accentColor = isHot ? AppColors.warning : colorScheme.primary;
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return AppCard(
-      gradient: isHot
-          ? const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFFF6B35), Color(0xFFE53E3E)],
-            )
-          : null,
-      color: isHot ? null : colorScheme.surfaceContainerHighest,
+      color: colorScheme.surface,
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: compact ? 38 : 44,
+            height: compact ? 38 : 44,
             decoration: BoxDecoration(
-              color: isHot
-                  ? Colors.white.withValues(alpha: 0.2)
-                  : colorScheme.primaryContainer,
-              shape: BoxShape.circle,
+              color: accentColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Center(
-              child: Text(
-                isHot ? '🔥' : '💪',
-                style: const TextStyle(fontSize: 24),
-              ),
+            child: Icon(
+              isHot
+                  ? Icons.local_fire_department_rounded
+                  : Icons.auto_graph_rounded,
+              color: accentColor,
+              size: compact ? 21 : 24,
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: compact ? 10 : 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Text(
-                      '$currentStreak',
-                      style: textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: isHot ? Colors.white : colorScheme.primary,
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: compact ? 72 : 96,
+                      ),
+                      child: Text(
+                        '$currentStreak',
+                        maxLines: 1,
+                        overflow: TextOverflow.fade,
+                        softWrap: false,
+                        style: textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: accentColor,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      AppStrings.streakDays,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: isHot
-                            ? Colors.white.withValues(alpha: 0.9)
-                            : colorScheme.onSurface,
-                        fontWeight: FontWeight.w500,
+                    Flexible(
+                      child: Text(
+                        AppStrings.streakDays,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
                 ),
                 Text(
                   message,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: textTheme.bodySmall?.copyWith(
-                    color: isHot
-                        ? Colors.white.withValues(alpha: 0.8)
-                        : colorScheme.onSurface.withValues(alpha: 0.6),
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -468,36 +438,45 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: isDark ? 0.2 : 0.1),
-            shape: BoxShape.circle,
+        if (!compact) ...[
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: isDark ? 0.2 : 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 16, color: color),
           ),
-          child: Icon(icon, size: 16, color: color),
-        ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
+          const SizedBox(width: 10),
+        ],
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
-            ),
-          ],
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

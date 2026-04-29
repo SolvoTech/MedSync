@@ -1,0 +1,2 @@
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/fs_cc0_chime_notification,@raw/fs_cc0_chime_notification_pcm,@raw/fs_cc0_phone_chime,@raw/fs_cc0_phone_chime_pcm,@raw/fs_cc0_soft_bell,@raw/fs_cc0_soft_bell_pcm,@raw/medsync_obat_tenang" />

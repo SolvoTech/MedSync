@@ -145,6 +145,7 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
       appBar: AppBar(
@@ -152,10 +153,12 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
           _isEditing
               ? AppStrings.tr('Edit Member', 'Edit Anggota')
               : AppStrings.addCarePerson,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(compact ? 16 : 20),
         child: Form(
           key: _formKey,
           autovalidateMode: _hasAttemptedSubmit
@@ -186,7 +189,11 @@ class _CarePersonFormScreenState extends ConsumerState<CarePersonFormScreen> {
                 children: _relationshipOptions.map((option) {
                   final isSelected = _relationshipController.text == option;
                   return ChoiceChip(
-                    label: Text(option),
+                    label: Text(
+                      option,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     selected: isSelected,
                     onSelected: (selected) {
                       setState(() {
