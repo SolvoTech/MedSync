@@ -91,7 +91,6 @@ class HomeScreen extends ConsumerWidget {
                   bottom: false,
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final isCompact = constraints.maxHeight < 64;
                       final showDate = constraints.maxHeight >= 76;
 
                       return Padding(

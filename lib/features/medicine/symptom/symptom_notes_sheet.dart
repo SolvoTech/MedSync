@@ -274,7 +274,7 @@ class _MoodChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: ConstrainedBox(
-        constraints: BoxConstraints(width: compact ? 78 : 88),
+        constraints: BoxConstraints.tightFor(width: compact ? 78 : 88),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: EdgeInsets.symmetric(
