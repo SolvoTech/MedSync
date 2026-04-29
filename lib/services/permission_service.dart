@@ -26,8 +26,35 @@ class PermissionService {
     return status.isGranted;
   }
 
+  Future<bool> hasNotificationPolicyAccess() async {
+    final status = await Permission.accessNotificationPolicy.status;
+    return status.isGranted;
+  }
+
+  Future<bool> requestNotificationPolicyAccess() async {
+    final status = await Permission.accessNotificationPolicy.request();
+    return status.isGranted;
+  }
+
   Future<bool> requestIgnoreBatteryOptimizations() async {
     final status = await Permission.ignoreBatteryOptimizations.request();
     return status.isGranted;
+  }
+
+  Future<void> ensureReminderReliabilityPermissions() async {
+    await ensureNotificationPermission();
+
+    if (!await canScheduleExactAlarms()) {
+      await requestExactAlarmPermission();
+    }
+
+    if (!await hasNotificationPolicyAccess()) {
+      await requestNotificationPolicyAccess();
+    }
+
+    final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
+    if (!batteryStatus.isGranted) {
+      await requestIgnoreBatteryOptimizations();
+    }
   }
 }

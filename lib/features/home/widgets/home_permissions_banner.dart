@@ -4,6 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/warning_banner.dart';
+import '../../../services/notification_service.dart';
 
 class HomePermissionsBanner extends ConsumerStatefulWidget {
   const HomePermissionsBanner({super.key});
@@ -17,6 +18,7 @@ class _HomePermissionsBannerState extends ConsumerState<HomePermissionsBanner>
     with WidgetsBindingObserver {
   bool _needsNotification = false;
   bool _needsAlarm = false;
+  bool _needsDndAccess = false;
   bool _needsBatteryOpt = false;
   bool _needsActivityRecognition = false;
   bool _needsBodySensors = false;
@@ -47,6 +49,7 @@ class _HomePermissionsBannerState extends ConsumerState<HomePermissionsBanner>
 
     final notifStatus = await Permission.notification.status;
     final alarmStatus = await Permission.scheduleExactAlarm.status;
+    final dndStatus = await Permission.accessNotificationPolicy.status;
     final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
     final activityRecognitionStatus =
         await Permission.activityRecognition.status;
@@ -56,6 +59,7 @@ class _HomePermissionsBannerState extends ConsumerState<HomePermissionsBanner>
       setState(() {
         _needsNotification = !notifStatus.isGranted;
         _needsAlarm = !alarmStatus.isGranted;
+        _needsDndAccess = !dndStatus.isGranted;
         _needsBatteryOpt = !batteryStatus.isGranted;
         _needsActivityRecognition = !activityRecognitionStatus.isGranted;
         _needsBodySensors = !sensorsStatus.isGranted;
@@ -67,11 +71,20 @@ class _HomePermissionsBannerState extends ConsumerState<HomePermissionsBanner>
   Future<void> _requestPermissions() async {
     if (_needsNotification) await Permission.notification.request();
     if (_needsAlarm) await Permission.scheduleExactAlarm.request();
+    final requestedDndAccess = _needsDndAccess;
+    if (_needsDndAccess) await Permission.accessNotificationPolicy.request();
     if (_needsBatteryOpt) await Permission.ignoreBatteryOptimizations.request();
     if (_needsActivityRecognition) {
       await Permission.activityRecognition.request();
     }
     if (_needsBodySensors) await Permission.sensors.request();
+    if (requestedDndAccess) {
+      try {
+        await ref
+            .read(notificationServiceProvider)
+            .applyRingtonePreferenceChanges();
+      } catch (_) {}
+    }
     await _checkPermissions();
   }
 
@@ -85,6 +98,11 @@ class _HomePermissionsBannerState extends ConsumerState<HomePermissionsBanner>
     }
     if (_needsAlarm) {
       missingPermissions.add(AppStrings.tr('Exact Alarm', 'Alarm Tepat Waktu'));
+    }
+    if (_needsDndAccess) {
+      missingPermissions.add(
+        AppStrings.tr('Do Not Disturb Access', 'Akses Jangan Ganggu'),
+      );
     }
     if (_needsBatteryOpt) {
       missingPermissions.add(

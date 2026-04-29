@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/admin/admin_control_screen.dart';
 import '../../features/admin/admin_education_screen.dart';
 import '../../features/admin/admin_user_activity_screen.dart';
+import '../../features/auth/auth_controller.dart';
 import '../../features/auth/login/login_screen.dart';
 import '../../features/auth/onboarding_profile/onboarding_profile_screen.dart';
 import '../../features/auth/register/register_screen.dart';
@@ -36,6 +37,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         matchedLocation: state.matchedLocation,
         isAuthenticated: authNotifier.session != null,
         isAdmin: authNotifier.isAdmin,
+        isRegistering: ref.read(authRegistrationInProgressProvider),
       );
     },
     routes: [
@@ -148,10 +150,11 @@ String? resolveAppRedirect({
   required String matchedLocation,
   required bool isAuthenticated,
   required bool? isAdmin,
+  bool isRegistering = false,
 }) {
-  final isAuthRoute =
-      matchedLocation == AppRoutes.login ||
-      matchedLocation == AppRoutes.register;
+  final isLoginRoute = matchedLocation == AppRoutes.login;
+  final isRegisterRoute = matchedLocation == AppRoutes.register;
+  final isAuthRoute = isLoginRoute || isRegisterRoute;
   final isAdminRoute =
       matchedLocation == AppRoutes.adminControl ||
       matchedLocation.startsWith('${AppRoutes.adminControl}/') ||
@@ -169,7 +172,11 @@ String? resolveAppRedirect({
     return AppRoutes.login;
   }
 
-  if (isAuthenticated && isAuthRoute) {
+  if (isAuthenticated && isLoginRoute) {
+    return AppRoutes.home;
+  }
+
+  if (isAuthenticated && isRegisterRoute && !isRegistering) {
     return AppRoutes.home;
   }
 

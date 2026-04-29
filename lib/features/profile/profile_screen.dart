@@ -54,6 +54,18 @@ final currentProfileProvider = FutureProvider.autoDispose<UserProfile?>((
   return ref.watch(_profileByUserIdProvider(authUserId).future);
 });
 
+void refreshCurrentProfile(WidgetRef ref) {
+  final authUserId =
+      ref.read(authUserIdProvider).valueOrNull ??
+      Supabase.instance.client.auth.currentUser?.id;
+
+  if (authUserId != null && authUserId.isNotEmpty) {
+    ref.invalidate(_profileByUserIdProvider(authUserId));
+  }
+
+  ref.invalidate(currentProfileProvider);
+}
+
 bool _isGenericDisplayName(String value) {
   final normalized = value.trim().toLowerCase();
   return normalized == 'administrator' ||
@@ -226,7 +238,7 @@ class ProfileScreen extends ConsumerWidget {
                           );
                           if (updated == true) {
                             await ImageCacheService.clearAll();
-                            ref.invalidate(currentProfileProvider);
+                            refreshCurrentProfile(ref);
                           }
                         },
                         borderRadius: BorderRadius.circular(40),
@@ -344,7 +356,7 @@ class ProfileScreen extends ConsumerWidget {
                           );
                           if (updated == true) {
                             await ImageCacheService.clearAll();
-                            ref.invalidate(currentProfileProvider);
+                            refreshCurrentProfile(ref);
                           }
                         },
                       ),

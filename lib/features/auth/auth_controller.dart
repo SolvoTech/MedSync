@@ -12,6 +12,8 @@ final authControllerProvider =
       AuthController.new,
     );
 
+final authRegistrationInProgressProvider = StateProvider<bool>((ref) => false);
+
 class AuthController extends AutoDisposeNotifier<AsyncValue<void>> {
   static const String _internalEmailDomain = 'users.medsync.local';
   static final RegExp _usernameRegex = RegExp(r'^[a-z0-9_]{3,24}$');
@@ -40,29 +42,42 @@ class AuthController extends AutoDisposeNotifier<AsyncValue<void>> {
     required String password,
   }) async {
     state = const AsyncLoading();
+    final registrationGuard = ref.read(
+      authRegistrationInProgressProvider.notifier,
+    );
+    registrationGuard.state = true;
+
     state = await AsyncValue.guard(() async {
-      final normalizedUsername = _normalizeUsername(username);
-      if (!_usernameRegex.hasMatch(normalizedUsername)) {
-        throw Exception('Username tidak valid.');
-      }
+      AuthResponse? response;
 
-      final response = await Supabase.instance.client.auth.signUp(
-        data: {'full_name': fullName.trim(), 'username': normalizedUsername},
-        email: _internalEmailFromUsername(normalizedUsername),
-        password: password,
-        emailRedirectTo: 'io.supabase.medsync://login-callback/',
-      );
+      try {
+        final normalizedUsername = _normalizeUsername(username);
+        if (!_usernameRegex.hasMatch(normalizedUsername)) {
+          throw Exception('Username tidak valid.');
+        }
 
-      await _ensureProfileAfterSignUp(
-        fullName: fullName.trim(),
-        normalizedUsername: normalizedUsername,
-        signedUpUserId: response.user?.id,
-      );
+        response = await Supabase.instance.client.auth.signUp(
+          data: {'full_name': fullName.trim(), 'username': normalizedUsername},
+          email: _internalEmailFromUsername(normalizedUsername),
+          password: password,
+          emailRedirectTo: 'io.supabase.medsync://login-callback/',
+        );
 
-      // Keep registration flow explicit: users must log in manually after sign up.
-      if (response.session != null ||
-          Supabase.instance.client.auth.currentSession != null) {
-        await Supabase.instance.client.auth.signOut();
+        await _ensureProfileAfterSignUp(
+          fullName: fullName.trim(),
+          normalizedUsername: normalizedUsername,
+          signedUpUserId: response.user?.id,
+        );
+      } finally {
+        try {
+          // Keep registration flow explicit: users must log in manually after sign up.
+          if (response?.session != null ||
+              Supabase.instance.client.auth.currentSession != null) {
+            await Supabase.instance.client.auth.signOut();
+          }
+        } finally {
+          registrationGuard.state = false;
+        }
       }
     });
   }

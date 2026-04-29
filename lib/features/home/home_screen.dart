@@ -375,9 +375,7 @@ class _StreakCard extends StatelessWidget {
                 Row(
                   children: [
                     ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: compact ? 72 : 96,
-                      ),
+                      constraints: BoxConstraints(maxWidth: compact ? 72 : 96),
                       child: Text(
                         '$currentStreak',
                         maxLines: 1,
@@ -520,28 +518,30 @@ class _TodayTaskSectionHeader extends StatelessWidget {
       color: colorScheme.surfaceContainerLow,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isVerySmall = constraints.maxWidth < 320 || textScale > 1.1;
+          final isCompact = constraints.maxWidth < 360 || textScale > 1.08;
+          final isTiny = constraints.maxWidth < 280;
 
           final leadingIcon = Container(
-            width: 40,
-            height: 40,
+            width: isTiny ? 36 : 40,
+            height: isTiny ? 36 : 40,
             decoration: BoxDecoration(
               color: colorScheme.primaryContainer.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(11),
+              borderRadius: BorderRadius.circular(isTiny ? 10 : 11),
             ),
             child: Icon(
               Icons.checklist_rtl_rounded,
               color: colorScheme.primary,
-              size: 21,
+              size: isTiny ? 19 : 21,
             ),
           );
 
           final pendingBadge = _PendingTaskBadge(
             total: total,
             pending: pending,
+            compact: isCompact,
           );
 
-          if (!isVerySmall) {
+          if (!isCompact) {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -576,20 +576,65 @@ class _TodayTaskSectionHeader extends StatelessWidget {
 }
 
 class _PendingTaskBadge extends StatelessWidget {
-  const _PendingTaskBadge({required this.total, required this.pending});
+  const _PendingTaskBadge({
+    required this.total,
+    required this.pending,
+    required this.compact,
+  });
 
   final int total;
   final int pending;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final label = total == 0
+        ? AppStrings.tr('No task', 'Tidak ada')
+        : AppStrings.tr('pending', 'menunggu');
+
+    if (compact) {
+      return ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 160),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '$pending ',
+                  style: textTheme.labelLarge?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                TextSpan(
+                  text: label,
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colorScheme.primary.withValues(alpha: 0.88),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            softWrap: false,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 78, maxWidth: 130),
+      constraints: const BoxConstraints(minWidth: 66, maxWidth: 112),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
         decoration: BoxDecoration(
           color: colorScheme.primary.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
@@ -609,9 +654,7 @@ class _PendingTaskBadge extends StatelessWidget {
               ),
             ),
             Text(
-              total == 0
-                  ? AppStrings.tr('No task', 'Tidak ada')
-                  : AppStrings.tr('pending', 'menunggu'),
+              label,
               maxLines: 1,
               softWrap: false,
               overflow: TextOverflow.ellipsis,

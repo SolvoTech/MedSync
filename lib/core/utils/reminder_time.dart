@@ -51,3 +51,43 @@ DateTime? reminderScheduledAtForDay({
 
   return DateTime(day.year, day.month, day.day, hour, minute);
 }
+
+DateTime nextReminderOccurrence({
+  required DateTime startDate,
+  required String timeOfDay,
+  DateTime? now,
+}) {
+  final referenceNow = now ?? DateTime.now();
+  final scheduledAt = reminderScheduledAtForDay(
+    day: startDate,
+    timeOfDay: timeOfDay,
+  );
+
+  if (scheduledAt == null) {
+    return referenceNow.add(const Duration(seconds: 5));
+  }
+
+  if (!scheduledAt.isBefore(referenceNow)) {
+    return scheduledAt;
+  }
+
+  final todayAtReminderTime = reminderScheduledAtForDay(
+    day: referenceNow,
+    timeOfDay: timeOfDay,
+  );
+
+  if (todayAtReminderTime == null) {
+    return referenceNow.add(const Duration(seconds: 5));
+  }
+
+  if (!todayAtReminderTime.isBefore(referenceNow)) {
+    return todayAtReminderTime;
+  }
+
+  if (referenceNow.hour == todayAtReminderTime.hour &&
+      referenceNow.minute == todayAtReminderTime.minute) {
+    return referenceNow.add(const Duration(seconds: 5));
+  }
+
+  return todayAtReminderTime.add(const Duration(days: 1));
+}

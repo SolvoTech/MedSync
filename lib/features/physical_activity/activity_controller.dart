@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/type_labels.dart';
 import '../../core/observability/app_monitoring.dart';
+import '../../core/utils/reminder_time.dart';
 import '../../data/local/preferences/app_preferences.dart';
 import '../../data/remote/datasources/physical_activity_remote_datasource.dart';
 import '../../domain/models/physical_activity_reminder.dart';
@@ -45,11 +46,7 @@ class ActivityController
     num? targetValue,
   }) async {
     final permissionService = ref.read(permissionServiceProvider);
-    await permissionService.ensureNotificationPermission();
-    final canScheduleExact = await permissionService.canScheduleExactAlarms();
-    if (!canScheduleExact) {
-      await permissionService.requestExactAlarmPermission();
-    }
+    await permissionService.ensureReminderReliabilityPermissions();
 
     final reminder = await ref
         .read(activityRemoteDataSourceProvider)
@@ -93,6 +90,9 @@ class ActivityController
     String? targetUnit,
     num? targetValue,
   }) async {
+    final permissionService = ref.read(permissionServiceProvider);
+    await permissionService.ensureReminderReliabilityPermissions();
+
     await ref
         .read(activityRemoteDataSourceProvider)
         .updateReminder(
@@ -228,22 +228,6 @@ class ActivityController
     required DateTime startDate,
     required String timeOfDay,
   }) {
-    final parts = timeOfDay.split(':');
-    final hour = int.parse(parts[0]);
-    final minute = int.parse(parts[1]);
-
-    var scheduledAt = DateTime(
-      startDate.year,
-      startDate.month,
-      startDate.day,
-      hour,
-      minute,
-    );
-
-    if (scheduledAt.isBefore(DateTime.now())) {
-      scheduledAt = scheduledAt.add(const Duration(days: 1));
-    }
-
-    return scheduledAt;
+    return nextReminderOccurrence(startDate: startDate, timeOfDay: timeOfDay);
   }
 }

@@ -24,14 +24,38 @@ void main() {
       expect(result, isNull);
     });
 
-    test('redirects authenticated user away from auth route', () {
+    test('redirects authenticated user away from login route', () {
       final result = resolveAppRedirect(
-        matchedLocation: AppRoutes.register,
+        matchedLocation: AppRoutes.login,
         isAuthenticated: true,
         isAdmin: false,
       );
 
       expect(result, AppRoutes.home);
+    });
+
+    test(
+      'redirects authenticated user away from register route by default',
+      () {
+        final result = resolveAppRedirect(
+          matchedLocation: AppRoutes.register,
+          isAuthenticated: true,
+          isAdmin: false,
+        );
+
+        expect(result, AppRoutes.home);
+      },
+    );
+
+    test('allows transient sign-up session to stay on register route', () {
+      final result = resolveAppRedirect(
+        matchedLocation: AppRoutes.register,
+        isAuthenticated: true,
+        isAdmin: false,
+        isRegistering: true,
+      );
+
+      expect(result, isNull);
     });
 
     test('redirects admin user away from user feature routes', () {

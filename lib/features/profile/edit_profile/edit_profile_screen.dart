@@ -73,7 +73,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         'birth_date': _birthDate?.toIso8601String().split('T').first,
       });
 
-      ref.invalidate(currentProfileProvider);
+      refreshCurrentProfile(ref);
 
       if (mounted) {
         context.showSuccessSnackBar(

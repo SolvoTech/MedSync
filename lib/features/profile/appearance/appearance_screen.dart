@@ -48,7 +48,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
       await ref.read(profileDataSourceProvider).updateProfile({
         'theme_mode': mode,
       });
-      ref.invalidate(currentProfileProvider);
+      refreshCurrentProfile(ref);
     } catch (e) {
       await ref.read(themeModeProvider.notifier).setThemeMode(previous);
       if (mounted) {

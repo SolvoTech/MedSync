@@ -194,7 +194,6 @@ class NotificationService implements TaskReminderScheduler {
     required DateTime scheduledAt,
     String? payload,
     bool repeatDaily = false,
-    int snoozeIndex = 0,
   }) async {
     final baseChannelId = _baseChannelId(channelId);
     final preferredRingtoneId = _ringtoneIdForBaseChannel(baseChannelId);
@@ -222,12 +221,17 @@ class NotificationService implements TaskReminderScheduler {
             ringtoneId: ringtoneId,
           ),
           importance: _channelImportance(baseChannelId),
+          channelBypassDnd: _isReminderBaseChannel(baseChannelId),
           priority: Priority.high,
           playSound: true,
           sound: _androidSoundForChannel(baseChannelId, ringtoneId: ringtoneId),
           audioAttributesUsage: _isReminderBaseChannel(baseChannelId)
               ? AudioAttributesUsage.alarm
               : AudioAttributesUsage.notification,
+          category: _isReminderBaseChannel(baseChannelId)
+              ? AndroidNotificationCategory.alarm
+              : null,
+          visibility: NotificationVisibility.public,
           actions: _supportsTaskDoneAction(baseChannelId)
               ? const <AndroidNotificationAction>[
                   AndroidNotificationAction(
@@ -273,7 +277,6 @@ class NotificationService implements TaskReminderScheduler {
 
     final modeCandidates = _androidScheduleModeCandidates(
       baseChannelId: baseChannelId,
-      snoozeIndex: snoozeIndex,
     );
 
     PlatformException? lastPlatformError;
@@ -410,7 +413,6 @@ class NotificationService implements TaskReminderScheduler {
       scheduledAt: scheduledAt,
       payload: basePayload,
       repeatDaily: true,
-      snoozeIndex: 0,
     );
 
     // Schedule 6 snooze notifications (5 minutes apart, up to 30 mins)
@@ -431,7 +433,6 @@ class NotificationService implements TaskReminderScheduler {
         scheduledAt: snoozeTime,
         payload: snoozePayload,
         repeatDaily: true,
-        snoozeIndex: i,
       );
     }
   }
@@ -509,7 +510,6 @@ class NotificationService implements TaskReminderScheduler {
           snoozeIndex: parsed.snoozeIndex,
         ),
         repeatDaily: true,
-        snoozeIndex: parsed.snoozeIndex,
       );
     }
   }
@@ -716,7 +716,6 @@ class NotificationService implements TaskReminderScheduler {
           snoozeIndex: parsed.snoozeIndex,
         ),
         repeatDaily: true,
-        snoozeIndex: parsed.snoozeIndex,
       );
     }
   }
@@ -909,27 +908,7 @@ class NotificationService implements TaskReminderScheduler {
     required DateTime startDate,
     required String timeOfDay,
   }) {
-    final parts = timeOfDay.split(':');
-    final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
-    final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
-
-    final now = DateTime.now();
-    var scheduledAt = DateTime(
-      startDate.year,
-      startDate.month,
-      startDate.day,
-      hour,
-      minute,
-    );
-
-    if (scheduledAt.isBefore(now)) {
-      scheduledAt = DateTime(now.year, now.month, now.day, hour, minute);
-      if (scheduledAt.isBefore(now)) {
-        scheduledAt = scheduledAt.add(const Duration(days: 1));
-      }
-    }
-
-    return scheduledAt;
+    return nextReminderOccurrence(startDate: startDate, timeOfDay: timeOfDay);
   }
 
   DateTime _nextDailyTime(String timeOfDay, {int snoozeIndex = 0}) {
@@ -1132,6 +1111,7 @@ class NotificationService implements TaskReminderScheduler {
         _channelName(baseChannelId),
         description: _channelDescription(baseChannelId, ringtoneId: ringtoneId),
         importance: _channelImportance(baseChannelId),
+        bypassDnd: _isReminderBaseChannel(baseChannelId),
         playSound: true,
         sound: _androidSoundForChannel(baseChannelId, ringtoneId: ringtoneId),
         audioAttributesUsage: _isReminderBaseChannel(baseChannelId)
@@ -1337,12 +1317,11 @@ class NotificationService implements TaskReminderScheduler {
 
   List<AndroidScheduleMode> _androidScheduleModeCandidates({
     required String baseChannelId,
-    required int snoozeIndex,
   }) {
     final candidates = <AndroidScheduleMode>[];
 
-    // Snooze notifications should stay reliable while the app is closed.
-    if (_isReminderBaseChannel(baseChannelId) && snoozeIndex > 0) {
+    // Reminder alarms should stay reliable while the app is closed/killed.
+    if (_isReminderBaseChannel(baseChannelId)) {
       candidates.add(AndroidScheduleMode.alarmClock);
     }
 

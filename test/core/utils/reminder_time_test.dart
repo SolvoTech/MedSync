@@ -35,4 +35,49 @@ void main() {
 
     expect(scheduledAt, DateTime(2026, 4, 28, 6, 30));
   });
+
+  group('nextReminderOccurrence', () {
+    test('keeps future start date time', () {
+      final next = nextReminderOccurrence(
+        startDate: DateTime(2026, 4, 30),
+        timeOfDay: '08:15',
+        now: DateTime(2026, 4, 29, 22, 0),
+      );
+
+      expect(next, DateTime(2026, 4, 30, 8, 15));
+    });
+
+    test(
+      'uses today when start date is in the past but time is still ahead',
+      () {
+        final next = nextReminderOccurrence(
+          startDate: DateTime(2026, 4, 1),
+          timeOfDay: '23:00',
+          now: DateTime(2026, 4, 30, 10, 0),
+        );
+
+        expect(next, DateTime(2026, 4, 30, 23, 0));
+      },
+    );
+
+    test('fires shortly when user chooses the current minute', () {
+      final next = nextReminderOccurrence(
+        startDate: DateTime(2026, 4, 30),
+        timeOfDay: '01:30',
+        now: DateTime(2026, 4, 30, 1, 30, 20),
+      );
+
+      expect(next, DateTime(2026, 4, 30, 1, 30, 25));
+    });
+
+    test('moves to tomorrow when today time is already past', () {
+      final next = nextReminderOccurrence(
+        startDate: DateTime(2026, 4, 30),
+        timeOfDay: '01:30',
+        now: DateTime(2026, 4, 30, 1, 31),
+      );
+
+      expect(next, DateTime(2026, 5, 1, 1, 30));
+    });
+  });
 }

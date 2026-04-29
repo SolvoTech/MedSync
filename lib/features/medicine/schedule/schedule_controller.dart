@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/app_exception.dart';
+import '../../../core/utils/reminder_time.dart';
 import '../../../data/local/preferences/app_preferences.dart';
 import '../../../data/remote/datasources/medicine_remote_datasource.dart';
 import '../../../data/remote/supabase_client.dart';
@@ -265,11 +266,7 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     String? scheduleName,
   }) async {
     final permissionService = ref.read(permissionServiceProvider);
-    await permissionService.ensureNotificationPermission();
-    final canScheduleExact = await permissionService.canScheduleExactAlarms();
-    if (!canScheduleExact) {
-      await permissionService.requestExactAlarmPermission();
-    }
+    await permissionService.ensureReminderReliabilityPermissions();
 
     final created = await ref
         .read(medicineRemoteDataSourceProvider)
@@ -300,11 +297,7 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     String? scheduleName,
   }) async {
     final permissionService = ref.read(permissionServiceProvider);
-    await permissionService.ensureNotificationPermission();
-    final canScheduleExact = await permissionService.canScheduleExactAlarms();
-    if (!canScheduleExact) {
-      await permissionService.requestExactAlarmPermission();
-    }
+    await permissionService.ensureReminderReliabilityPermissions();
 
     for (final slot in current.slots) {
       await ref
@@ -372,26 +365,11 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     final now = DateTime.now();
 
     for (final slot in bundle.slots) {
-      final parts = slot.timeOfDay.split(':');
-      final hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
-
-      var scheduledAt = DateTime(
-        bundle.schedule.startDate.year,
-        bundle.schedule.startDate.month,
-        bundle.schedule.startDate.day,
-        hour,
-        minute,
+      final scheduledAt = nextReminderOccurrence(
+        startDate: bundle.schedule.startDate,
+        timeOfDay: slot.timeOfDay,
+        now: now,
       );
-
-      // Fast-forward to today if it's already in the past
-      if (scheduledAt.isBefore(now)) {
-        scheduledAt = DateTime(now.year, now.month, now.day, hour, minute);
-        // If today's time block has also already passed, push it to tomorrow
-        if (scheduledAt.isBefore(now)) {
-          scheduledAt = scheduledAt.add(const Duration(days: 1));
-        }
-      }
 
       await notificationService.scheduleTaskNotification(
         taskType: 'medicine',
