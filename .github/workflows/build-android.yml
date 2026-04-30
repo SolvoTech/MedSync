@@ -1,5 +1,5 @@
 # .github/workflows/build-android.yml
-name: Build & Publish Android APK
+name: Build & Publish Android
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-release:
-    name: Build APK & Publish Release
+    name: Build APK/AAB & Publish Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -82,10 +82,20 @@ jobs:
           flutter build apk --release \
             --dart-define=APP_VERSION=${{ steps.pubspec.outputs.app_version }}+${{ steps.vars.outputs.sha_short }}
 
+      - name: Build Android App Bundle
+        run: |
+          flutter build appbundle --release \
+            --dart-define=APP_VERSION=${{ steps.pubspec.outputs.app_version }}+${{ steps.vars.outputs.sha_short }}
+
       - name: Rename APK
         run: |
           mv build/app/outputs/flutter-apk/app-release.apk \
              build/app/outputs/flutter-apk/MedSync-${{ steps.pubspec.outputs.app_version }}+build.${{ steps.vars.outputs.sha_short }}.apk
+
+      - name: Rename AAB
+        run: |
+          mv build/app/outputs/bundle/release/app-release.aab \
+             build/app/outputs/bundle/release/MedSync-${{ steps.pubspec.outputs.app_version }}+build.${{ steps.vars.outputs.sha_short }}.aab
 
       - name: Resolve APK path
         id: apk
@@ -93,11 +103,24 @@ jobs:
           APK_PATH=$(ls build/app/outputs/flutter-apk/MedSync-*.apk | head -n 1)
           echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
 
+      - name: Resolve AAB path
+        id: aab
+        run: |
+          AAB_PATH=$(ls build/app/outputs/bundle/release/MedSync-*.aab | head -n 1)
+          echo "aab_path=$AAB_PATH" >> $GITHUB_OUTPUT
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: MedSync-APK-${{ steps.vars.outputs.sha_short }}
           path: ${{ steps.apk.outputs.apk_path }}
+          retention-days: 30
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MedSync-AAB-${{ steps.vars.outputs.sha_short }}
+          path: ${{ steps.aab.outputs.aab_path }}
           retention-days: 30
 
       - name: Prepare release metadata
@@ -113,14 +136,16 @@ jobs:
           echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
           echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
 
-      - name: Publish APK to GitHub Release
+      - name: Publish Android artifacts to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_meta.outputs.tag_name }}
           name: ${{ steps.release_meta.outputs.release_name }}
           prerelease: ${{ steps.release_meta.outputs.is_prerelease }}
           generate_release_notes: true
-          files: ${{ steps.apk.outputs.apk_path }}
+          files: |
+            ${{ steps.apk.outputs.apk_path }}
+            ${{ steps.aab.outputs.aab_path }}
 
       - name: Write job summary
         run: |
@@ -133,3 +158,4 @@ jobs:
           echo "| **Branch** | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Release Tag** | \`${{ steps.release_meta.outputs.tag_name }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **APK File** | \`${{ steps.apk.outputs.apk_path }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **AAB File** | \`${{ steps.aab.outputs.aab_path }}\` |" >> $GITHUB_STEP_SUMMARY
