@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kebijakan Privasi - Med Sync</title>
+    <meta
+      name="description"
+      content="Kebijakan privasi aplikasi Med Sync oleh Solvo."
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f4ef;
+        --bg-accent: #efe6da;
+        --ink: #1f1c16;
+        --muted: #5c564a;
+        --brand: #2f6f6a;
+        --brand-2: #c47f47;
+        --card: #ffffff;
+        --border: #e1d8cb;
+        --shadow: 0 22px 50px rgba(31, 28, 22, 0.1);
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(1200px 600px at 10% -10%, #fff8ed 0%, transparent 60%),
+          radial-gradient(1000px 500px at 90% -20%, #eef6f2 0%, transparent 55%),
+          var(--bg);
+        line-height: 1.6;
+      }
+
+      a {
+        color: var(--brand);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .page {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
+
+      header {
+        background: linear-gradient(120deg, #ffffff 0%, #f5f0e6 100%);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 36px;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+      }
+
+      header::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(47, 111, 106, 0.08) 100%);
+        pointer-events: none;
+      }
+
+      .title {
+        font-family: "Source Serif 4", "Georgia", serif;
+        font-size: clamp(2rem, 3vw, 3rem);
+        margin: 0 0 8px;
+      }
+
+      .subtitle {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 20px;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .pill {
+        border: 1px solid var(--border);
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #fff;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 260px;
+        gap: 28px;
+        margin-top: 36px;
+      }
+
+      nav {
+        position: sticky;
+        top: 24px;
+        align-self: start;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+      }
+
+      nav h2 {
+        font-size: 1rem;
+        margin: 0 0 12px;
+      }
+
+      nav ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      nav a {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      nav a.active {
+        color: var(--brand);
+        font-weight: 600;
+      }
+
+      section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 28px 28px 22px;
+        box-shadow: var(--shadow);
+        margin-bottom: 18px;
+      }
+
+      section h2 {
+        margin: 0 0 12px;
+        font-size: 1.25rem;
+      }
+
+      section p,
+      section li {
+        color: var(--muted);
+        margin: 0 0 12px;
+      }
+
+      section ul {
+        padding-left: 20px;
+        margin: 0 0 12px;
+      }
+
+      .highlight {
+        background: #f1f7f6;
+        border-left: 4px solid var(--brand);
+        padding: 12px 14px;
+        border-radius: 12px;
+        color: var(--ink);
+      }
+
+      .cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-top: 12px;
+      }
+
+      button {
+        border: none;
+        padding: 10px 16px;
+        border-radius: 12px;
+        background: var(--brand);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 10px 18px rgba(47, 111, 106, 0.2);
+      }
+
+      button.secondary {
+        background: #fff;
+        color: var(--brand);
+        border: 1px solid var(--border);
+        box-shadow: none;
+      }
+
+      .footer {
+        margin-top: 32px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        nav {
+          position: static;
+          order: -1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <h1 class="title">Kebijakan Privasi Med Sync</h1>
+        <p class="subtitle">
+          Aplikasi kesehatan pribadi oleh Solvo
+        </p>
+        <div class="meta">
+          <span class="pill">Nama aplikasi: Med Sync</span>
+          <span class="pill">Developer: Solvo</span>
+          <span class="pill">
+            Terakhir diperbarui:
+            <span id="lastUpdated" data-iso="2026-04-30">30 April 2026</span>
+          </span>
+        </div>
+      </header>
+
+      <div class="layout">
+        <main>
+          <section id="ringkasan" data-section>
+            <h2>Ringkasan</h2>
+            <p class="highlight">
+              Med Sync menghormati privasi Anda. Kamera hanya digunakan saat Anda
+              mengambil foto (misalnya foto profil atau foto obat). Data kesehatan
+              dari Health Connect hanya diakses jika Anda menghubungkannya.
+            </p>
+            <p>
+              Kebijakan ini menjelaskan data apa yang kami kumpulkan, bagaimana
+              kami menggunakannya, dan pilihan yang Anda miliki.
+            </p>
+          </section>
+
+          <section id="data" data-section>
+            <h2>Data yang Kami Kumpulkan</h2>
+            <ul>
+              <li>
+                <strong>Data akun dan profil</strong>: nama, email, dan foto
+                profil jika Anda menambahkannya.
+              </li>
+              <li>
+                <strong>Data obat dan jadwal</strong>: nama obat, dosis, jadwal
+                minum, catatan, dan foto obat jika Anda unggah.
+              </li>
+              <li>
+                <strong>Data pengukuran dan aktivitas</strong>: catatan
+                pengukuran (misalnya tekanan darah, gula darah, suhu tubuh) serta
+                aktivitas yang Anda input.
+              </li>
+              <li>
+                <strong>Data kesehatan dari Health Connect</strong> (opsional):
+                langkah, detak jantung, tekanan darah, gula darah, suhu tubuh,
+                berat, tinggi, kalori aktif, dan tidur.
+              </li>
+              <li>
+                <strong>Konten unggahan</strong>: foto profil, foto obat, dan
+                gambar lain yang Anda unggah di aplikasi.
+              </li>
+            </ul>
+          </section>
+
+          <section id="kamera" data-section>
+            <h2>Penggunaan Kamera</h2>
+            <p>
+              Izin kamera diperlukan untuk:
+            </p>
+            <ul>
+              <li>Mengambil foto profil.</li>
+              <li>Mengambil foto obat saat menambahkan data obat.</li>
+              <li>Mengunggah gambar lain yang Anda pilih di dalam aplikasi.</li>
+            </ul>
+            <p>
+              Kamera hanya aktif ketika Anda memilih fitur terkait. Anda dapat
+              menolak atau mencabut izin kamera kapan saja melalui pengaturan
+              perangkat.
+            </p>
+          </section>
+
+          <section id="penggunaan" data-section>
+            <h2>Bagaimana Kami Menggunakan Data</h2>
+            <ul>
+              <li>Menyediakan fitur inti aplikasi seperti jadwal obat.</li>
+              <li>Menampilkan laporan dan ringkasan kesehatan Anda.</li>
+              <li>Mengirim pengingat dan notifikasi sesuai jadwal.</li>
+              <li>Menyinkronkan data Anda saat masuk di perangkat lain.</li>
+            </ul>
+          </section>
+
+          <section id="izin" data-section>
+            <h2>Izin Aplikasi</h2>
+            <ul>
+              <li>Kamera dan foto: untuk mengambil atau memilih gambar.</li>
+              <li>Notifikasi dan alarm: untuk pengingat obat dan pengukuran.</li>
+              <li>Aktivitas dan sensor tubuh: untuk data kebugaran.</li>
+              <li>Health Connect: untuk membaca data kesehatan (opsional).</li>
+              <li>Internet: untuk sinkronisasi data.</li>
+            </ul>
+          </section>
+
+          <section id="pihak-ketiga" data-section>
+            <h2>Penyimpanan dan Pihak Ketiga</h2>
+            <p>
+              Med Sync menggunakan <strong>Supabase</strong> sebagai layanan
+              backend untuk autentikasi, basis data, dan penyimpanan file.
+              Data Anda dapat disimpan di infrastruktur Supabase sesuai
+              pengaturan aplikasi.
+            </p>
+          </section>
+
+          <section id="berbagi" data-section>
+            <h2>Berbagi Data</h2>
+            <p>
+              Kami tidak menjual data pribadi Anda. Data hanya dibagikan
+              kepada penyedia layanan yang diperlukan untuk menjalankan aplikasi
+              (misalnya Supabase), atau jika diwajibkan oleh hukum.
+            </p>
+          </section>
+
+          <section id="keamanan" data-section>
+            <h2>Keamanan</h2>
+            <p>
+              Kami menggunakan praktik keamanan yang wajar untuk melindungi data,
+              termasuk koneksi terenkripsi dan kontrol akses. Namun, tidak ada
+              metode transmisi data yang sepenuhnya aman.
+            </p>
+          </section>
+
+          <section id="retensi" data-section>
+            <h2>Retensi Data</h2>
+            <p>
+              Data disimpan selama dibutuhkan untuk menyediakan layanan. Anda
+              dapat meminta penghapusan data atau akun kapan saja.
+            </p>
+          </section>
+
+          <section id="hak" data-section>
+            <h2>Hak Pengguna</h2>
+            <ul>
+              <li>Memperbarui data profil dan konten yang Anda unggah.</li>
+              <li>Mencabut izin kamera atau Health Connect di pengaturan.</li>
+              <li>Meminta salinan atau penghapusan data melalui email.</li>
+            </ul>
+          </section>
+
+          <section id="anak" data-section>
+            <h2>Privasi Anak-anak</h2>
+            <p>
+              Med Sync tidak ditujukan untuk anak di bawah 13 tahun dan tidak
+              dengan sengaja mengumpulkan data dari anak-anak.
+            </p>
+          </section>
+
+          <section id="perubahan" data-section>
+            <h2>Perubahan Kebijakan</h2>
+            <p>
+              Kami dapat memperbarui kebijakan ini dari waktu ke waktu. Perubahan
+              akan diinformasikan melalui aplikasi atau halaman ini.
+            </p>
+          </section>
+
+          <section id="kontak" data-section>
+            <h2>Kontak</h2>
+            <p>
+              Jika Anda memiliki pertanyaan tentang kebijakan privasi ini, hubungi:
+            </p>
+            <p><strong>Email:</strong> <span id="contactEmail">solvotech57@gmail.com</span></p>
+            <div class="cta">
+              <button id="copyEmail">Salin Email</button>
+              <button class="secondary" id="scrollTop">Kembali ke atas</button>
+              <span id="copyStatus" aria-live="polite"></span>
+            </div>
+          </section>
+        </main>
+
+        <nav aria-label="Daftar isi">
+          <h2>Daftar Isi</h2>
+          <ul id="toc">
+            <li><a href="#ringkasan">Ringkasan</a></li>
+            <li><a href="#data">Data yang Kami Kumpulkan</a></li>
+            <li><a href="#kamera">Penggunaan Kamera</a></li>
+            <li><a href="#penggunaan">Bagaimana Kami Menggunakan Data</a></li>
+            <li><a href="#izin">Izin Aplikasi</a></li>
+            <li><a href="#pihak-ketiga">Penyimpanan dan Pihak Ketiga</a></li>
+            <li><a href="#berbagi">Berbagi Data</a></li>
+            <li><a href="#keamanan">Keamanan</a></li>
+            <li><a href="#retensi">Retensi Data</a></li>
+            <li><a href="#hak">Hak Pengguna</a></li>
+            <li><a href="#anak">Privasi Anak-anak</a></li>
+            <li><a href="#perubahan">Perubahan Kebijakan</a></li>
+            <li><a href="#kontak">Kontak</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <p class="footer">Med Sync - Solvo</p>
+    </div>
+
+    <script>
+      (function () {
+        const lastUpdated = document.getElementById("lastUpdated");
+        if (lastUpdated && lastUpdated.dataset.iso) {
+          const date = new Date(lastUpdated.dataset.iso + "T00:00:00");
+          if (!Number.isNaN(date.valueOf())) {
+            const formatter = new Intl.DateTimeFormat("id-ID", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            });
+            lastUpdated.textContent = formatter.format(date);
+          }
+        }
+
+        const email = document.getElementById("contactEmail");
+        const copyButton = document.getElementById("copyEmail");
+        const copyStatus = document.getElementById("copyStatus");
+
+        if (copyButton && email) {
+          copyButton.addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(email.textContent.trim());
+              copyStatus.textContent = "Email disalin.";
+            } catch (error) {
+              copyStatus.textContent = "Gagal menyalin email.";
+            }
+            setTimeout(() => {
+              copyStatus.textContent = "";
+            }, 2000);
+          });
+        }
+
+        const scrollTopButton = document.getElementById("scrollTop");
+        if (scrollTopButton) {
+          scrollTopButton.addEventListener("click", () => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          });
+        }
+
+        const sectionLinks = Array.from(document.querySelectorAll("#toc a"));
+        const sections = Array.from(document.querySelectorAll("section[data-section]"));
+
+        if (sectionLinks.length && sections.length) {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  const id = entry.target.getAttribute("id");
+                  sectionLinks.forEach((link) => {
+                    link.classList.toggle("active", link.getAttribute("href") === "#" + id);
+                  });
+                }
+              });
+            },
+            { rootMargin: "-40% 0px -55% 0px" }
+          );
+
+          sections.forEach((section) => observer.observe(section));
+        }
+      })();
+    </script>
+  </body>
+</html>
