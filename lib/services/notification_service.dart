@@ -28,19 +28,21 @@ class NotificationService implements TaskReminderScheduler {
   );
 
   static const String markDoneActionId = 'mark_done';
-  // v5 is intentionally new to recover from stale Android channels that may
-  // persist silent sound settings from previous installs/updates.
-  // Bumped from v4 → v5 to force recreation of channels after audio files
-  // were extended to ≥ 1 second (fixes silent alarm bug).
-  static const String medicineReminderChannelId = 'medicine_reminders_v5';
-  static const String legacyMedicineReminderChannelId = 'medicine_reminders_v4';
+  // v6 is intentionally new to recover from stale Android channels that may
+  // persist previous sound/vibration settings from older installs/updates.
+  static const String medicineReminderChannelId = 'medicine_reminders_v6';
+  static const String legacyMedicineReminderChannelId = 'medicine_reminders_v5';
+  static const String legacyMedicineReminderChannelIdV3 =
+      'medicine_reminders_v4';
   static const String legacyMedicineReminderChannelIdV2 =
       'medicine_reminders_v3';
   static const String legacyMedicineReminderChannelIdV1 =
       'medicine_reminders_v2';
   static const String legacyMedicineReminderChannelIdV0 = 'medicine_reminders';
-  static const String measurementReminderChannelId = 'measurement_reminders_v5';
+  static const String measurementReminderChannelId = 'measurement_reminders_v6';
   static const String legacyMeasurementReminderChannelId =
+      'measurement_reminders_v5';
+  static const String legacyMeasurementReminderChannelIdV3 =
       'measurement_reminders_v4';
   static const String legacyMeasurementReminderChannelIdV2 =
       'measurement_reminders_v3';
@@ -48,8 +50,10 @@ class NotificationService implements TaskReminderScheduler {
       'measurement_reminders_v2';
   static const String legacyMeasurementReminderChannelIdV0 =
       'measurement_reminders';
-  static const String activityReminderChannelId = 'activity_reminders_v5';
-  static const String legacyActivityReminderChannelId = 'activity_reminders_v4';
+  static const String activityReminderChannelId = 'activity_reminders_v6';
+  static const String legacyActivityReminderChannelId = 'activity_reminders_v5';
+  static const String legacyActivityReminderChannelIdV3 =
+      'activity_reminders_v4';
   static const String legacyActivityReminderChannelIdV2 =
       'activity_reminders_v3';
   static const String legacyActivityReminderChannelIdV1 =
@@ -60,11 +64,20 @@ class NotificationService implements TaskReminderScheduler {
   static const String dailySummaryChannelId = 'daily_summary';
   static const String _legacyTaskPayloadPrefix = 'task';
   static const String _scopedTaskPayloadPrefix = 'taskv2';
+  static const int _scheduledReminderSnoozeCount = 6;
   static const String _fallbackReminderRingtoneId =
       AlarmRingtones.defaultReminderRingtoneId;
 
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
+  static final Int64List _reminderVibrationPattern = Int64List.fromList(<int>[
+    0,
+    900,
+    350,
+    900,
+    350,
+    1300,
+  ]);
 
   Future<void> initialize() async {
     const androidSettings = AndroidInitializationSettings(
@@ -225,6 +238,8 @@ class NotificationService implements TaskReminderScheduler {
           priority: Priority.high,
           playSound: true,
           sound: _androidSoundForChannel(baseChannelId, ringtoneId: ringtoneId),
+          enableVibration: true,
+          vibrationPattern: _androidVibrationPatternForChannel(baseChannelId),
           audioAttributesUsage: _isReminderBaseChannel(baseChannelId)
               ? AudioAttributesUsage.alarm
               : AudioAttributesUsage.notification,
@@ -415,8 +430,8 @@ class NotificationService implements TaskReminderScheduler {
       repeatDaily: true,
     );
 
-    // Schedule 6 snooze notifications (5 minutes apart, up to 30 mins)
-    for (int i = 1; i <= 6; i++) {
+    // Schedule snooze notifications (5 minutes apart, up to 30 mins).
+    for (int i = 1; i <= _scheduledReminderSnoozeCount; i++) {
       final snoozeTime = scheduledAt.add(Duration(minutes: 5 * i));
       final snoozePayload = _buildTaskPayload(
         taskType: taskType,
@@ -449,6 +464,7 @@ class NotificationService implements TaskReminderScheduler {
     final pendingList = await _plugin.pendingNotificationRequests();
     final now = tz.TZDateTime.now(tz.local);
     final activeUserId = _activeUserId();
+    final matchingPending = <PendingNotificationRequest>[];
 
     for (final pending in pendingList) {
       final payload = pending.payload;
@@ -474,6 +490,31 @@ class NotificationService implements TaskReminderScheduler {
         continue;
       }
 
+      matchingPending.add(pending);
+    }
+
+    for (final pending in matchingPending) {
+      await _plugin.cancel(pending.id);
+    }
+
+    await _cancelTaskNotificationsByStableIds(
+      taskType: taskType,
+      referenceId: referenceId,
+      timeOfDay: timeOfDay,
+      activeUserId: activeUserId,
+    );
+
+    for (final pending in matchingPending) {
+      final payload = pending.payload;
+      if (payload == null || payload.isEmpty) {
+        continue;
+      }
+
+      final parsed = _parseTaskPayload(payload);
+      if (parsed == null) {
+        continue;
+      }
+
       final baseTime =
           reminderScheduledAtForDay(
             day: now,
@@ -491,9 +532,6 @@ class NotificationService implements TaskReminderScheduler {
 
       // Add the snooze offset minutes
       nextTime = nextTime.add(Duration(minutes: 5 * parsed.snoozeIndex));
-
-      // Cancel the old intent natively first to guarantee a clean overwrite
-      await _plugin.cancel(pending.id);
 
       // Re-schedule it for tomorrow to silence the remaining trigger today
       await scheduleNotification(
@@ -547,6 +585,54 @@ class NotificationService implements TaskReminderScheduler {
       }
 
       await _plugin.cancel(pending.id);
+    }
+
+    await _cancelTaskNotificationsByStableIds(
+      taskType: taskType,
+      referenceId: referenceId,
+      timeOfDay: timeOfDay,
+      activeUserId: activeUserId,
+    );
+  }
+
+  Future<void> _cancelTaskNotificationsByStableIds({
+    required String taskType,
+    required String referenceId,
+    required String timeOfDay,
+    required String? activeUserId,
+  }) async {
+    final normalizedTimeOfDay =
+        canonicalReminderTimeOfDay(timeOfDay) ?? timeOfDay.trim();
+    if (normalizedTimeOfDay.isEmpty) {
+      return;
+    }
+
+    final ids = <int>{};
+    for (
+      var snoozeIndex = 0;
+      snoozeIndex <= _scheduledReminderSnoozeCount;
+      snoozeIndex++
+    ) {
+      void addId(String? userId) {
+        ids.add(
+          stableNotificationId(
+            _buildTaskPayload(
+              taskType: taskType,
+              userId: userId,
+              referenceId: referenceId,
+              timeOfDay: normalizedTimeOfDay,
+              snoozeIndex: snoozeIndex,
+            ),
+          ),
+        );
+      }
+
+      addId(activeUserId);
+      addId(null);
+    }
+
+    for (final id in ids) {
+      await _plugin.cancel(id);
     }
   }
 
@@ -946,6 +1032,14 @@ class NotificationService implements TaskReminderScheduler {
     return RawResourceAndroidNotificationSound(resourceName);
   }
 
+  Int64List? _androidVibrationPatternForChannel(String baseChannelId) {
+    if (!_isReminderBaseChannel(baseChannelId)) {
+      return null;
+    }
+
+    return _reminderVibrationPattern;
+  }
+
   Future<void> _ensureAndroidChannels() async {
     final android = _plugin
         .resolvePlatformSpecificImplementation<
@@ -1114,6 +1208,8 @@ class NotificationService implements TaskReminderScheduler {
         bypassDnd: _isReminderBaseChannel(baseChannelId),
         playSound: true,
         sound: _androidSoundForChannel(baseChannelId, ringtoneId: ringtoneId),
+        enableVibration: true,
+        vibrationPattern: _androidVibrationPatternForChannel(baseChannelId),
         audioAttributesUsage: _isReminderBaseChannel(baseChannelId)
             ? AudioAttributesUsage.alarm
             : AudioAttributesUsage.notification,
@@ -1126,14 +1222,17 @@ class NotificationService implements TaskReminderScheduler {
   ) async {
     final legacyBaseChannelIds = <String>{
       legacyMedicineReminderChannelId,
+      legacyMedicineReminderChannelIdV3,
       legacyMedicineReminderChannelIdV2,
       legacyMedicineReminderChannelIdV1,
       legacyMedicineReminderChannelIdV0,
       legacyMeasurementReminderChannelId,
+      legacyMeasurementReminderChannelIdV3,
       legacyMeasurementReminderChannelIdV2,
       legacyMeasurementReminderChannelIdV1,
       legacyMeasurementReminderChannelIdV0,
       legacyActivityReminderChannelId,
+      legacyActivityReminderChannelIdV3,
       legacyActivityReminderChannelIdV2,
       legacyActivityReminderChannelIdV1,
       legacyActivityReminderChannelIdV0,
@@ -1266,11 +1365,13 @@ class NotificationService implements TaskReminderScheduler {
   bool _isMedicineRequestedChannel(String channelId) {
     return channelId == medicineReminderChannelId ||
         channelId == legacyMedicineReminderChannelId ||
+        channelId == legacyMedicineReminderChannelIdV3 ||
         channelId == legacyMedicineReminderChannelIdV2 ||
         channelId == legacyMedicineReminderChannelIdV1 ||
         channelId == legacyMedicineReminderChannelIdV0 ||
         channelId.startsWith('${medicineReminderChannelId}__') ||
         channelId.startsWith('${legacyMedicineReminderChannelId}__') ||
+        channelId.startsWith('${legacyMedicineReminderChannelIdV3}__') ||
         channelId.startsWith('${legacyMedicineReminderChannelIdV2}__') ||
         channelId.startsWith('${legacyMedicineReminderChannelIdV1}__') ||
         channelId.startsWith('${legacyMedicineReminderChannelIdV0}__');
@@ -1279,11 +1380,13 @@ class NotificationService implements TaskReminderScheduler {
   bool _isMeasurementRequestedChannel(String channelId) {
     return channelId == measurementReminderChannelId ||
         channelId == legacyMeasurementReminderChannelId ||
+        channelId == legacyMeasurementReminderChannelIdV3 ||
         channelId == legacyMeasurementReminderChannelIdV2 ||
         channelId == legacyMeasurementReminderChannelIdV1 ||
         channelId == legacyMeasurementReminderChannelIdV0 ||
         channelId.startsWith('${measurementReminderChannelId}__') ||
         channelId.startsWith('${legacyMeasurementReminderChannelId}__') ||
+        channelId.startsWith('${legacyMeasurementReminderChannelIdV3}__') ||
         channelId.startsWith('${legacyMeasurementReminderChannelIdV2}__') ||
         channelId.startsWith('${legacyMeasurementReminderChannelIdV1}__') ||
         channelId.startsWith('${legacyMeasurementReminderChannelIdV0}__');
@@ -1292,11 +1395,13 @@ class NotificationService implements TaskReminderScheduler {
   bool _isActivityRequestedChannel(String channelId) {
     return channelId == activityReminderChannelId ||
         channelId == legacyActivityReminderChannelId ||
+        channelId == legacyActivityReminderChannelIdV3 ||
         channelId == legacyActivityReminderChannelIdV2 ||
         channelId == legacyActivityReminderChannelIdV1 ||
         channelId == legacyActivityReminderChannelIdV0 ||
         channelId.startsWith('${activityReminderChannelId}__') ||
         channelId.startsWith('${legacyActivityReminderChannelId}__') ||
+        channelId.startsWith('${legacyActivityReminderChannelIdV3}__') ||
         channelId.startsWith('${legacyActivityReminderChannelIdV2}__') ||
         channelId.startsWith('${legacyActivityReminderChannelIdV1}__') ||
         channelId.startsWith('${legacyActivityReminderChannelIdV0}__');
