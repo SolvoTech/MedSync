@@ -919,7 +919,7 @@ class AppStrings {
   static String get alarmToneUpdated =>
       _t('Alarm tone updated successfully.', 'Nada alarm berhasil diperbarui.');
   static String get ringtoneCc0ChimeNotification =>
-      _t('CC0 Chime Notification', 'CC0 Chime Notification');
+      _t('CC0 Long Notification', 'CC0 Notifikasi Panjang');
   static String get ringtoneCc0PhoneChime =>
       _t('CC0 Phone Chime', 'CC0 Phone Chime');
   static String get ringtoneCc0SoftBell => _t('CC0 Soft Bell', 'CC0 Soft Bell');

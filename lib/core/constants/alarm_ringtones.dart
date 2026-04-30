@@ -21,13 +21,13 @@ class AlarmRingtones {
   static const String medSyncClassic = 'medsync_classic';
   static const String systemDefault = 'system_default';
 
-  // Default tone is bundled locally from a CC0 source.
+  // Keep the legacy id so saved preferences automatically use the longer tone.
   static const String defaultReminderRingtoneId = cc0ChimeNotification;
 
   static const AlarmRingtoneOption _defaultOption = AlarmRingtoneOption(
     id: cc0ChimeNotification,
-    labelEn: 'CC0 Chime Notification',
-    labelId: 'CC0 Chime Notification',
+    labelEn: 'CC0 Long Notification',
+    labelId: 'CC0 Notifikasi Panjang',
     androidResourceName: 'fs_cc0_chime_notification_pcm',
   );
 

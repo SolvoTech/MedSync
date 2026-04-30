@@ -1,4 +1,4 @@
-package com.example.med_syn
+package com.solvo.medsync
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
