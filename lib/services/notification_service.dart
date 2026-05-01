@@ -28,10 +28,12 @@ class NotificationService implements TaskReminderScheduler {
   );
 
   static const String markDoneActionId = 'mark_done';
-  // v6 is intentionally new to recover from stale Android channels that may
+  // v7 is intentionally new to recover from stale Android channels that may
   // persist previous sound/vibration settings from older installs/updates.
-  static const String medicineReminderChannelId = 'medicine_reminders_v6';
-  static const String legacyMedicineReminderChannelId = 'medicine_reminders_v5';
+  static const String medicineReminderChannelId = 'medicine_reminders_v7';
+  static const String legacyMedicineReminderChannelId = 'medicine_reminders_v6';
+  static const String legacyMedicineReminderChannelIdV4 =
+      'medicine_reminders_v5';
   static const String legacyMedicineReminderChannelIdV3 =
       'medicine_reminders_v4';
   static const String legacyMedicineReminderChannelIdV2 =
@@ -39,8 +41,10 @@ class NotificationService implements TaskReminderScheduler {
   static const String legacyMedicineReminderChannelIdV1 =
       'medicine_reminders_v2';
   static const String legacyMedicineReminderChannelIdV0 = 'medicine_reminders';
-  static const String measurementReminderChannelId = 'measurement_reminders_v6';
+  static const String measurementReminderChannelId = 'measurement_reminders_v7';
   static const String legacyMeasurementReminderChannelId =
+      'measurement_reminders_v6';
+  static const String legacyMeasurementReminderChannelIdV4 =
       'measurement_reminders_v5';
   static const String legacyMeasurementReminderChannelIdV3 =
       'measurement_reminders_v4';
@@ -50,8 +54,10 @@ class NotificationService implements TaskReminderScheduler {
       'measurement_reminders_v2';
   static const String legacyMeasurementReminderChannelIdV0 =
       'measurement_reminders';
-  static const String activityReminderChannelId = 'activity_reminders_v6';
-  static const String legacyActivityReminderChannelId = 'activity_reminders_v5';
+  static const String activityReminderChannelId = 'activity_reminders_v7';
+  static const String legacyActivityReminderChannelId = 'activity_reminders_v6';
+  static const String legacyActivityReminderChannelIdV4 =
+      'activity_reminders_v5';
   static const String legacyActivityReminderChannelIdV3 =
       'activity_reminders_v4';
   static const String legacyActivityReminderChannelIdV2 =
@@ -64,7 +70,12 @@ class NotificationService implements TaskReminderScheduler {
   static const String dailySummaryChannelId = 'daily_summary';
   static const String _legacyTaskPayloadPrefix = 'task';
   static const String _scopedTaskPayloadPrefix = 'taskv2';
+  static const String _scopedTaskOccurrencePayloadPrefix = 'taskv3';
   static const int _scheduledReminderSnoozeCount = 6;
+  static const int _taskNotificationHorizonDays = 30;
+  static const Duration _missedReminderCatchUpGrace = Duration(minutes: 5);
+  static const Duration _nearTermScheduleLeadTime = Duration(seconds: 5);
+  static const int _notificationFlagInsistent = 4;
   static const String _fallbackReminderRingtoneId =
       AlarmRingtones.defaultReminderRingtoneId;
 
@@ -111,14 +122,6 @@ class NotificationService implements TaskReminderScheduler {
     }
 
     await _ensureAndroidChannels();
-
-    try {
-      await _syncReminderNotificationsToCurrentChannelConfig();
-    } catch (error) {
-      if (kDebugMode) {
-        debugPrint('[NotificationService] Skip reminder channel sync: $error');
-      }
-    }
   }
 
   Future<void> applyRingtonePreferenceChanges() async {
@@ -133,6 +136,7 @@ class NotificationService implements TaskReminderScheduler {
       return;
     }
 
+    await cancelStaleTaskNotificationsForActiveSession();
     await _cancelTaskNotificationsForActiveUser(userId);
 
     if (AppPreferences.notifMedicine) {
@@ -240,6 +244,8 @@ class NotificationService implements TaskReminderScheduler {
           sound: _androidSoundForChannel(baseChannelId, ringtoneId: ringtoneId),
           enableVibration: true,
           vibrationPattern: _androidVibrationPatternForChannel(baseChannelId),
+          fullScreenIntent: _isReminderBaseChannel(baseChannelId),
+          additionalFlags: _androidAdditionalFlagsForChannel(baseChannelId),
           audioAttributesUsage: _isReminderBaseChannel(baseChannelId)
               ? AudioAttributesUsage.alarm
               : AudioAttributesUsage.notification,
@@ -271,8 +277,14 @@ class NotificationService implements TaskReminderScheduler {
       );
     }
 
-    final scheduleDate = tz.TZDateTime.from(scheduledAt, tz.local);
+    var scheduleDate = tz.TZDateTime.from(scheduledAt, tz.local);
     final now = tz.TZDateTime.now(tz.local);
+    final resolvedScheduleDate = resolveNotificationScheduleTime(
+      scheduledAt: scheduleDate,
+      now: now,
+      repeatDaily: repeatDaily,
+      isReminder: _isReminderBaseChannel(baseChannelId),
+    );
 
     if (kDebugMode) {
       debugPrint('[Notification] Scheduling id=$id');
@@ -281,14 +293,19 @@ class NotificationService implements TaskReminderScheduler {
       debugPrint('[Notification]   tzScheduleDate=$scheduleDate');
       debugPrint('[Notification]   now=$now');
       debugPrint('[Notification]   repeatDaily=$repeatDaily');
+      debugPrint(
+        '[Notification]   channel=${activeChannelConfig.resolvedChannelId}',
+      );
+      debugPrint('[Notification]   ringtone=${activeChannelConfig.ringtoneId}');
     }
 
-    if (scheduleDate.isBefore(now)) {
+    if (resolvedScheduleDate == null) {
       if (kDebugMode) {
         debugPrint('[Notification]   ⚠️ SKIPPED — scheduleDate is in the past');
       }
       return;
     }
+    scheduleDate = tz.TZDateTime.from(resolvedScheduleDate, tz.local);
 
     final modeCandidates = _androidScheduleModeCandidates(
       baseChannelId: baseChannelId,
@@ -399,7 +416,7 @@ class NotificationService implements TaskReminderScheduler {
     await _plugin.cancel(id);
   }
 
-  Future<void> scheduleTaskNotification({
+  Future<bool> scheduleTaskNotification({
     required String taskType,
     required String referenceId,
     required String timeOfDay,
@@ -409,35 +426,56 @@ class NotificationService implements TaskReminderScheduler {
     required DateTime scheduledAt,
   }) async {
     final activeUserId = _activeUserId();
+    if (activeUserId == null || activeUserId.isEmpty) {
+      return false;
+    }
+
     final normalizedTimeOfDay =
         canonicalReminderTimeOfDay(timeOfDay) ?? timeOfDay.trim();
+    if (normalizedTimeOfDay.isEmpty) {
+      return false;
+    }
+
+    final baseChannelId = _baseChannelId(channelId);
+    final baseScheduledAt = resolveTaskReminderOccurrenceScheduleTime(
+      scheduledAt: scheduledAt,
+      now: DateTime.now(),
+      isReminder: _isReminderBaseChannel(baseChannelId),
+    );
+    if (baseScheduledAt == null) {
+      return false;
+    }
+
     final basePayload = _buildTaskPayload(
       taskType: taskType,
       userId: activeUserId,
       referenceId: referenceId,
       timeOfDay: normalizedTimeOfDay,
+      scheduledAt: scheduledAt,
       snoozeIndex: 0,
     );
 
-    // Schedule base notification
+    // Task reminders are one-shot per pending occurrence. Daily repeating
+    // notifications cannot safely skip a date after today's task is completed.
     await scheduleNotification(
       id: stableNotificationId(basePayload),
       channelId: channelId,
       title: title,
       body: body,
-      scheduledAt: scheduledAt,
+      scheduledAt: baseScheduledAt,
       payload: basePayload,
-      repeatDaily: true,
+      repeatDaily: false,
     );
 
     // Schedule snooze notifications (5 minutes apart, up to 30 mins).
     for (int i = 1; i <= _scheduledReminderSnoozeCount; i++) {
-      final snoozeTime = scheduledAt.add(Duration(minutes: 5 * i));
+      final snoozeTime = baseScheduledAt.add(Duration(minutes: 5 * i));
       final snoozePayload = _buildTaskPayload(
         taskType: taskType,
         userId: activeUserId,
         referenceId: referenceId,
         timeOfDay: normalizedTimeOfDay,
+        scheduledAt: scheduledAt,
         snoozeIndex: i,
       );
       await scheduleNotification(
@@ -447,9 +485,11 @@ class NotificationService implements TaskReminderScheduler {
         body: '$body (Peringatan ke-$i)',
         scheduledAt: snoozeTime,
         payload: snoozePayload,
-        repeatDaily: true,
+        repeatDaily: false,
       );
     }
+
+    return true;
   }
 
   @override
@@ -457,13 +497,22 @@ class NotificationService implements TaskReminderScheduler {
     required String taskType,
     required String referenceId,
     required String timeOfDay,
+    DateTime? scheduledAt,
   }) async {
     final channelId =
         _channelIdForTaskType(taskType) ?? medicineReminderChannelId;
+    final normalizedTimeOfDay =
+        canonicalReminderTimeOfDay(timeOfDay) ?? timeOfDay.trim();
+    if (normalizedTimeOfDay.isEmpty) {
+      return;
+    }
 
     final pendingList = await _plugin.pendingNotificationRequests();
     final now = tz.TZDateTime.now(tz.local);
     final activeUserId = _activeUserId();
+    final occurrenceScheduledAt =
+        scheduledAt ??
+        reminderScheduledAtForDay(day: now, timeOfDay: normalizedTimeOfDay);
     final matchingPending = <PendingNotificationRequest>[];
 
     for (final pending in pendingList) {
@@ -481,12 +530,16 @@ class NotificationService implements TaskReminderScheduler {
         parsed,
         taskType: taskType,
         referenceId: referenceId,
-        timeOfDay: timeOfDay,
+        timeOfDay: normalizedTimeOfDay,
       )) {
         continue;
       }
 
-      if (!_isPayloadOwnedByUser(parsed, activeUserId)) {
+      if (!_isPayloadCancelableByActiveSession(parsed, activeUserId)) {
+        continue;
+      }
+
+      if (!_matchesOccurrenceDay(parsed, occurrenceScheduledAt)) {
         continue;
       }
 
@@ -500,56 +553,52 @@ class NotificationService implements TaskReminderScheduler {
     await _cancelTaskNotificationsByStableIds(
       taskType: taskType,
       referenceId: referenceId,
-      timeOfDay: timeOfDay,
+      timeOfDay: normalizedTimeOfDay,
+      scheduledAt: occurrenceScheduledAt,
       activeUserId: activeUserId,
     );
 
-    for (final pending in matchingPending) {
-      final payload = pending.payload;
-      if (payload == null || payload.isEmpty) {
-        continue;
-      }
-
-      final parsed = _parseTaskPayload(payload);
-      if (parsed == null) {
-        continue;
-      }
-
-      final baseTime =
-          reminderScheduledAtForDay(
-            day: now,
-            timeOfDay: parsed.timeOfDay ?? timeOfDay,
-          ) ??
-          reminderScheduledAtForDay(day: now, timeOfDay: timeOfDay);
-      if (baseTime == null) {
-        continue;
-      }
-
-      var nextTime = tz.TZDateTime.from(baseTime, tz.local);
-
-      // Unconditionally add 1 day from today to permanently silence today's triggers
-      nextTime = nextTime.add(const Duration(days: 1));
-
-      // Add the snooze offset minutes
-      nextTime = nextTime.add(Duration(minutes: 5 * parsed.snoozeIndex));
-
-      // Re-schedule it for tomorrow to silence the remaining trigger today
-      await scheduleNotification(
-        id: pending.id,
-        channelId: channelId,
-        title: pending.title ?? 'Pengingat MedSync',
-        body: pending.body ?? 'Saatnya tugas Anda.',
-        scheduledAt: nextTime,
-        payload: _buildTaskPayload(
-          taskType: parsed.taskType,
-          userId: parsed.userId,
-          referenceId: parsed.referenceId,
-          timeOfDay: parsed.timeOfDay ?? timeOfDay,
-          snoozeIndex: parsed.snoozeIndex,
-        ),
-        repeatDaily: true,
-      );
+    if (!_notificationsEnabledForTaskType(taskType)) {
+      return;
     }
+
+    if (activeUserId == null || activeUserId.isEmpty) {
+      return;
+    }
+
+    final client = SupabaseClientRef.maybeClient;
+    if (client == null) {
+      return;
+    }
+
+    final nextPending = await _nextPendingTaskForSlot(
+      client: client,
+      userId: activeUserId,
+      taskType: taskType,
+      referenceId: referenceId,
+      timeOfDay: normalizedTimeOfDay,
+      after: _startOfLocalDay(
+        occurrenceScheduledAt ?? now,
+      ).add(const Duration(days: 1)),
+    );
+    if (nextPending == null) {
+      return;
+    }
+
+    final reminderText = _reminderTextForReschedule(
+      taskType: taskType,
+      matchingPending: matchingPending,
+    );
+
+    await scheduleTaskNotification(
+      taskType: taskType,
+      referenceId: referenceId,
+      timeOfDay: normalizedTimeOfDay,
+      channelId: channelId,
+      title: reminderText.title,
+      body: reminderText.body,
+      scheduledAt: nextPending.scheduledAt,
+    );
   }
 
   Future<void> cancelTaskNotification({
@@ -580,7 +629,7 @@ class NotificationService implements TaskReminderScheduler {
         continue;
       }
 
-      if (!_isPayloadOwnedByUser(parsed, activeUserId)) {
+      if (!_isPayloadCancelableByActiveSession(parsed, activeUserId)) {
         continue;
       }
 
@@ -599,6 +648,7 @@ class NotificationService implements TaskReminderScheduler {
     required String taskType,
     required String referenceId,
     required String timeOfDay,
+    DateTime? scheduledAt,
     required String? activeUserId,
   }) async {
     final normalizedTimeOfDay =
@@ -607,29 +657,14 @@ class NotificationService implements TaskReminderScheduler {
       return;
     }
 
-    final ids = <int>{};
-    for (
-      var snoozeIndex = 0;
-      snoozeIndex <= _scheduledReminderSnoozeCount;
-      snoozeIndex++
-    ) {
-      void addId(String? userId) {
-        ids.add(
-          stableNotificationId(
-            _buildTaskPayload(
-              taskType: taskType,
-              userId: userId,
-              referenceId: referenceId,
-              timeOfDay: normalizedTimeOfDay,
-              snoozeIndex: snoozeIndex,
-            ),
-          ),
-        );
-      }
-
-      addId(activeUserId);
-      addId(null);
-    }
+    final ids = taskNotificationIdsForSlot(
+      taskType: taskType,
+      activeUserId: activeUserId,
+      referenceId: referenceId,
+      timeOfDay: normalizedTimeOfDay,
+      scheduledAt: scheduledAt,
+      includeCurrentRuntimeHashIds: true,
+    );
 
     for (final id in ids) {
       await _plugin.cancel(id);
@@ -749,61 +784,7 @@ class NotificationService implements TaskReminderScheduler {
   }
 
   Future<void> _syncReminderNotificationsToCurrentChannelConfig() async {
-    final pendingList = await _plugin.pendingNotificationRequests();
-    final activeUserId = _activeUserId();
-    if (activeUserId == null || activeUserId.isEmpty) {
-      return;
-    }
-
-    for (final pending in pendingList) {
-      final payload = pending.payload;
-      if (payload == null || payload.isEmpty) {
-        continue;
-      }
-
-      final parsed = _parseTaskPayload(payload);
-      if (parsed == null) {
-        continue;
-      }
-
-      if (!_isPayloadOwnedByUser(parsed, activeUserId)) {
-        await _plugin.cancel(pending.id);
-        continue;
-      }
-
-      final channelId = _channelIdForTaskType(parsed.taskType);
-      if (channelId == null) {
-        continue;
-      }
-
-      final timeOfDay = parsed.timeOfDay;
-      if (timeOfDay == null || timeOfDay.isEmpty) {
-        continue;
-      }
-
-      final nextTime = _nextDailyTime(
-        timeOfDay,
-        snoozeIndex: parsed.snoozeIndex,
-      );
-
-      await _plugin.cancel(pending.id);
-
-      await scheduleNotification(
-        id: pending.id,
-        channelId: channelId,
-        title: pending.title ?? 'Pengingat Obat',
-        body: pending.body ?? 'Waktunya minum obat Anda.',
-        scheduledAt: nextTime,
-        payload: _buildTaskPayload(
-          taskType: parsed.taskType,
-          userId: parsed.userId,
-          referenceId: parsed.referenceId,
-          timeOfDay: timeOfDay,
-          snoozeIndex: parsed.snoozeIndex,
-        ),
-        repeatDaily: true,
-      );
-    }
+    await syncTaskNotificationsWithCurrentPreferences();
   }
 
   String? _activeUserId() {
@@ -822,9 +803,26 @@ class NotificationService implements TaskReminderScheduler {
     required String referenceId,
     required String timeOfDay,
   }) {
-    return parsed.taskType == taskType &&
-        parsed.referenceId == referenceId &&
-        reminderTimesMatch(parsed.timeOfDay, timeOfDay);
+    return _taskPayloadMatchesSlot(
+      parsed,
+      taskType: taskType,
+      referenceId: referenceId,
+      timeOfDay: timeOfDay,
+    );
+  }
+
+  bool _isPayloadCancelableByActiveSession(
+    _TaskPayload payload,
+    String? activeUserId,
+  ) {
+    final payloadUserId = payload.userId;
+    if (payloadUserId == null || payloadUserId.isEmpty) {
+      return true;
+    }
+
+    return activeUserId != null &&
+        activeUserId.isNotEmpty &&
+        payloadUserId == activeUserId;
   }
 
   bool _isPayloadOwnedByUser(_TaskPayload payload, String? activeUserId) {
@@ -841,25 +839,218 @@ class NotificationService implements TaskReminderScheduler {
     return payloadUserId == activeUserId;
   }
 
+  _ReminderText _reminderTextForReschedule({
+    required String taskType,
+    required List<PendingNotificationRequest> matchingPending,
+  }) {
+    final defaultText = _defaultReminderTextForTaskType(taskType);
+    PendingNotificationRequest? preferred;
+
+    for (final pending in matchingPending) {
+      final payload = pending.payload;
+      if (payload == null || payload.isEmpty) {
+        continue;
+      }
+
+      final parsed = _parseTaskPayload(payload);
+      if (parsed == null) {
+        continue;
+      }
+
+      preferred ??= pending;
+      if (parsed.snoozeIndex == 0) {
+        preferred = pending;
+        break;
+      }
+    }
+
+    final title = preferred?.title ?? defaultText.title;
+    final body = _removeSnoozeSuffix(preferred?.body ?? defaultText.body);
+
+    return _ReminderText(title: title, body: body);
+  }
+
+  _ReminderText _defaultReminderTextForTaskType(String taskType) {
+    switch (taskType) {
+      case 'medicine':
+        return const _ReminderText(
+          title: 'Pengingat Obat',
+          body: 'Waktunya minum obat Anda.',
+        );
+      case 'measurement':
+        return const _ReminderText(
+          title: 'Pengingat Pengukuran',
+          body: 'Saatnya melakukan pengukuran kesehatan Anda.',
+        );
+      case 'physical_activity':
+        return const _ReminderText(
+          title: 'Pengingat Aktivitas',
+          body: 'Saatnya melakukan aktivitas fisik Anda.',
+        );
+      default:
+        return const _ReminderText(
+          title: 'Pengingat MedSync',
+          body: 'Saatnya tugas Anda.',
+        );
+    }
+  }
+
+  String _removeSnoozeSuffix(String body) {
+    return body.replaceFirst(RegExp(r'\s*\(Peringatan ke-\d+\)$'), '');
+  }
+
+  bool _notificationsEnabledForTaskType(String taskType) {
+    switch (taskType) {
+      case 'medicine':
+        return AppPreferences.notifMedicine;
+      case 'measurement':
+        return AppPreferences.notifMeasurement;
+      case 'physical_activity':
+        return AppPreferences.notifActivity;
+      default:
+        return true;
+    }
+  }
+
+  DateTime _startOfLocalDay(DateTime date) {
+    final local = date.toLocal();
+    return DateTime(local.year, local.month, local.day);
+  }
+
+  bool _matchesOccurrenceDay(
+    _TaskPayload parsed,
+    DateTime? occurrenceScheduledAt,
+  ) {
+    final parsedScheduledAt = parsed.scheduledAt;
+    if (parsedScheduledAt == null || occurrenceScheduledAt == null) {
+      return true;
+    }
+
+    return _startOfLocalDay(parsedScheduledAt) ==
+        _startOfLocalDay(occurrenceScheduledAt);
+  }
+
+  Future<_PendingTaskOccurrence?> _nextPendingTaskForSlot({
+    required SupabaseClient client,
+    required String userId,
+    required String taskType,
+    required String referenceId,
+    required String timeOfDay,
+    required DateTime after,
+  }) async {
+    final end = after.add(const Duration(days: _taskNotificationHorizonDays));
+    final rows = await client
+        .from('task_logs')
+        .select('scheduled_at')
+        .eq('owner_id', userId)
+        .eq('task_type', taskType)
+        .eq('reference_id', referenceId)
+        .eq('status', 'pending')
+        .gte('scheduled_at', after.toIso8601String())
+        .lt('scheduled_at', end.toIso8601String())
+        .order('scheduled_at', ascending: true)
+        .limit(_taskNotificationHorizonDays * 8);
+
+    for (final row in (rows as List<dynamic>)) {
+      final occurrence = _pendingOccurrenceFromRow(row, timeOfDay);
+      if (occurrence != null) {
+        return occurrence;
+      }
+    }
+
+    return null;
+  }
+
+  Future<void> _schedulePendingTaskNotificationsForSlot({
+    required SupabaseClient client,
+    required String userId,
+    required String taskType,
+    required String referenceId,
+    required String timeOfDay,
+    required String channelId,
+    required String title,
+    required String body,
+  }) async {
+    final now = DateTime.now();
+    final start = _startOfLocalDay(now);
+    final end = start.add(const Duration(days: _taskNotificationHorizonDays));
+
+    final rows = await client
+        .from('task_logs')
+        .select('scheduled_at')
+        .eq('owner_id', userId)
+        .eq('task_type', taskType)
+        .eq('reference_id', referenceId)
+        .eq('status', 'pending')
+        .gte('scheduled_at', start.toIso8601String())
+        .lt('scheduled_at', end.toIso8601String())
+        .order('scheduled_at', ascending: true)
+        .limit(_taskNotificationHorizonDays * 8);
+
+    for (final row in (rows as List<dynamic>)) {
+      final occurrence = _pendingOccurrenceFromRow(row, timeOfDay);
+      if (occurrence == null) {
+        continue;
+      }
+
+      final scheduled = await scheduleTaskNotification(
+        taskType: taskType,
+        referenceId: referenceId,
+        timeOfDay: timeOfDay,
+        channelId: channelId,
+        title: title,
+        body: body,
+        scheduledAt: occurrence.scheduledAt,
+      );
+      if (scheduled) {
+        return;
+      }
+    }
+  }
+
+  _PendingTaskOccurrence? _pendingOccurrenceFromRow(
+    Object? row,
+    String timeOfDay,
+  ) {
+    if (row is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final rawScheduledAt = row['scheduled_at']?.toString();
+    DateTime? scheduledAt;
+    if (rawScheduledAt != null) {
+      try {
+        scheduledAt = parseReminderScheduledAt(rawScheduledAt);
+      } catch (_) {
+        scheduledAt = null;
+      }
+    }
+    if (scheduledAt == null ||
+        !reminderTimesMatch(
+          reminderTimeOfDayFromDateTime(scheduledAt),
+          timeOfDay,
+        )) {
+      return null;
+    }
+
+    return _PendingTaskOccurrence(scheduledAt: scheduledAt);
+  }
+
   Future<void> _scheduleActiveMedicineTaskNotifications({
     required SupabaseClient client,
     required String userId,
   }) async {
     final scheduleRows = await client
         .from('medicine_schedules')
-        .select('id, start_date')
+        .select('id')
         .eq('owner_id', userId)
         .eq('is_active', true);
 
     for (final row in (scheduleRows as List<dynamic>)) {
       final map = row as Map<String, dynamic>;
       final scheduleId = map['id']?.toString();
-      final rawStartDate = map['start_date']?.toString();
-      final startDate = rawStartDate == null
-          ? null
-          : DateTime.tryParse(rawStartDate);
 
-      if (scheduleId == null || scheduleId.isEmpty || startDate == null) {
+      if (scheduleId == null || scheduleId.isEmpty) {
         continue;
       }
 
@@ -882,19 +1073,15 @@ class NotificationService implements TaskReminderScheduler {
           continue;
         }
 
-        final scheduledAt = _nextScheduleTimeFromStartDate(
-          startDate: startDate,
-          timeOfDay: timeOfDay,
-        );
-
-        await scheduleTaskNotification(
+        await _schedulePendingTaskNotificationsForSlot(
+          client: client,
+          userId: userId,
           taskType: 'medicine',
           referenceId: scheduleId,
           timeOfDay: timeOfDay,
           channelId: medicineReminderChannelId,
           title: 'Pengingat Obat',
           body: 'Waktunya minum obat Anda.',
-          scheduledAt: scheduledAt,
         );
       }
     }
@@ -906,41 +1093,33 @@ class NotificationService implements TaskReminderScheduler {
   }) async {
     final rows = await client
         .from('measurement_reminders')
-        .select('id, time_of_day, start_date')
+        .select('id, time_of_day')
         .eq('owner_id', userId)
         .eq('is_active', true)
+        .eq('notification_enabled', true)
         .order('time_of_day', ascending: true);
 
     for (final row in (rows as List<dynamic>)) {
       final map = row as Map<String, dynamic>;
       final reminderId = map['id']?.toString();
       final timeOfDay = map['time_of_day']?.toString();
-      final rawStartDate = map['start_date']?.toString();
-      final startDate = rawStartDate == null
-          ? null
-          : DateTime.tryParse(rawStartDate);
 
       if (reminderId == null ||
           reminderId.isEmpty ||
           timeOfDay == null ||
-          timeOfDay.isEmpty ||
-          startDate == null) {
+          timeOfDay.isEmpty) {
         continue;
       }
 
-      final scheduledAt = _nextScheduleTimeFromStartDate(
-        startDate: startDate,
-        timeOfDay: timeOfDay,
-      );
-
-      await scheduleTaskNotification(
+      await _schedulePendingTaskNotificationsForSlot(
+        client: client,
+        userId: userId,
         taskType: 'measurement',
         referenceId: reminderId,
         timeOfDay: timeOfDay,
         channelId: measurementReminderChannelId,
         title: 'Pengingat Pengukuran',
         body: 'Saatnya melakukan pengukuran kesehatan Anda.',
-        scheduledAt: scheduledAt,
       );
     }
   }
@@ -951,69 +1130,35 @@ class NotificationService implements TaskReminderScheduler {
   }) async {
     final rows = await client
         .from('physical_activity_reminders')
-        .select('id, time_of_day, start_date')
+        .select('id, time_of_day')
         .eq('owner_id', userId)
         .eq('is_active', true)
+        .eq('notification_enabled', true)
         .order('time_of_day', ascending: true);
 
     for (final row in (rows as List<dynamic>)) {
       final map = row as Map<String, dynamic>;
       final reminderId = map['id']?.toString();
       final timeOfDay = map['time_of_day']?.toString();
-      final rawStartDate = map['start_date']?.toString();
-      final startDate = rawStartDate == null
-          ? null
-          : DateTime.tryParse(rawStartDate);
 
       if (reminderId == null ||
           reminderId.isEmpty ||
           timeOfDay == null ||
-          timeOfDay.isEmpty ||
-          startDate == null) {
+          timeOfDay.isEmpty) {
         continue;
       }
 
-      final scheduledAt = _nextScheduleTimeFromStartDate(
-        startDate: startDate,
-        timeOfDay: timeOfDay,
-      );
-
-      await scheduleTaskNotification(
+      await _schedulePendingTaskNotificationsForSlot(
+        client: client,
+        userId: userId,
         taskType: 'physical_activity',
         referenceId: reminderId,
         timeOfDay: timeOfDay,
         channelId: activityReminderChannelId,
         title: 'Pengingat Aktivitas',
         body: 'Saatnya melakukan aktivitas fisik Anda.',
-        scheduledAt: scheduledAt,
       );
     }
-  }
-
-  DateTime _nextScheduleTimeFromStartDate({
-    required DateTime startDate,
-    required String timeOfDay,
-  }) {
-    return nextReminderOccurrence(startDate: startDate, timeOfDay: timeOfDay);
-  }
-
-  DateTime _nextDailyTime(String timeOfDay, {int snoozeIndex = 0}) {
-    final now = DateTime.now();
-    final parts = timeOfDay.split(':');
-
-    final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
-    final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
-
-    var scheduledAt = DateTime(now.year, now.month, now.day, hour, minute);
-    if (scheduledAt.isBefore(now)) {
-      scheduledAt = scheduledAt.add(const Duration(days: 1));
-    }
-
-    if (snoozeIndex > 0) {
-      scheduledAt = scheduledAt.add(Duration(minutes: 5 * snoozeIndex));
-    }
-
-    return scheduledAt;
   }
 
   AndroidNotificationSound? _androidSoundForChannel(
@@ -1038,6 +1183,14 @@ class NotificationService implements TaskReminderScheduler {
     }
 
     return _reminderVibrationPattern;
+  }
+
+  Int32List? _androidAdditionalFlagsForChannel(String baseChannelId) {
+    if (!_isReminderBaseChannel(baseChannelId)) {
+      return null;
+    }
+
+    return Int32List.fromList(<int>[_notificationFlagInsistent]);
   }
 
   Future<void> _ensureAndroidChannels() async {
@@ -1222,16 +1375,19 @@ class NotificationService implements TaskReminderScheduler {
   ) async {
     final legacyBaseChannelIds = <String>{
       legacyMedicineReminderChannelId,
+      legacyMedicineReminderChannelIdV4,
       legacyMedicineReminderChannelIdV3,
       legacyMedicineReminderChannelIdV2,
       legacyMedicineReminderChannelIdV1,
       legacyMedicineReminderChannelIdV0,
       legacyMeasurementReminderChannelId,
+      legacyMeasurementReminderChannelIdV4,
       legacyMeasurementReminderChannelIdV3,
       legacyMeasurementReminderChannelIdV2,
       legacyMeasurementReminderChannelIdV1,
       legacyMeasurementReminderChannelIdV0,
       legacyActivityReminderChannelId,
+      legacyActivityReminderChannelIdV4,
       legacyActivityReminderChannelIdV3,
       legacyActivityReminderChannelIdV2,
       legacyActivityReminderChannelIdV1,
@@ -1240,9 +1396,9 @@ class NotificationService implements TaskReminderScheduler {
 
     final allLegacyChannelIds = <String>{...legacyBaseChannelIds};
     for (final baseChannelId in legacyBaseChannelIds) {
-      for (final option in AlarmRingtones.options) {
+      for (final ringtoneId in AlarmRingtones.channelCleanupRingtoneIds) {
         allLegacyChannelIds.add(
-          '${baseChannelId}__${_safeChannelSuffix(option.id)}',
+          '${baseChannelId}__${_safeChannelSuffix(ringtoneId)}',
         );
       }
     }
@@ -1365,12 +1521,14 @@ class NotificationService implements TaskReminderScheduler {
   bool _isMedicineRequestedChannel(String channelId) {
     return channelId == medicineReminderChannelId ||
         channelId == legacyMedicineReminderChannelId ||
+        channelId == legacyMedicineReminderChannelIdV4 ||
         channelId == legacyMedicineReminderChannelIdV3 ||
         channelId == legacyMedicineReminderChannelIdV2 ||
         channelId == legacyMedicineReminderChannelIdV1 ||
         channelId == legacyMedicineReminderChannelIdV0 ||
         channelId.startsWith('${medicineReminderChannelId}__') ||
         channelId.startsWith('${legacyMedicineReminderChannelId}__') ||
+        channelId.startsWith('${legacyMedicineReminderChannelIdV4}__') ||
         channelId.startsWith('${legacyMedicineReminderChannelIdV3}__') ||
         channelId.startsWith('${legacyMedicineReminderChannelIdV2}__') ||
         channelId.startsWith('${legacyMedicineReminderChannelIdV1}__') ||
@@ -1380,12 +1538,14 @@ class NotificationService implements TaskReminderScheduler {
   bool _isMeasurementRequestedChannel(String channelId) {
     return channelId == measurementReminderChannelId ||
         channelId == legacyMeasurementReminderChannelId ||
+        channelId == legacyMeasurementReminderChannelIdV4 ||
         channelId == legacyMeasurementReminderChannelIdV3 ||
         channelId == legacyMeasurementReminderChannelIdV2 ||
         channelId == legacyMeasurementReminderChannelIdV1 ||
         channelId == legacyMeasurementReminderChannelIdV0 ||
         channelId.startsWith('${measurementReminderChannelId}__') ||
         channelId.startsWith('${legacyMeasurementReminderChannelId}__') ||
+        channelId.startsWith('${legacyMeasurementReminderChannelIdV4}__') ||
         channelId.startsWith('${legacyMeasurementReminderChannelIdV3}__') ||
         channelId.startsWith('${legacyMeasurementReminderChannelIdV2}__') ||
         channelId.startsWith('${legacyMeasurementReminderChannelIdV1}__') ||
@@ -1395,12 +1555,14 @@ class NotificationService implements TaskReminderScheduler {
   bool _isActivityRequestedChannel(String channelId) {
     return channelId == activityReminderChannelId ||
         channelId == legacyActivityReminderChannelId ||
+        channelId == legacyActivityReminderChannelIdV4 ||
         channelId == legacyActivityReminderChannelIdV3 ||
         channelId == legacyActivityReminderChannelIdV2 ||
         channelId == legacyActivityReminderChannelIdV1 ||
         channelId == legacyActivityReminderChannelIdV0 ||
         channelId.startsWith('${activityReminderChannelId}__') ||
         channelId.startsWith('${legacyActivityReminderChannelId}__') ||
+        channelId.startsWith('${legacyActivityReminderChannelIdV4}__') ||
         channelId.startsWith('${legacyActivityReminderChannelIdV3}__') ||
         channelId.startsWith('${legacyActivityReminderChannelIdV2}__') ||
         channelId.startsWith('${legacyActivityReminderChannelIdV1}__') ||
@@ -1464,7 +1626,171 @@ class _AndroidChannelConfig {
   final String? ringtoneId;
 }
 
+class _PendingTaskOccurrence {
+  const _PendingTaskOccurrence({required this.scheduledAt});
+
+  final DateTime scheduledAt;
+}
+
+class _ReminderText {
+  const _ReminderText({required this.title, required this.body});
+
+  final String title;
+  final String body;
+}
+
+@visibleForTesting
+Set<int> taskNotificationIdsForSlot({
+  required String taskType,
+  required String? activeUserId,
+  required String referenceId,
+  required String timeOfDay,
+  DateTime? scheduledAt,
+  bool includeCurrentRuntimeHashIds = false,
+}) {
+  final normalizedTimeOfDay =
+      canonicalReminderTimeOfDay(timeOfDay) ?? timeOfDay.trim();
+  if (normalizedTimeOfDay.isEmpty) {
+    return const <int>{};
+  }
+
+  final ids = <int>{};
+
+  void addIds(String? userId) {
+    for (
+      var snoozeIndex = 0;
+      snoozeIndex <= NotificationService._scheduledReminderSnoozeCount;
+      snoozeIndex++
+    ) {
+      final payload = _buildTaskPayload(
+        taskType: taskType,
+        userId: userId,
+        referenceId: referenceId,
+        timeOfDay: normalizedTimeOfDay,
+        snoozeIndex: snoozeIndex,
+      );
+      ids.add(stableNotificationId(payload));
+      if (includeCurrentRuntimeHashIds) {
+        ids.add(_currentRuntimeNotificationId(payload));
+      }
+
+      if (userId == null || scheduledAt == null) {
+        continue;
+      }
+
+      final occurrencePayload = _buildTaskPayload(
+        taskType: taskType,
+        userId: userId,
+        referenceId: referenceId,
+        timeOfDay: normalizedTimeOfDay,
+        scheduledAt: scheduledAt,
+        snoozeIndex: snoozeIndex,
+      );
+      ids.add(stableNotificationId(occurrencePayload));
+      if (includeCurrentRuntimeHashIds) {
+        ids.add(_currentRuntimeNotificationId(occurrencePayload));
+      }
+    }
+  }
+
+  addIds(activeUserId);
+  addIds(null);
+
+  return ids;
+}
+
+@visibleForTesting
+bool taskNotificationPayloadMatchesSlot({
+  required String payload,
+  required String taskType,
+  required String referenceId,
+  required String timeOfDay,
+}) {
+  final parsed = _parseTaskPayload(payload);
+  if (parsed == null) {
+    return false;
+  }
+
+  return _taskPayloadMatchesSlot(
+    parsed,
+    taskType: taskType,
+    referenceId: referenceId,
+    timeOfDay: timeOfDay,
+  );
+}
+
+bool _taskPayloadMatchesSlot(
+  _TaskPayload parsed, {
+  required String taskType,
+  required String referenceId,
+  required String timeOfDay,
+}) {
+  return parsed.taskType == taskType &&
+      parsed.referenceId == referenceId &&
+      reminderTimesMatch(parsed.timeOfDay, timeOfDay);
+}
+
+@visibleForTesting
+DateTime? resolveNotificationScheduleTime({
+  required DateTime scheduledAt,
+  required DateTime now,
+  required bool repeatDaily,
+  required bool isReminder,
+}) {
+  if (!scheduledAt.isBefore(now)) {
+    return scheduledAt;
+  }
+
+  if (!repeatDaily) {
+    return null;
+  }
+
+  final missedBy = now.difference(scheduledAt);
+  if (isReminder &&
+      !missedBy.isNegative &&
+      missedBy <= NotificationService._missedReminderCatchUpGrace) {
+    return now.add(NotificationService._nearTermScheduleLeadTime);
+  }
+
+  // For recurring notifications, keep the original clock time. The native
+  // scheduler will calculate the next matching daily occurrence.
+  return scheduledAt;
+}
+
+@visibleForTesting
+DateTime? resolveTaskReminderOccurrenceScheduleTime({
+  required DateTime scheduledAt,
+  required DateTime now,
+  required bool isReminder,
+}) {
+  if (!scheduledAt.isBefore(now)) {
+    return scheduledAt;
+  }
+
+  final missedBy = now.difference(scheduledAt);
+  if (isReminder &&
+      !missedBy.isNegative &&
+      missedBy <= NotificationService._missedReminderCatchUpGrace) {
+    return now.add(NotificationService._nearTermScheduleLeadTime);
+  }
+
+  return null;
+}
+
 int stableNotificationId(String seed) {
+  const fnvOffsetBasis = 0x811c9dc5;
+  const fnvPrime = 0x01000193;
+  var hash = fnvOffsetBasis;
+
+  for (final codeUnit in seed.codeUnits) {
+    hash ^= codeUnit;
+    hash = (hash * fnvPrime) & 0xffffffff;
+  }
+
+  return hash & 0x7fffffff;
+}
+
+int _currentRuntimeNotificationId(String seed) {
   return seed.hashCode.abs() % 2147483647;
 }
 
@@ -1530,6 +1856,7 @@ Future<void> _handleNotificationResponse(NotificationResponse response) async {
       taskType: parsed.taskType,
       referenceId: parsed.referenceId,
       timeOfDay: parsed.timeOfDay,
+      scheduledAt: parsed.scheduledAt,
     );
   } catch (error) {
     if (kDebugMode) {
@@ -1543,6 +1870,7 @@ String _buildTaskPayload({
   required String? userId,
   required String referenceId,
   required String timeOfDay,
+  DateTime? scheduledAt,
   required int snoozeIndex,
 }) {
   final normalizedTimeOfDay =
@@ -1552,6 +1880,10 @@ String _buildTaskPayload({
     return '${NotificationService._legacyTaskPayloadPrefix}|$taskType|$referenceId|$normalizedTimeOfDay|$snoozeIndex';
   }
 
+  if (scheduledAt != null) {
+    return '${NotificationService._scopedTaskOccurrencePayloadPrefix}|$taskType|$userId|$referenceId|$normalizedTimeOfDay|${scheduledAt.toIso8601String()}|$snoozeIndex';
+  }
+
   return '${NotificationService._scopedTaskPayloadPrefix}|$taskType|$userId|$referenceId|$normalizedTimeOfDay|$snoozeIndex';
 }
 
@@ -1559,12 +1891,51 @@ _TaskPayload? _parseTaskPayload(String payload) {
   // Payload formats:
   // v1: task|taskType|referenceId|HH:mm[:ss]|snoozeIndex
   // v2: taskv2|taskType|userId|referenceId|HH:mm[:ss]|snoozeIndex
+  // v3: taskv3|taskType|userId|referenceId|HH:mm[:ss]|scheduledAtIso|snoozeIndex
   final parts = payload.split('|');
   if (parts.isEmpty) {
     return null;
   }
 
   final prefix = parts.first;
+  if (prefix == NotificationService._scopedTaskOccurrencePayloadPrefix) {
+    if (parts.length < 6) {
+      return null;
+    }
+
+    final taskType = parts[1].trim();
+    final userId = parts[2].trim();
+    final referenceId = parts[3].trim();
+    final rawTimeOfDay = parts[4].trim();
+    final rawScheduledAt = parts[5].trim();
+    DateTime? scheduledAt;
+    if (rawScheduledAt.isNotEmpty) {
+      try {
+        scheduledAt = parseReminderScheduledAt(rawScheduledAt);
+      } catch (_) {
+        scheduledAt = null;
+      }
+    }
+    final snoozeIndex = parts.length > 6 ? int.tryParse(parts[6]) ?? 0 : 0;
+    final normalizedTimeOfDay = canonicalReminderTimeOfDay(rawTimeOfDay);
+
+    if (taskType.isEmpty ||
+        userId.isEmpty ||
+        referenceId.isEmpty ||
+        scheduledAt == null) {
+      return null;
+    }
+
+    return _TaskPayload(
+      taskType: taskType,
+      userId: userId,
+      referenceId: referenceId,
+      timeOfDay: normalizedTimeOfDay,
+      scheduledAt: scheduledAt,
+      snoozeIndex: snoozeIndex,
+    );
+  }
+
   if (prefix == NotificationService._scopedTaskPayloadPrefix) {
     if (parts.length < 5) {
       return null;
@@ -1586,6 +1957,7 @@ _TaskPayload? _parseTaskPayload(String payload) {
       userId: userId,
       referenceId: referenceId,
       timeOfDay: normalizedTimeOfDay,
+      scheduledAt: null,
       snoozeIndex: snoozeIndex,
     );
   }
@@ -1610,6 +1982,7 @@ _TaskPayload? _parseTaskPayload(String payload) {
     userId: null,
     referenceId: referenceId,
     timeOfDay: normalizedTimeOfDay,
+    scheduledAt: null,
     snoozeIndex: snoozeIndex,
   );
 }
@@ -1653,6 +2026,7 @@ class _TaskPayload {
     required this.userId,
     required this.referenceId,
     required this.timeOfDay,
+    required this.scheduledAt,
     required this.snoozeIndex,
   });
 
@@ -1660,5 +2034,6 @@ class _TaskPayload {
   final String? userId;
   final String referenceId;
   final String? timeOfDay;
+  final DateTime? scheduledAt;
   final int snoozeIndex;
 }

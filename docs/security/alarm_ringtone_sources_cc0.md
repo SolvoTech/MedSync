@@ -1,35 +1,41 @@
-# Alarm Ringtone Sources (CC0)
+# Alarm Ringtone Sources
 
-Tanggal pembaruan: 2026-04-30
+Tanggal pembaruan: 2026-05-01
 
-Dokumen ini mencatat sumber nada dering alarm yang digunakan aplikasi.
-Semua item di bawah menggunakan lisensi Creative Commons 0 (CC0) dari Freesound.
+Dokumen ini mencatat sumber nada dering alarm yang digunakan aplikasi Android.
+Nada aktif dibuat dari kombinasi sintetis lokal dan satu sumber public domain
+dari internet. Semua nada dibuat panjang dan berkarakter alarm agar pengingat
+obat, pengukuran, dan aktivitas lebih mudah terdengar.
 
-## Daftar Nada
+## Daftar Nada Aktif
 
-1. Default reminder tone
-- Nama internal: fs_cc0_chime_notification_pcm
-- Sumber: Notification.wav
-- URL: https://freesound.org/people/finn.appleton/sounds/560880/
-- Lisensi: Creative Commons 0
-- Durasi: 15.253 detik
+1. Wake Pulse
+- ID preferensi: `medsync_alarm_pulse`
+- Resource Android: `medsync_alarm_pulse_pcm`
+- Durasi: 30 detik
+- Pola: pulsa cepat 880 Hz dengan harmonic 1760 Hz.
 
-2. Alternatif reminder tone
-- Nama internal: fs_cc0_phone_chime_pcm
-- Sumber: Phone chime.wav
-- URL: https://freesound.org/people/ChristopherJngs/sounds/666296/
-- Lisensi: Creative Commons 0
+2. Warning Beep
+- ID preferensi: `medsync_alarm_siren`
+- Resource Android: `medsync_alarm_siren_pcm`
+- Durasi: 30 detik
+- Sumber: Wikimedia Commons, `Alarm_or_siren.ogg`
+  <https://commons.wikimedia.org/wiki/File:Alarm_or_siren.ogg>
+- Lisensi: public domain, sumber asli PDSounds oleh stephan.
+- Proses: file OGG 10 detik di-loop dan dikonversi ke WAV PCM mono 44.1 kHz.
 
-3. Alternatif reminder tone
-- Nama internal: fs_cc0_soft_bell_pcm
-- Sumber: Soft-Notifications - Bell - Ding-Dong.mp3
-- URL: https://freesound.org/people/LegitCheese/sounds/571513/
-- Lisensi: Creative Commons 0
+3. Rapid Bell
+- ID preferensi: `medsync_alarm_bell`
+- Resource Android: `medsync_alarm_bell_pcm`
+- Durasi: 30 detik
+- Pola: bel tiga ketukan berulang 1046 Hz dengan harmonic 2093 Hz.
 
 ## Catatan Teknis
 
-- File audio disimpan di android/app/src/main/res/raw.
-- Ringtone default Android dibundel ulang sebagai WAV PCM mono 44.1 kHz dengan durasi 15.253 detik.
-- Dua ringtone alternatif CC0 Android dibundel ulang sebagai WAV PCM mono 44.1 kHz dengan durasi minimum 1.25 detik untuk meningkatkan kompatibilitas channel notifikasi Android.
-- Saat ini aplikasi menggunakan versi preview publik Freesound agar unduhan otomatis dapat dilakukan tanpa sesi login.
-- Jika diperlukan kualitas audio lebih tinggi, unduh file original dari halaman sumber di atas (memerlukan login Freesound), lalu ganti file resource dengan nama internal yang sama.
+- File audio disimpan di `android/app/src/main/res/raw`.
+- Format tiap nada aktif: WAV PCM mono 44.1 kHz, 16-bit.
+- ID preferensi lama (`cc0_chime_notification`, `cc0_phone_chime`,
+  `cc0_soft_bell`, `medsync_classic`) dimapping otomatis ke `Wake Pulse`.
+- File raw lama yang duplikat sudah dihapus. Kompatibilitas preferensi lama
+  tetap dijaga lewat mapping ID ke `Wake Pulse` dan cleanup channel lama.
+- UI pengaturan menampilkan tiga nada aktif di atas dan `System Default`.

@@ -389,6 +389,7 @@ Future<void> showReminderEditorSheet({
   final nameController = TextEditingController(text: initialCustomName ?? '');
   final formKey = GlobalKey<FormState>();
   var hasAttemptedSubmit = false;
+  var isSubmitting = false;
   final parts = initialTimeOfDay.split(':');
   TimeOfDay selectedTime = TimeOfDay(
     hour: int.parse(parts[0]),
@@ -453,6 +454,9 @@ Future<void> showReminderEditorSheet({
                               )
                               .toList(),
                           onChanged: (value) {
+                            if (isSubmitting) {
+                              return;
+                            }
                             if (value == null) {
                               return;
                             }
@@ -477,87 +481,112 @@ Future<void> showReminderEditorSheet({
                         AppDateField(
                           label: AppStrings.startDate,
                           value: selectedDate,
-                          onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: selectedDate,
-                              firstDate: DateTime.now().subtract(
-                                const Duration(days: 365),
-                              ),
-                              lastDate: DateTime.now().add(
-                                const Duration(days: 3650),
-                              ),
-                            );
-                            if (picked != null) {
-                              setLocalState(() {
-                                selectedDate = picked;
-                              });
-                            }
-                          },
+                          onTap: isSubmitting
+                              ? () {}
+                              : () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: selectedDate,
+                                    firstDate: DateTime.now().subtract(
+                                      const Duration(days: 365),
+                                    ),
+                                    lastDate: DateTime.now().add(
+                                      const Duration(days: 3650),
+                                    ),
+                                  );
+                                  if (picked != null) {
+                                    setLocalState(() {
+                                      selectedDate = picked;
+                                    });
+                                  }
+                                },
                         ),
                         const SizedBox(height: 10),
                         AppTimeField(
                           label: timeFieldLabel,
                           value: selectedTime,
-                          onTap: () async {
-                            final picked = await showTimePicker(
-                              context: context,
-                              initialTime: selectedTime,
-                            );
-                            if (picked != null) {
-                              setLocalState(() => selectedTime = picked);
-                            }
-                          },
+                          onTap: isSubmitting
+                              ? () {}
+                              : () async {
+                                  final picked = await showTimePicker(
+                                    context: context,
+                                    initialTime: selectedTime,
+                                  );
+                                  if (picked != null) {
+                                    setLocalState(() => selectedTime = picked);
+                                  }
+                                },
                         ),
                         const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
                           child: FilledButton(
-                            onPressed: () async {
-                              if (!formKey.currentState!.validate()) {
-                                setLocalState(() => hasAttemptedSubmit = true);
-                                return;
-                              }
+                            onPressed: isSubmitting
+                                ? null
+                                : () async {
+                                    if (!formKey.currentState!.validate()) {
+                                      setLocalState(
+                                        () => hasAttemptedSubmit = true,
+                                      );
+                                      return;
+                                    }
 
-                              final timeString =
-                                  '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}:00';
+                                    final timeString =
+                                        '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}:00';
 
-                              try {
-                                await onSubmit(
-                                  selectedType: selectedType,
-                                  customName: nameController.text.trim().isEmpty
-                                      ? null
-                                      : nameController.text.trim(),
-                                  timeOfDay: timeString,
-                                  startDate: selectedDate,
-                                );
+                                    try {
+                                      setLocalState(() {
+                                        isSubmitting = true;
+                                      });
 
-                                if (context.mounted) {
-                                  Navigator.pop(context);
-                                  context.showSuccessSnackBar(
-                                    isEditing
-                                        ? updateSuccessMessage
-                                        : createSuccessMessage,
-                                  );
-                                }
-                              } catch (error) {
-                                if (context.mounted) {
-                                  context.showErrorSnackBar(
-                                    toUserErrorMessage(
-                                      error,
-                                      fallback: AppStrings.actionFailed,
+                                      await onSubmit(
+                                        selectedType: selectedType,
+                                        customName:
+                                            nameController.text.trim().isEmpty
+                                            ? null
+                                            : nameController.text.trim(),
+                                        timeOfDay: timeString,
+                                        startDate: selectedDate,
+                                      );
+
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                        context.showSuccessSnackBar(
+                                          isEditing
+                                              ? updateSuccessMessage
+                                              : createSuccessMessage,
+                                        );
+                                      }
+                                    } catch (error) {
+                                      if (context.mounted) {
+                                        setLocalState(() {
+                                          isSubmitting = false;
+                                        });
+                                      }
+                                      if (context.mounted) {
+                                        context.showErrorSnackBar(
+                                          toUserErrorMessage(
+                                            error,
+                                            fallback: AppStrings.actionFailed,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                            child: isSubmitting
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
                                     ),
-                                  );
-                                }
-                              }
-                            },
-                            child: Text(
-                              isEditing
-                                  ? AppStrings.saveChanges
-                                  : AppStrings.save,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                                  )
+                                : Text(
+                                    isEditing
+                                        ? AppStrings.saveChanges
+                                        : AppStrings.save,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                           ),
                         ),
                       ],

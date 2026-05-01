@@ -3,6 +3,7 @@ package com.solvo.medsync
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver
 import io.flutter.Log
 
 class BootReceiver : BroadcastReceiver() {
@@ -10,7 +11,10 @@ class BootReceiver : BroadcastReceiver() {
         if (intent?.action == Intent.ACTION_BOOT_COMPLETED ||
             intent?.action == Intent.ACTION_MY_PACKAGE_REPLACED
         ) {
-            // Alarm rescheduling will be wired in the alarm service integration slice.
+            val rescheduleIntent = Intent(context, ScheduledNotificationBootReceiver::class.java).apply {
+                action = intent.action
+            }
+            context.sendBroadcast(rescheduleIntent)
             Log.i("MedSync", "Boot receiver triggered: ${intent.action}")
         }
     }

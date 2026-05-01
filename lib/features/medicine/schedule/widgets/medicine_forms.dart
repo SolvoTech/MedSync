@@ -335,6 +335,7 @@ Future<void> _showScheduleSheet({
   final formKey = GlobalKey<FormState>();
   DateTime startDate = initialStartDate ?? DateTime.now();
   var repeatType = initialRepeatType ?? 'daily';
+  var isSubmitting = false;
   final compact = MediaQuery.sizeOf(context).width < 340;
 
   await showModalBottomSheet<void>(
@@ -441,6 +442,9 @@ Future<void> _showScheduleSheet({
                             ),
                           ],
                           onChanged: (value) {
+                            if (isSubmitting) {
+                              return;
+                            }
                             if (value == null) {
                               return;
                             }
@@ -461,7 +465,7 @@ Future<void> _showScheduleSheet({
                         AppDateField(
                           label: AppStrings.startDate,
                           value: startDate,
-                          onTap: pickDate,
+                          onTap: isSubmitting ? () {} : pickDate,
                         ),
                         const SizedBox(height: 8),
                         Wrap(
@@ -473,11 +477,13 @@ Future<void> _showScheduleSheet({
                                 label: Text(
                                   '${times[i].hour.toString().padLeft(2, '0')}:${times[i].minute.toString().padLeft(2, '0')}',
                                 ),
-                                onDeleted: () {
-                                  setLocalState(() {
-                                    times.removeAt(i);
-                                  });
-                                },
+                                onDeleted: isSubmitting
+                                    ? null
+                                    : () {
+                                        setLocalState(() {
+                                          times.removeAt(i);
+                                        });
+                                      },
                               ),
                             ActionChip(
                               label: Text(
@@ -486,7 +492,7 @@ Future<void> _showScheduleSheet({
                                 overflow: TextOverflow.ellipsis,
                               ),
                               avatar: const Icon(Icons.add_alarm, size: 18),
-                              onPressed: pickTime,
+                              onPressed: isSubmitting ? null : pickTime,
                             ),
                           ],
                         ),
@@ -494,56 +500,77 @@ Future<void> _showScheduleSheet({
                         SizedBox(
                           width: double.infinity,
                           child: FilledButton(
-                            onPressed: () async {
-                              if (!formKey.currentState!.validate()) {
-                                return;
-                              }
-                              if (times.isEmpty) {
-                                context.showWarningSnackBar(
-                                  AppStrings.minimumOneTimeWarning,
-                                );
-                                return;
-                              }
+                            onPressed: isSubmitting
+                                ? null
+                                : () async {
+                                    if (!formKey.currentState!.validate()) {
+                                      return;
+                                    }
+                                    if (times.isEmpty) {
+                                      context.showWarningSnackBar(
+                                        AppStrings.minimumOneTimeWarning,
+                                      );
+                                      return;
+                                    }
 
-                              try {
-                                final formattedTimes = times
-                                    .map(
-                                      (t) =>
-                                          '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00',
-                                    )
-                                    .toList();
+                                    try {
+                                      final formattedTimes = times
+                                          .map(
+                                            (t) =>
+                                                '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00',
+                                          )
+                                          .toList();
 
-                                await onSubmit(
-                                  startDate,
-                                  formattedTimes,
-                                  nameController.text.trim().isEmpty
-                                      ? null
-                                      : nameController.text.trim(),
-                                  repeatType,
-                                );
-                                ref.invalidate(
-                                  medicineSchedulesProvider(medicine.id),
-                                );
-                                if (context.mounted) {
-                                  Navigator.pop(context);
-                                  context.showSuccessSnackBar(successMessage);
-                                }
-                              } catch (error) {
-                                if (context.mounted) {
-                                  context.showErrorSnackBar(
-                                    toUserErrorMessage(
-                                      error,
-                                      fallback: AppStrings.saveScheduleFailed,
+                                      setLocalState(() {
+                                        isSubmitting = true;
+                                      });
+
+                                      await onSubmit(
+                                        startDate,
+                                        formattedTimes,
+                                        nameController.text.trim().isEmpty
+                                            ? null
+                                            : nameController.text.trim(),
+                                        repeatType,
+                                      );
+                                      ref.invalidate(
+                                        medicineSchedulesProvider(medicine.id),
+                                      );
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                        context.showSuccessSnackBar(
+                                          successMessage,
+                                        );
+                                      }
+                                    } catch (error) {
+                                      if (context.mounted) {
+                                        setLocalState(() {
+                                          isSubmitting = false;
+                                        });
+                                      }
+                                      if (context.mounted) {
+                                        context.showErrorSnackBar(
+                                          toUserErrorMessage(
+                                            error,
+                                            fallback:
+                                                AppStrings.saveScheduleFailed,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                            child: isSubmitting
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
                                     ),
-                                  );
-                                }
-                              }
-                            },
-                            child: Text(
-                              submitLabel,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                                  )
+                                : Text(
+                                    submitLabel,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                           ),
                         ),
                       ],

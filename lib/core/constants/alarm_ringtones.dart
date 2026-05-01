@@ -15,41 +15,57 @@ class AlarmRingtoneOption {
 class AlarmRingtones {
   const AlarmRingtones._();
 
+  // Legacy IDs are retained so saved preferences from older builds resolve to
+  // the default bundled tone instead of falling back to the platform default.
   static const String cc0ChimeNotification = 'cc0_chime_notification';
   static const String cc0PhoneChime = 'cc0_phone_chime';
   static const String cc0SoftBell = 'cc0_soft_bell';
   static const String medSyncClassic = 'medsync_classic';
+  static const String medSyncAlarmPulse = 'medsync_alarm_pulse';
+  static const String medSyncAlarmSiren = 'medsync_alarm_siren';
+  static const String medSyncAlarmBell = 'medsync_alarm_bell';
   static const String systemDefault = 'system_default';
 
-  // Keep the legacy id so saved preferences automatically use the longer tone.
-  static const String defaultReminderRingtoneId = cc0ChimeNotification;
+  static const Set<String> _legacyBundledToneIds = {
+    cc0ChimeNotification,
+    cc0PhoneChime,
+    cc0SoftBell,
+    medSyncClassic,
+  };
+
+  static const List<String> channelCleanupRingtoneIds = [
+    cc0ChimeNotification,
+    cc0PhoneChime,
+    cc0SoftBell,
+    medSyncClassic,
+    medSyncAlarmPulse,
+    medSyncAlarmSiren,
+    medSyncAlarmBell,
+    systemDefault,
+  ];
+
+  static const String defaultReminderRingtoneId = medSyncAlarmPulse;
 
   static const AlarmRingtoneOption _defaultOption = AlarmRingtoneOption(
-    id: cc0ChimeNotification,
-    labelEn: 'CC0 Long Notification',
-    labelId: 'CC0 Notifikasi Panjang',
-    androidResourceName: 'fs_cc0_chime_notification_pcm',
+    id: medSyncAlarmPulse,
+    labelEn: 'Wake Pulse',
+    labelId: 'Pulse Bangun',
+    androidResourceName: 'medsync_alarm_pulse_pcm',
   );
 
   static const List<AlarmRingtoneOption> options = [
     _defaultOption,
     AlarmRingtoneOption(
-      id: cc0PhoneChime,
-      labelEn: 'CC0 Phone Chime',
-      labelId: 'CC0 Phone Chime',
-      androidResourceName: 'fs_cc0_phone_chime_pcm',
+      id: medSyncAlarmSiren,
+      labelEn: 'Warning Beep',
+      labelId: 'Beep Peringatan',
+      androidResourceName: 'medsync_alarm_siren_pcm',
     ),
     AlarmRingtoneOption(
-      id: cc0SoftBell,
-      labelEn: 'CC0 Soft Bell',
-      labelId: 'CC0 Soft Bell',
-      androidResourceName: 'fs_cc0_soft_bell_pcm',
-    ),
-    AlarmRingtoneOption(
-      id: medSyncClassic,
-      labelEn: 'MedSync Classic',
-      labelId: 'Klasik MedSync',
-      androidResourceName: 'medsync_obat_tenang',
+      id: medSyncAlarmBell,
+      labelEn: 'Rapid Bell',
+      labelId: 'Bel Cepat',
+      androidResourceName: 'medsync_alarm_bell_pcm',
     ),
     AlarmRingtoneOption(
       id: systemDefault,
@@ -61,6 +77,10 @@ class AlarmRingtones {
 
   static AlarmRingtoneOption byId(String? id) {
     final normalized = id?.trim() ?? '';
+    if (_legacyBundledToneIds.contains(normalized)) {
+      return _defaultOption;
+    }
+
     for (final option in options) {
       if (option.id == normalized) {
         return option;

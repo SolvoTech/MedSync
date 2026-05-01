@@ -1,9 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/type_labels.dart';
 import '../../core/observability/app_monitoring.dart';
-import '../../core/utils/reminder_time.dart';
 import '../../data/local/preferences/app_preferences.dart';
 import '../../data/remote/datasources/measurement_remote_datasource.dart';
 import '../../domain/models/measurement_reminder.dart';
@@ -48,7 +46,7 @@ class MeasurementController
     final permissionService = ref.read(permissionServiceProvider);
     await permissionService.ensureReminderReliabilityPermissions();
 
-    final reminder = await ref
+    await ref
         .read(measurementRemoteDataSourceProvider)
         .createReminder(
           measurementType: measurementType,
@@ -59,24 +57,10 @@ class MeasurementController
           targetValue: targetValue,
         );
 
-    final scheduleAt = _nextScheduleTime(
-      startDate: startDate,
-      timeOfDay: timeOfDay,
-    );
-
     if (AppPreferences.notifMeasurement) {
       await ref
           .read(notificationServiceProvider)
-          .scheduleTaskNotification(
-            taskType: 'measurement',
-            referenceId: reminder.id,
-            timeOfDay: timeOfDay,
-            channelId: NotificationService.measurementReminderChannelId,
-            title: 'Pengingat Pengukuran',
-            body:
-                'Saatnya melakukan pengukuran ${measurementTypeLabel(measurementType)}.',
-            scheduledAt: scheduleAt,
-          );
+          .syncTaskNotificationsWithCurrentPreferences();
     }
     await refresh();
   }
@@ -116,24 +100,10 @@ class MeasurementController
           timeOfDay: oldReminder.timeOfDay,
         );
 
-    final scheduleAt = _nextScheduleTime(
-      startDate: startDate,
-      timeOfDay: timeOfDay,
-    );
-
     if (AppPreferences.notifMeasurement) {
       await ref
           .read(notificationServiceProvider)
-          .scheduleTaskNotification(
-            taskType: 'measurement',
-            referenceId: reminderId,
-            timeOfDay: timeOfDay,
-            channelId: NotificationService.measurementReminderChannelId,
-            title: 'Pengingat Pengukuran',
-            body:
-                'Saatnya melakukan pengukuran ${measurementTypeLabel(measurementType)}.',
-            scheduledAt: scheduleAt,
-          );
+          .syncTaskNotificationsWithCurrentPreferences();
     }
     await refresh();
   }
@@ -223,12 +193,5 @@ class MeasurementController
         'time_of_day': timeOfDay,
       },
     );
-  }
-
-  DateTime _nextScheduleTime({
-    required DateTime startDate,
-    required String timeOfDay,
-  }) {
-    return nextReminderOccurrence(startDate: startDate, timeOfDay: timeOfDay);
   }
 }

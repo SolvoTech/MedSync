@@ -26,6 +26,43 @@ String reminderTimeOfDayFromDateTime(DateTime value) {
   return '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
 }
 
+DateTime parseReminderScheduledAt(String value) {
+  final match = RegExp(
+    r'^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,6}))?)?',
+  ).firstMatch(value.trim());
+
+  if (match == null) {
+    return DateTime.parse(value);
+  }
+
+  final fraction = (match.group(7) ?? '').padRight(6, '0');
+  final microsecond = fraction.isEmpty
+      ? 0
+      : int.parse(fraction.substring(3, 6));
+
+  return DateTime(
+    int.parse(match.group(1)!),
+    int.parse(match.group(2)!),
+    int.parse(match.group(3)!),
+    int.parse(match.group(4)!),
+    int.parse(match.group(5)!),
+    int.tryParse(match.group(6) ?? '') ?? 0,
+    fraction.isEmpty ? 0 : int.parse(fraction.substring(0, 3)),
+    microsecond,
+  );
+}
+
+String reminderDateTimeWallKey(DateTime value) {
+  return [
+    value.year.toString().padLeft(4, '0'),
+    value.month.toString().padLeft(2, '0'),
+    value.day.toString().padLeft(2, '0'),
+    value.hour.toString().padLeft(2, '0'),
+    value.minute.toString().padLeft(2, '0'),
+    value.second.toString().padLeft(2, '0'),
+  ].join('-');
+}
+
 bool reminderTimesMatch(String? left, String? right) {
   final normalizedLeft = canonicalReminderTimeOfDay(left);
   final normalizedRight = canonicalReminderTimeOfDay(right);

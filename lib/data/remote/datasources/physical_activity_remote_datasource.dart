@@ -1,3 +1,4 @@
+import '../../../core/utils/reminder_time.dart';
 import '../../../domain/models/physical_activity_reminder.dart';
 import '../supabase_client.dart';
 
@@ -301,10 +302,9 @@ class PhysicalActivityRemoteDataSource {
     for (final row in (existingRows as List<dynamic>)) {
       final scheduledAtRaw = (row as Map<String, dynamic>)['scheduled_at'];
       if (scheduledAtRaw is String) {
-        final parsed = DateTime.tryParse(scheduledAtRaw);
-        if (parsed != null) {
-          existingKeys.add(_dateTimeKey(parsed));
-        }
+        existingKeys.add(
+          _dateTimeKey(parseReminderScheduledAt(scheduledAtRaw)),
+        );
       }
     }
 
@@ -479,6 +479,6 @@ class PhysicalActivityRemoteDataSource {
   }
 
   String _dateTimeKey(DateTime value) {
-    return value.toUtc().millisecondsSinceEpoch.toString();
+    return reminderDateTimeWallKey(value);
   }
 }

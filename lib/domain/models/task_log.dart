@@ -1,3 +1,5 @@
+import '../../core/utils/reminder_time.dart';
+
 class TaskLog {
   const TaskLog({
     required this.id,
@@ -26,7 +28,7 @@ class TaskLog {
       id: map['id'] as String,
       taskType: map['task_type'] as String,
       referenceId: map['reference_id'] as String,
-      scheduledAt: DateTime.parse(map['scheduled_at'] as String),
+      scheduledAt: parseReminderScheduledAt(map['scheduled_at'] as String),
       completedAt: map['completed_at'] == null
           ? null
           : DateTime.tryParse(map['completed_at'] as String),

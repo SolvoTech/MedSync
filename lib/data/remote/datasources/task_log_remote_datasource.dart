@@ -35,6 +35,33 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
         .toList();
   }
 
+  Future<TaskLog?> getTaskById(String taskLogId) async {
+    final client = SupabaseClientRef.maybeClient;
+    if (client == null) {
+      throw Exception(
+        'Supabase belum diinisialisasi. Periksa konfigurasi .env.',
+      );
+    }
+
+    final user = client.auth.currentUser;
+    if (user == null) {
+      throw Exception('Anda harus login terlebih dahulu.');
+    }
+
+    final rows = await client
+        .from('task_logs')
+        .select()
+        .eq('id', taskLogId)
+        .eq('owner_id', user.id)
+        .limit(1);
+
+    if ((rows as List<dynamic>).isEmpty) {
+      return null;
+    }
+
+    return TaskLog.fromMap(rows.first);
+  }
+
   @override
   Future<void> updateTaskStatus({
     required String taskLogId,
@@ -69,6 +96,7 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
     required String taskType,
     required String referenceId,
     String? timeOfDay,
+    DateTime? scheduledAt,
   }) async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
@@ -85,16 +113,17 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
     final now = DateTime.now();
     final start = DateTime(now.year, now.month, now.day);
     final end = start.add(const Duration(days: 1));
-    final scheduledAt = _scheduledAtForToday(now: now, timeOfDay: timeOfDay);
+    final exactScheduledAt =
+        scheduledAt ?? _scheduledAtForToday(now: now, timeOfDay: timeOfDay);
 
-    if (scheduledAt != null) {
+    if (exactScheduledAt != null) {
       final exactRows = await client
           .from('task_logs')
           .select('id, status')
           .eq('owner_id', user.id)
           .eq('task_type', taskType)
           .eq('reference_id', referenceId)
-          .eq('scheduled_at', scheduledAt.toIso8601String());
+          .eq('scheduled_at', exactScheduledAt.toIso8601String());
 
       final exactDecision = decideExactReminderCompletion(
         (exactRows as List<dynamic>)
@@ -123,7 +152,7 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
         'owner_id': user.id,
         'task_type': taskType,
         'reference_id': referenceId,
-        'scheduled_at': scheduledAt.toIso8601String(),
+        'scheduled_at': exactScheduledAt.toIso8601String(),
         'status': 'done',
         'completed_at': now.toIso8601String(),
       });
@@ -167,7 +196,7 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
       'owner_id': user.id,
       'task_type': taskType,
       'reference_id': referenceId,
-      'scheduled_at': (scheduledAt ?? now).toIso8601String(),
+      'scheduled_at': (exactScheduledAt ?? now).toIso8601String(),
       'status': 'done',
       'completed_at': now.toIso8601String(),
     });

@@ -94,7 +94,7 @@ class HomeController extends AutoDisposeAsyncNotifier<List<TaskLog>> {
   }
 
   Future<void> markDone(String taskLogId) async {
-    final task = _findTaskById(taskLogId);
+    final task = await _findTaskByIdOrFetch(taskLogId);
     if (task == null) {
       await ref
           .read(taskLogRemoteDataSourceProvider)
@@ -111,7 +111,7 @@ class HomeController extends AutoDisposeAsyncNotifier<List<TaskLog>> {
   }
 
   Future<void> markSkipped(String taskLogId) async {
-    final task = _findTaskById(taskLogId);
+    final task = await _findTaskByIdOrFetch(taskLogId);
     if (task == null) {
       await ref
           .read(taskLogRemoteDataSourceProvider)
@@ -132,6 +132,15 @@ class HomeController extends AutoDisposeAsyncNotifier<List<TaskLog>> {
       taskLogStore: ref.read(taskLogRemoteDataSourceProvider),
       reminderScheduler: ref.read(notificationServiceProvider),
     );
+  }
+
+  Future<TaskLog?> _findTaskByIdOrFetch(String taskLogId) async {
+    final task = _findTaskById(taskLogId);
+    if (task != null) {
+      return task;
+    }
+
+    return ref.read(taskLogRemoteDataSourceProvider).getTaskById(taskLogId);
   }
 
   TaskLog? _findTaskById(String taskLogId) {

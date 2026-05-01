@@ -189,20 +189,8 @@ class _NotificationSettingsScreenState
   }
 
   String _ringtoneLabel(String ringtoneId) {
-    switch (ringtoneId) {
-      case AlarmRingtones.cc0ChimeNotification:
-        return AppStrings.ringtoneCc0ChimeNotification;
-      case AlarmRingtones.cc0PhoneChime:
-        return AppStrings.ringtoneCc0PhoneChime;
-      case AlarmRingtones.cc0SoftBell:
-        return AppStrings.ringtoneCc0SoftBell;
-      case AlarmRingtones.medSyncClassic:
-        return AppStrings.ringtoneMedsyncClassic;
-      case AlarmRingtones.systemDefault:
-        return AppStrings.ringtoneSystemDefault;
-      default:
-        return AppStrings.ringtoneCc0ChimeNotification;
-    }
+    final option = AlarmRingtones.byId(ringtoneId);
+    return AppStrings.languageCode == 'id' ? option.labelId : option.labelEn;
   }
 
   Widget _buildRingtonePicker({
@@ -232,6 +220,7 @@ class _NotificationSettingsScreenState
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
+            key: ValueKey(selectedId),
             initialValue: selectedId,
             isExpanded: true,
             decoration: const InputDecoration(

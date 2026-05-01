@@ -27,6 +27,24 @@ void main() {
     });
   });
 
+  group('parseReminderScheduledAt', () {
+    test('keeps Supabase UTC timestamp as local reminder wall time', () {
+      final scheduledAt = parseReminderScheduledAt('2026-05-14T16:45:00.000Z');
+
+      expect(scheduledAt.isUtc, isFalse);
+      expect(scheduledAt, DateTime(2026, 5, 14, 16, 45));
+    });
+
+    test('builds wall-clock keys without timezone conversion', () {
+      expect(
+        reminderDateTimeWallKey(
+          parseReminderScheduledAt('2026-05-14T16:45:00+00:00'),
+        ),
+        '2026-05-14-16-45-00',
+      );
+    });
+  });
+
   test('reminderScheduledAtForDay uses same calendar day', () {
     final scheduledAt = reminderScheduledAtForDay(
       day: DateTime(2026, 4, 28, 22, 10),

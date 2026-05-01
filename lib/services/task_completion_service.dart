@@ -11,6 +11,7 @@ abstract interface class TaskLogCompletionStore {
     required String taskType,
     required String referenceId,
     String? timeOfDay,
+    DateTime? scheduledAt,
   });
 }
 
@@ -19,6 +20,7 @@ abstract interface class TaskReminderScheduler {
     required String taskType,
     required String referenceId,
     required String timeOfDay,
+    DateTime? scheduledAt,
   });
 }
 
@@ -40,6 +42,7 @@ class TaskCompletionService {
       taskType: task.taskType,
       referenceId: task.referenceId,
       timeOfDay: reminderTimeOfDayFromDateTime(task.scheduledAt),
+      scheduledAt: task.scheduledAt,
     );
   }
 
@@ -47,6 +50,7 @@ class TaskCompletionService {
     required String taskType,
     required String referenceId,
     String? timeOfDay,
+    DateTime? scheduledAt,
   }) async {
     final normalizedTime = canonicalReminderTimeOfDay(timeOfDay);
     final rawTime = timeOfDay?.trim();
@@ -55,6 +59,7 @@ class TaskCompletionService {
       taskType: taskType,
       referenceId: referenceId,
       timeOfDay: normalizedTime ?? rawTime,
+      scheduledAt: scheduledAt,
     );
 
     if (normalizedTime == null || normalizedTime.isEmpty) {
@@ -65,6 +70,7 @@ class TaskCompletionService {
       taskType: taskType,
       referenceId: referenceId,
       timeOfDay: normalizedTime,
+      scheduledAt: scheduledAt,
     );
   }
 }

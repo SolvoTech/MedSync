@@ -1,9 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/type_labels.dart';
 import '../../core/observability/app_monitoring.dart';
-import '../../core/utils/reminder_time.dart';
 import '../../data/local/preferences/app_preferences.dart';
 import '../../data/remote/datasources/physical_activity_remote_datasource.dart';
 import '../../domain/models/physical_activity_reminder.dart';
@@ -48,7 +46,7 @@ class ActivityController
     final permissionService = ref.read(permissionServiceProvider);
     await permissionService.ensureReminderReliabilityPermissions();
 
-    final reminder = await ref
+    await ref
         .read(activityRemoteDataSourceProvider)
         .createReminder(
           activityType: activityType,
@@ -59,24 +57,10 @@ class ActivityController
           targetValue: targetValue,
         );
 
-    final scheduleAt = _nextScheduleTime(
-      startDate: startDate,
-      timeOfDay: timeOfDay,
-    );
-
     if (AppPreferences.notifActivity) {
       await ref
           .read(notificationServiceProvider)
-          .scheduleTaskNotification(
-            taskType: 'physical_activity',
-            referenceId: reminder.id,
-            timeOfDay: timeOfDay,
-            channelId: NotificationService.activityReminderChannelId,
-            title: 'Pengingat Aktivitas',
-            body:
-                'Saatnya melakukan aktivitas ${activityTypeLabel(activityType)}.',
-            scheduledAt: scheduleAt,
-          );
+          .syncTaskNotificationsWithCurrentPreferences();
     }
     await refresh();
   }
@@ -116,24 +100,10 @@ class ActivityController
           timeOfDay: oldReminder.timeOfDay,
         );
 
-    final scheduleAt = _nextScheduleTime(
-      startDate: startDate,
-      timeOfDay: timeOfDay,
-    );
-
     if (AppPreferences.notifActivity) {
       await ref
           .read(notificationServiceProvider)
-          .scheduleTaskNotification(
-            taskType: 'physical_activity',
-            referenceId: reminderId,
-            timeOfDay: timeOfDay,
-            channelId: NotificationService.activityReminderChannelId,
-            title: 'Pengingat Aktivitas',
-            body:
-                'Saatnya melakukan aktivitas ${activityTypeLabel(activityType)}.',
-            scheduledAt: scheduleAt,
-          );
+          .syncTaskNotificationsWithCurrentPreferences();
     }
     await refresh();
   }
@@ -222,12 +192,5 @@ class ActivityController
         'time_of_day': timeOfDay,
       },
     );
-  }
-
-  DateTime _nextScheduleTime({
-    required DateTime startDate,
-    required String timeOfDay,
-  }) {
-    return nextReminderOccurrence(startDate: startDate, timeOfDay: timeOfDay);
   }
 }

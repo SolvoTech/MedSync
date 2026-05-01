@@ -919,12 +919,15 @@ class AppStrings {
   static String get alarmToneUpdated =>
       _t('Alarm tone updated successfully.', 'Nada alarm berhasil diperbarui.');
   static String get ringtoneCc0ChimeNotification =>
-      _t('CC0 Long Notification', 'CC0 Notifikasi Panjang');
-  static String get ringtoneCc0PhoneChime =>
-      _t('CC0 Phone Chime', 'CC0 Phone Chime');
-  static String get ringtoneCc0SoftBell => _t('CC0 Soft Bell', 'CC0 Soft Bell');
-  static String get ringtoneMedsyncClassic =>
-      _t('MedSync Classic', 'Klasik MedSync');
+      _t('Wake Pulse', 'Pulse Bangun');
+  static String get ringtoneCc0PhoneChime => _t('Wake Pulse', 'Pulse Bangun');
+  static String get ringtoneCc0SoftBell => _t('Wake Pulse', 'Pulse Bangun');
+  static String get ringtoneMedsyncClassic => _t('Wake Pulse', 'Pulse Bangun');
+  static String get ringtoneMedsyncAlarmPulse =>
+      _t('Wake Pulse', 'Pulse Bangun');
+  static String get ringtoneMedsyncAlarmSiren =>
+      _t('Warning Beep', 'Beep Peringatan');
+  static String get ringtoneMedsyncAlarmBell => _t('Rapid Bell', 'Bel Cepat');
   static String get ringtoneSystemDefault =>
       _t('System Default', 'Default Sistem');
   static String get lowStockAlertTitle =>

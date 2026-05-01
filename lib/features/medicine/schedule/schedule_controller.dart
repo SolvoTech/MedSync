@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/app_exception.dart';
-import '../../../core/utils/reminder_time.dart';
 import '../../../data/local/preferences/app_preferences.dart';
 import '../../../data/remote/datasources/medicine_remote_datasource.dart';
 import '../../../data/remote/supabase_client.dart';
@@ -45,6 +44,7 @@ final medicineSchedulesProvider =
 
 class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
   static const int _maxMedicinePhotoBytes = 5 * 1024 * 1024;
+  static final Set<String> _pendingScheduleCreateKeys = <String>{};
 
   @override
   Future<List<Medicine>> build() async {
@@ -223,16 +223,7 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
   Future<void> activateMedicine(String medicineId) async {
     await ref.read(medicineRepositoryProvider).activateMedicine(medicineId);
 
-    final bundles = await ref
-        .read(medicineRemoteDataSourceProvider)
-        .getSchedulesForMedicine(medicineId);
-
-    for (final bundle in bundles) {
-      await _scheduleMedicineBundleNotifications(
-        medicineId: medicineId,
-        bundle: bundle,
-      );
-    }
+    await _syncMedicineNotificationsIfEnabled();
 
     await refresh();
   }
@@ -265,27 +256,39 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     String repeatType = 'daily',
     String? scheduleName,
   }) async {
-    final permissionService = ref.read(permissionServiceProvider);
-    await permissionService.ensureReminderReliabilityPermissions();
-
-    final created = await ref
-        .read(medicineRemoteDataSourceProvider)
-        .createScheduleWithSlots(
-          medicineId: medicineId,
-          startDate: startDate,
-          timeSlots: timeSlots,
-          repeatType: repeatType,
-          scheduleName: scheduleName,
-        );
-
-    await _scheduleMedicineBundleNotifications(
+    final requestKey = _scheduleCreateRequestKey(
       medicineId: medicineId,
-      bundle: created,
+      startDate: startDate,
+      timeSlots: timeSlots,
+      repeatType: repeatType,
+      scheduleName: scheduleName,
     );
+    if (!_pendingScheduleCreateKeys.add(requestKey)) {
+      return;
+    }
 
-    ref.invalidate(medicineSchedulesProvider(medicineId));
-    ref.invalidate(todayTasksProvider);
-    ref.invalidate(reportDataProvider);
+    try {
+      final permissionService = ref.read(permissionServiceProvider);
+      await permissionService.ensureReminderReliabilityPermissions();
+
+      await ref
+          .read(medicineRemoteDataSourceProvider)
+          .createScheduleWithSlots(
+            medicineId: medicineId,
+            startDate: startDate,
+            timeSlots: timeSlots,
+            repeatType: repeatType,
+            scheduleName: scheduleName,
+          );
+
+      await _syncMedicineNotificationsIfEnabled();
+
+      ref.invalidate(medicineSchedulesProvider(medicineId));
+      ref.invalidate(todayTasksProvider);
+      ref.invalidate(reportDataProvider);
+    } finally {
+      _pendingScheduleCreateKeys.remove(requestKey);
+    }
   }
 
   Future<void> editSchedule({
@@ -309,7 +312,7 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
           );
     }
 
-    final updated = await ref
+    await ref
         .read(medicineRemoteDataSourceProvider)
         .replaceScheduleWithSlots(
           oldScheduleId: current.schedule.id,
@@ -320,10 +323,7 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
           scheduleName: scheduleName,
         );
 
-    await _scheduleMedicineBundleNotifications(
-      medicineId: medicineId,
-      bundle: updated,
-    );
+    await _syncMedicineNotificationsIfEnabled();
 
     ref.invalidate(medicineSchedulesProvider(medicineId));
     ref.invalidate(todayTasksProvider);
@@ -353,33 +353,32 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     ref.invalidate(reportDataProvider);
   }
 
-  Future<void> _scheduleMedicineBundleNotifications({
-    required String medicineId,
-    required MedicineScheduleBundle bundle,
-  }) async {
+  Future<void> _syncMedicineNotificationsIfEnabled() async {
     if (!AppPreferences.notifMedicine) {
       return;
     }
 
-    final notificationService = ref.read(notificationServiceProvider);
-    final now = DateTime.now();
+    await ref
+        .read(notificationServiceProvider)
+        .syncTaskNotificationsWithCurrentPreferences();
+  }
 
-    for (final slot in bundle.slots) {
-      final scheduledAt = nextReminderOccurrence(
-        startDate: bundle.schedule.startDate,
-        timeOfDay: slot.timeOfDay,
-        now: now,
-      );
-
-      await notificationService.scheduleTaskNotification(
-        taskType: 'medicine',
-        referenceId: bundle.schedule.id,
-        timeOfDay: slot.timeOfDay,
-        channelId: NotificationService.medicineReminderChannelId,
-        title: 'Pengingat Obat',
-        body: 'Waktunya minum obat Anda.',
-        scheduledAt: scheduledAt,
-      );
-    }
+  String _scheduleCreateRequestKey({
+    required String medicineId,
+    required DateTime startDate,
+    required List<String> timeSlots,
+    required String repeatType,
+    String? scheduleName,
+  }) {
+    final normalizedTimes = [...timeSlots]..sort();
+    final dateKey =
+        '${startDate.year.toString().padLeft(4, '0')}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}';
+    return [
+      medicineId,
+      dateKey,
+      repeatType,
+      (scheduleName ?? '').trim(),
+      ...normalizedTimes,
+    ].join('|');
   }
 }
