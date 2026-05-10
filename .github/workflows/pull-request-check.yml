@@ -37,12 +37,13 @@ jobs:
             .dart_tool
           key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock') }}
 
-      - name: Create .env file (dummy for build)
+      - name: Create .env file from secrets
         run: |
-          mkdir -p assets
-          cat > assets/.env << EOF
-          SUPABASE_URL=https://placeholder.supabase.co
-          SUPABASE_ANON_KEY=placeholder_key
+          SUPA_URL="${{ secrets.SUPABASE_URL }}"
+          SUPA_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+          cat > .env << EOF
+          SUPABASE_URL=${SUPA_URL:-https://placeholder.supabase.co}
+          SUPABASE_ANON_KEY=${SUPA_KEY:-placeholder_key}
           EOF
 
       - name: Flutter pub get
