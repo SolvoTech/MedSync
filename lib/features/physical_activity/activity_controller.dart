@@ -13,6 +13,10 @@ final activityRemoteDataSourceProvider =
       return PhysicalActivityRemoteDataSource();
     });
 
+/// Provider to hold the currently selected care person filter for activities.
+/// null means "Saya sendiri" (show own data without care_person_id).
+final activityCarePersonFilterProvider = StateProvider<String?>((ref) => null);
+
 final activityControllerProvider =
     AutoDisposeAsyncNotifierProvider<
       ActivityController,
@@ -23,16 +27,21 @@ class ActivityController
     extends AutoDisposeAsyncNotifier<List<PhysicalActivityReminder>> {
   @override
   Future<List<PhysicalActivityReminder>> build() {
-    return _fetch();
+    final carePersonId = ref.watch(activityCarePersonFilterProvider);
+    return _fetch(carePersonId: carePersonId);
   }
 
-  Future<List<PhysicalActivityReminder>> _fetch() {
-    return ref.read(activityRemoteDataSourceProvider).getReminders();
+  Future<List<PhysicalActivityReminder>> _fetch({String? carePersonId}) {
+    return ref.read(activityRemoteDataSourceProvider).getReminders(
+      carePersonId: carePersonId,
+      filterByCarePersonId: true,
+    );
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetch);
+    final carePersonId = ref.read(activityCarePersonFilterProvider);
+    state = await AsyncValue.guard(() => _fetch(carePersonId: carePersonId));
   }
 
   Future<void> addReminder({
@@ -42,6 +51,7 @@ class ActivityController
     String? customName,
     String? targetUnit,
     num? targetValue,
+    String? carePersonId,
   }) async {
     final permissionService = ref.read(permissionServiceProvider);
     await permissionService.ensureReminderReliabilityPermissions();
@@ -55,6 +65,7 @@ class ActivityController
           customName: customName,
           targetUnit: targetUnit,
           targetValue: targetValue,
+          carePersonId: carePersonId,
         );
 
     if (AppPreferences.notifActivity) {
@@ -73,6 +84,7 @@ class ActivityController
     String? customName,
     String? targetUnit,
     num? targetValue,
+    String? carePersonId,
   }) async {
     final permissionService = ref.read(permissionServiceProvider);
     await permissionService.ensureReminderReliabilityPermissions();
@@ -87,6 +99,7 @@ class ActivityController
           customName: customName,
           targetUnit: targetUnit,
           targetValue: targetValue,
+          carePersonId: carePersonId,
         );
 
     final oldReminder = (state.valueOrNull ?? []).firstWhere(

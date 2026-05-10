@@ -191,6 +191,7 @@ class MeasurementTab extends ConsumerWidget {
     MeasurementReminder? existing,
   }) async {
     final controller = ref.read(measurementControllerProvider.notifier);
+    final carePersonId = ref.read(measurementCarePersonFilterProvider);
     await showReminderEditorSheet(
       context: context,
       availableTypes: measurementTypes,
@@ -223,6 +224,7 @@ class MeasurementTab extends ConsumerWidget {
                 customName: customName,
                 timeOfDay: timeOfDay,
                 startDate: startDate,
+                carePersonId: carePersonId,
               );
             } else {
               await controller.updateReminder(
@@ -233,6 +235,7 @@ class MeasurementTab extends ConsumerWidget {
                 startDate: startDate,
                 unit: existing.unit,
                 targetValue: existing.targetValue,
+                carePersonId: existing.carePersonId,
               );
             }
           },
