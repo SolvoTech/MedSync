@@ -189,6 +189,7 @@ class ActivityTab extends ConsumerWidget {
     PhysicalActivityReminder? existing,
   }) async {
     final controller = ref.read(activityControllerProvider.notifier);
+    final carePersonId = ref.read(activityCarePersonFilterProvider);
     await showReminderEditorSheet(
       context: context,
       availableTypes: activityTypes,
@@ -221,6 +222,7 @@ class ActivityTab extends ConsumerWidget {
                 customName: customName,
                 timeOfDay: timeOfDay,
                 startDate: startDate,
+                carePersonId: carePersonId,
               );
             } else {
               await controller.updateReminder(
@@ -231,6 +233,7 @@ class ActivityTab extends ConsumerWidget {
                 startDate: startDate,
                 targetUnit: existing.targetUnit,
                 targetValue: existing.targetValue,
+                carePersonId: existing.carePersonId,
               );
             }
           },
