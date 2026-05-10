@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/extensions/string_ext.dart';
-import '../../../../domain/models/care_person.dart';
 import '../../../profile/care_persons/care_person_list_screen.dart';
 
 class CarePersonFilter extends ConsumerWidget {
