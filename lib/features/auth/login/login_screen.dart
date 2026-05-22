@@ -182,17 +182,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       textAlign: TextAlign.center,
                       maxLines: 2,
                     ),
-                    SizedBox(height: compactWidth ? 8 : 12),
-                    Center(
-                      child: Image.asset(
-                        'assets/images/medsync_hero_medication.png',
-                        width: compactWidth ? 112 : 136,
-                        height: compactWidth ? 82 : 100,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-
-                    SizedBox(height: headerToCardSpacing * 0.55),
+                    SizedBox(height: headerToCardSpacing),
 
                     // Form card
                     Container(

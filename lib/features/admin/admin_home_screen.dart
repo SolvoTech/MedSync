@@ -91,7 +91,8 @@ class AdminHomeScreen extends ConsumerWidget {
                 onRetry: () => ref.invalidate(adminDashboardProvider),
               ),
               data: (dashboard) {
-                final xxs = media.size.width < 340;
+                final singleColumnMetrics =
+                    media.size.width < 430 || media.textScaler.scale(1) > 1.05;
                 final firstRow = [
                   AdminMetricTile(
                     title: AppStrings.adminMetricTotalUsers,
@@ -126,7 +127,7 @@ class AdminHomeScreen extends ConsumerWidget {
                   ),
                 ];
 
-                if (xxs) {
+                if (singleColumnMetrics) {
                   return Column(
                     children: [
                       for (final metric in [...firstRow, ...secondRow]) ...[

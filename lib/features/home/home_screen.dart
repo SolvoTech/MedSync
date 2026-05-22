@@ -385,23 +385,37 @@ class _HomeHero extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Positioned(
-            right: compact ? -42 : -34,
-            bottom: compact ? -48 : -44,
-            child: Image.asset(
-              'assets/images/medsync_hero_medication.png',
-              width: compact ? 150 : 176,
-              fit: BoxFit.contain,
+            right: compact ? 34 : 46,
+            bottom: compact ? 34 : 42,
+            child: Container(
+              width: compact ? 82 : 96,
+              height: compact ? 82 : 96,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
             ),
           ),
           Positioned(
-            right: compact ? 70 : 88,
-            top: 34,
-            child: Container(
-              width: compact ? 38 : 46,
-              height: compact ? 38 : 46,
+            right: compact ? 12 : 18,
+            bottom: compact ? 12 : 16,
+            child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.asset(
+                    'assets/images/app_logo.png',
+                    width: compact ? 52 : 60,
+                    height: compact ? 52 : 60,
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
             ),
           ),
@@ -457,7 +471,7 @@ class _HomeHero extends StatelessWidget {
               ),
               const Spacer(),
               ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: compact ? 196 : 230),
+                constraints: BoxConstraints(maxWidth: compact ? 188 : 218),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,

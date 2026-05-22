@@ -336,7 +336,7 @@ class AdminCollapsibleSection extends StatelessWidget {
               padding ??
               EdgeInsets.fromLTRB(
                 isCompact ? 12 : 14,
-                0,
+                8,
                 isCompact ? 12 : 14,
                 isCompact ? 12 : 14,
               ),

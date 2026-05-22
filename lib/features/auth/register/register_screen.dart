@@ -185,17 +185,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: compactHeight ? 6 : 10),
-                      Center(
-                        child: Image.asset(
-                          'assets/images/medsync_hero_medication.png',
-                          width: compactWidth ? 96 : 118,
-                          height: compactWidth ? 70 : 86,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-
-                      SizedBox(height: compactHeight ? 14 : 24),
+                      SizedBox(height: compactHeight ? 18 : 28),
 
                       // Form card
                       Container(

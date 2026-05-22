@@ -21,7 +21,9 @@ class _DashboardSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final xxs = MediaQuery.sizeOf(context).width < 340;
+    final media = MediaQuery.of(context);
+    final singleColumnMetrics =
+        media.size.width < 430 || media.textScaler.scale(1) > 1.05;
     final metricCards = [
       AdminMetricTile(
         title: AppStrings.adminMetricTotalUsers,
@@ -51,7 +53,7 @@ class _DashboardSummary extends StatelessWidget {
 
     return Column(
       children: [
-        if (xxs) ...[
+        if (singleColumnMetrics) ...[
           for (final metric in metricCards) ...[
             metric,
             const SizedBox(height: 10),
@@ -570,7 +572,7 @@ class _UserItem extends StatelessWidget {
                       runSpacing: 6,
                       children: [
                         _InfoTag(
-                          label: '@${user.username}',
+                          label: _displayUsername(user.username),
                           icon: Icons.alternate_email_rounded,
                         ),
                         _InfoTag(
@@ -717,6 +719,14 @@ class _UserItem extends StatelessWidget {
 
     return (parts.first.substring(0, 1) + parts[1].substring(0, 1))
         .toUpperCase();
+  }
+
+  String _displayUsername(String username) {
+    final value = username.trim();
+    if (value.isEmpty) {
+      return '-';
+    }
+    return value.startsWith('@') ? value.substring(1) : value;
   }
 }
 
