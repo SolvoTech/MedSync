@@ -6,10 +6,7 @@ class MeasurementRemoteDataSource {
   static const int _taskLogHorizonDays = 30;
   static const String _taskType = 'measurement';
 
-  Future<List<MeasurementReminder>> getReminders({
-    String? carePersonId,
-    bool filterByCarePersonId = false,
-  }) async {
+  Future<List<MeasurementReminder>> getReminders() async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
       throw Exception(
@@ -28,12 +25,6 @@ class MeasurementRemoteDataSource {
         .eq('owner_id', user.id)
         .eq('is_active', true);
 
-    if (filterByCarePersonId) {
-      query = carePersonId == null
-          ? query.filter('care_person_id', 'is', 'null')
-          : query.eq('care_person_id', carePersonId);
-    }
-
     final rows = await query.order('time_of_day', ascending: true);
 
     return (rows as List<dynamic>)
@@ -48,7 +39,6 @@ class MeasurementRemoteDataSource {
     String? customName,
     String? unit,
     String? targetValue,
-    String? carePersonId,
   }) async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
@@ -72,7 +62,6 @@ class MeasurementRemoteDataSource {
           'start_date': startDate.toIso8601String().split('T').first,
           'target_value': targetValue,
           'unit': unit,
-          'care_person_id': carePersonId,
           'is_active': true,
           'notification_enabled': true,
           'repeat_type': 'daily',
@@ -104,7 +93,6 @@ class MeasurementRemoteDataSource {
     String? customName,
     String? unit,
     String? targetValue,
-    String? carePersonId,
   }) async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
@@ -127,7 +115,6 @@ class MeasurementRemoteDataSource {
           'start_date': startDate.toIso8601String().split('T').first,
           'target_value': targetValue,
           'unit': unit,
-          'care_person_id': carePersonId,
         })
         .eq('id', reminderId)
         .eq('owner_id', user.id);

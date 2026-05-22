@@ -65,8 +65,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
           _heading(context, '6. Data Anak-Anak'),
           Text(
             'MedSync tidak diperuntukkan bagi anak di bawah 13 tahun. '
-            'Fitur caregiver mode ditujukan untuk orang dewasa yang '
-            'mengelola kesehatan anggota keluarganya.',
+            'Aplikasi ini ditujukan untuk orang dewasa yang mengelola '
+            'jadwal dan catatan kesehatannya sendiri.',
             style: bodyStyle,
           ),
           const SizedBox(height: 16),

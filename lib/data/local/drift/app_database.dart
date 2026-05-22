@@ -11,7 +11,6 @@ class LocalMedicines extends Table {
   TextColumn get medicineType => text().withDefault(const Constant('tablet'))();
   IntColumn get stockCurrent => integer().withDefault(const Constant(0))();
   TextColumn get stockUnit => text().withDefault(const Constant('tablet'))();
-  TextColumn get carePersonId => text().nullable()();
   TextColumn get photoUrl => text().nullable()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get syncedAt => dateTime().nullable()();

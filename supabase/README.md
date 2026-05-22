@@ -18,7 +18,6 @@ supabase db push
 ## Deploy edge functions
 ```bash
 supabase functions deploy daily-task-check
-supabase functions deploy shared-view
 ```
 
 ## Required secrets for edge functions

@@ -11,22 +11,9 @@ create table if not exists profiles (
   updated_at timestamptz default now()
 );
 
-create table if not exists care_persons (
-  id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references profiles(id) on delete cascade,
-  display_name text not null,
-  relationship text,
-  birth_date date,
-  notes text,
-  avatar_color text,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
 create table if not exists medicines (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references profiles(id) on delete cascade,
-  care_person_id uuid references care_persons(id) on delete cascade,
   name text not null,
   dosage text,
   medicine_type text default 'tablet',
@@ -76,7 +63,6 @@ create table if not exists schedule_time_slots (
 create table if not exists task_logs (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references profiles(id) on delete cascade,
-  care_person_id uuid references care_persons(id),
   task_type text not null,
   reference_id uuid not null,
   time_slot_id uuid references schedule_time_slots(id),
@@ -86,13 +72,20 @@ create table if not exists task_logs (
   mood text,
   symptom_notes text,
   notes text,
-  created_at timestamptz default now()
+  completion_proof_photo_path text,
+  completion_proof_captured_at timestamptz,
+  completion_proof_uploaded_at timestamptz,
+  created_at timestamptz default now(),
+  constraint task_logs_completion_proof_owner_path_check
+    check (
+      completion_proof_photo_path is null
+      or split_part(completion_proof_photo_path, '/', 1) = owner_id::text
+    )
 );
 
 create table if not exists measurement_reminders (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references profiles(id) on delete cascade,
-  care_person_id uuid references care_persons(id),
   measurement_type text not null,
   custom_name text,
   repeat_type text default 'daily',
@@ -112,7 +105,6 @@ create table if not exists measurement_reminders (
 create table if not exists measurement_logs (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references profiles(id) on delete cascade,
-  care_person_id uuid references care_persons(id),
   reminder_id uuid references measurement_reminders(id),
   measurement_type text not null,
   value_primary numeric not null,
@@ -184,21 +176,7 @@ create table if not exists user_streaks (
   updated_at timestamptz default now()
 );
 
-create table if not exists shared_access_tokens (
-  id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references profiles(id) on delete cascade,
-  care_person_id uuid not null references care_persons(id) on delete cascade,
-  token text unique not null,
-  token_display text not null,
-  viewer_name text,
-  is_active boolean default true,
-  expires_at timestamptz,
-  last_accessed_at timestamptz,
-  created_at timestamptz default now()
-);
-
 alter table profiles enable row level security;
-alter table care_persons enable row level security;
 alter table medicines enable row level security;
 alter table medicine_schedules enable row level security;
 alter table schedule_time_slots enable row level security;
@@ -209,13 +187,9 @@ alter table physical_activity_reminders enable row level security;
 alter table physical_activity_logs enable row level security;
 alter table notification_logs enable row level security;
 alter table user_streaks enable row level security;
-alter table shared_access_tokens enable row level security;
 
 create policy "Users can manage their own profile"
   on profiles for all using (auth.uid() = id);
-
-create policy "Owner manages their care persons"
-  on care_persons for all using (auth.uid() = owner_id);
 
 create policy "Owner manages medicines"
   on medicines for all using (auth.uid() = owner_id);
@@ -254,14 +228,15 @@ create policy "Owner manages notification logs"
 create policy "Owner manages streak"
   on user_streaks for all using (auth.uid() = owner_id);
 
-create policy "Owner manages shared tokens"
-  on shared_access_tokens for all using (auth.uid() = owner_id);
-
 create index if not exists task_logs_scheduled_at_idx
   on task_logs(owner_id, scheduled_at desc);
 
 create index if not exists task_logs_date_idx
   on task_logs(owner_id, ((scheduled_at at time zone 'utc')::date));
+
+create index if not exists task_logs_completion_proof_idx
+  on public.task_logs (owner_id, completion_proof_uploaded_at desc)
+  where completion_proof_photo_path is not null;
 
 create index if not exists notif_logs_created_at_idx
   on notification_logs(owner_id, created_at desc);
@@ -461,11 +436,6 @@ create policy "Admins can delete profiles"
   on profiles for delete
   using (public.is_admin());
 
-drop policy if exists "Admins can read care persons" on care_persons;
-create policy "Admins can read care persons"
-  on care_persons for select
-  using (public.is_admin());
-
 drop policy if exists "Admins can read medicines" on medicines;
 create policy "Admins can read medicines"
   on medicines for select
@@ -514,11 +484,6 @@ create policy "Admins can read notification logs"
 drop policy if exists "Admins can read streaks" on user_streaks;
 create policy "Admins can read streaks"
   on user_streaks for select
-  using (public.is_admin());
-
-drop policy if exists "Admins can read shared tokens" on shared_access_tokens;
-create policy "Admins can read shared tokens"
-  on shared_access_tokens for select
   using (public.is_admin());
 
 create table if not exists admin_audit_logs (
@@ -672,23 +637,14 @@ for each row execute function public.notify_users_on_education_publish();
 
 -- Add covering indexes for foreign keys flagged by Supabase performance advisor.
 
-create index if not exists care_persons_owner_id_idx
-  on public.care_persons (owner_id);
-
 create index if not exists education_articles_author_id_idx
   on public.education_articles (author_id);
-
-create index if not exists measurement_logs_care_person_id_idx
-  on public.measurement_logs (care_person_id);
 
 create index if not exists measurement_logs_owner_id_idx
   on public.measurement_logs (owner_id);
 
 create index if not exists measurement_logs_reminder_id_idx
   on public.measurement_logs (reminder_id);
-
-create index if not exists measurement_reminders_care_person_id_idx
-  on public.measurement_reminders (care_person_id);
 
 create index if not exists measurement_reminders_owner_id_idx
   on public.measurement_reminders (owner_id);
@@ -698,9 +654,6 @@ create index if not exists medicine_schedules_medicine_id_idx
 
 create index if not exists medicine_schedules_owner_id_idx
   on public.medicine_schedules (owner_id);
-
-create index if not exists medicines_care_person_id_idx
-  on public.medicines (care_person_id);
 
 create index if not exists medicines_owner_id_idx
   on public.medicines (owner_id);
@@ -716,15 +669,6 @@ create index if not exists physical_activity_reminders_owner_id_idx
 
 create index if not exists schedule_time_slots_schedule_id_idx
   on public.schedule_time_slots (schedule_id);
-
-create index if not exists shared_access_tokens_care_person_id_idx
-  on public.shared_access_tokens (care_person_id);
-
-create index if not exists shared_access_tokens_owner_id_idx
-  on public.shared_access_tokens (owner_id);
-
-create index if not exists task_logs_care_person_id_idx
-  on public.task_logs (care_person_id);
 
 create index if not exists task_logs_time_slot_id_idx
   on public.task_logs (time_slot_id);

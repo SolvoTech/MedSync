@@ -5,6 +5,9 @@ abstract interface class TaskLogCompletionStore {
   Future<void> updateTaskStatus({
     required String taskLogId,
     required String status,
+    String? completionProofPhotoPath,
+    DateTime? completionProofCapturedAt,
+    DateTime? completionProofUploadedAt,
   });
 
   Future<void> markReminderDoneByReference({
@@ -12,6 +15,9 @@ abstract interface class TaskLogCompletionStore {
     required String referenceId,
     String? timeOfDay,
     DateTime? scheduledAt,
+    String? completionProofPhotoPath,
+    DateTime? completionProofCapturedAt,
+    DateTime? completionProofUploadedAt,
   });
 }
 
@@ -36,8 +42,17 @@ class TaskCompletionService {
   Future<void> markTaskStatusAndSilence({
     required TaskLog task,
     required String status,
+    String? completionProofPhotoPath,
+    DateTime? completionProofCapturedAt,
+    DateTime? completionProofUploadedAt,
   }) async {
-    await taskLogStore.updateTaskStatus(taskLogId: task.id, status: status);
+    await taskLogStore.updateTaskStatus(
+      taskLogId: task.id,
+      status: status,
+      completionProofPhotoPath: completionProofPhotoPath,
+      completionProofCapturedAt: completionProofCapturedAt,
+      completionProofUploadedAt: completionProofUploadedAt,
+    );
     await reminderScheduler.advanceScheduleToTomorrow(
       taskType: task.taskType,
       referenceId: task.referenceId,
@@ -51,6 +66,9 @@ class TaskCompletionService {
     required String referenceId,
     String? timeOfDay,
     DateTime? scheduledAt,
+    String? completionProofPhotoPath,
+    DateTime? completionProofCapturedAt,
+    DateTime? completionProofUploadedAt,
   }) async {
     final normalizedTime = canonicalReminderTimeOfDay(timeOfDay);
     final rawTime = timeOfDay?.trim();
@@ -60,6 +78,9 @@ class TaskCompletionService {
       referenceId: referenceId,
       timeOfDay: normalizedTime ?? rawTime,
       scheduledAt: scheduledAt,
+      completionProofPhotoPath: completionProofPhotoPath,
+      completionProofCapturedAt: completionProofCapturedAt,
+      completionProofUploadedAt: completionProofUploadedAt,
     );
 
     if (normalizedTime == null || normalizedTime.isEmpty) {

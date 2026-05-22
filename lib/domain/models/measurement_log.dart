@@ -7,7 +7,6 @@ class MeasurementLog {
     this.unit,
     this.notes,
     required this.measuredAt,
-    this.carePersonId,
   });
 
   final String id;
@@ -17,7 +16,6 @@ class MeasurementLog {
   final String? unit;
   final String? notes;
   final DateTime measuredAt;
-  final String? carePersonId;
 
   factory MeasurementLog.fromMap(Map<String, dynamic> map) {
     return MeasurementLog(
@@ -28,7 +26,6 @@ class MeasurementLog {
       unit: map['unit'] as String?,
       notes: map['notes'] as String?,
       measuredAt: DateTime.parse(map['measured_at'] as String),
-      carePersonId: map['care_person_id'] as String?,
     );
   }
 
@@ -40,7 +37,6 @@ class MeasurementLog {
       'unit': unit,
       'notes': notes,
       'measured_at': measuredAt.toIso8601String(),
-      'care_person_id': carePersonId,
     };
   }
 }

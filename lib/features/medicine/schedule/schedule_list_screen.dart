@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_strings.dart';
-import '../../measurement/measurement_controller.dart';
-import '../../physical_activity/activity_controller.dart';
-import 'schedule_controller.dart';
 import 'widgets/activity_tab.dart';
-import 'widgets/care_person_filter.dart';
 import 'widgets/measurement_tab.dart';
 import 'widgets/medicine_tab.dart';
 
@@ -16,21 +12,13 @@ class ScheduleListScreen extends ConsumerStatefulWidget {
   const ScheduleListScreen({super.key});
 
   @override
-  ConsumerState<ScheduleListScreen> createState() =>
-      _ScheduleListScreenState();
+  ConsumerState<ScheduleListScreen> createState() => _ScheduleListScreenState();
 }
 
 class _ScheduleListScreenState extends ConsumerState<ScheduleListScreen> {
   ScheduleSection _selected = ScheduleSection.medicine;
 
   static const _pages = [MedicineTab(), MeasurementTab(), ActivityTab()];
-
-  void _onCarePersonSelected(String? carePersonId) {
-    // Update all three filter providers simultaneously
-    ref.read(medicineCarePersonFilterProvider.notifier).state = carePersonId;
-    ref.read(measurementCarePersonFilterProvider.notifier).state = carePersonId;
-    ref.read(activityCarePersonFilterProvider.notifier).state = carePersonId;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,9 +31,6 @@ class _ScheduleListScreenState extends ConsumerState<ScheduleListScreen> {
       color: colorScheme.onSurface,
     );
 
-    // Watch the current filter (any of them since they're synced)
-    final selectedCarePersonId = ref.watch(medicineCarePersonFilterProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -57,18 +42,10 @@ class _ScheduleListScreenState extends ConsumerState<ScheduleListScreen> {
       ),
       body: Column(
         children: [
-          // Care person filter
-          Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 4),
-            child: CarePersonFilter(
-              selectedCarePersonId: selectedCarePersonId,
-              onSelected: _onCarePersonSelected,
-            ),
-          ),
           Padding(
             padding: EdgeInsets.fromLTRB(
               compact ? 12 : 16,
-              4,
+              12,
               compact ? 12 : 16,
               0,
             ),
@@ -94,10 +71,7 @@ class _ScheduleListScreenState extends ConsumerState<ScheduleListScreen> {
                       ),
                     ),
                     textStyle: WidgetStatePropertyAll(
-                      TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                     ),
                   ),
                   segments: [

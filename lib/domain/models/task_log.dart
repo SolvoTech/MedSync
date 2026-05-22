@@ -11,6 +11,9 @@ class TaskLog {
     this.notes,
     this.mood,
     this.symptomNotes,
+    this.completionProofPhotoPath,
+    this.completionProofCapturedAt,
+    this.completionProofUploadedAt,
   });
 
   final String id;
@@ -22,6 +25,9 @@ class TaskLog {
   final String? notes;
   final String? mood; // 'good', 'neutral', 'bad'
   final String? symptomNotes;
+  final String? completionProofPhotoPath;
+  final DateTime? completionProofCapturedAt;
+  final DateTime? completionProofUploadedAt;
 
   factory TaskLog.fromMap(Map<String, dynamic> map) {
     return TaskLog(
@@ -36,6 +42,13 @@ class TaskLog {
       notes: map['notes'] as String?,
       mood: map['mood'] as String?,
       symptomNotes: map['symptom_notes'] as String?,
+      completionProofPhotoPath: map['completion_proof_photo_path'] as String?,
+      completionProofCapturedAt: map['completion_proof_captured_at'] == null
+          ? null
+          : DateTime.tryParse(map['completion_proof_captured_at'] as String),
+      completionProofUploadedAt: map['completion_proof_uploaded_at'] == null
+          ? null
+          : DateTime.tryParse(map['completion_proof_uploaded_at'] as String),
     );
   }
 
@@ -45,6 +58,9 @@ class TaskLog {
     String? notes,
     String? mood,
     String? symptomNotes,
+    String? completionProofPhotoPath,
+    DateTime? completionProofCapturedAt,
+    DateTime? completionProofUploadedAt,
   }) {
     return TaskLog(
       id: id,
@@ -56,6 +72,12 @@ class TaskLog {
       notes: notes ?? this.notes,
       mood: mood ?? this.mood,
       symptomNotes: symptomNotes ?? this.symptomNotes,
+      completionProofPhotoPath:
+          completionProofPhotoPath ?? this.completionProofPhotoPath,
+      completionProofCapturedAt:
+          completionProofCapturedAt ?? this.completionProofCapturedAt,
+      completionProofUploadedAt:
+          completionProofUploadedAt ?? this.completionProofUploadedAt,
     );
   }
 }

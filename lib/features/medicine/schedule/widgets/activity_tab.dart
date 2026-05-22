@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/extensions/context_ext.dart';
 import '../../../../core/errors/user_error_message.dart';
 import '../../../../core/constants/type_labels.dart';
 import '../../../../data/remote/datasources/task_log_remote_datasource.dart';
@@ -9,6 +10,7 @@ import '../../../../domain/models/physical_activity_reminder.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../services/notification_service.dart';
 import '../../../../services/task_completion_service.dart';
+import '../../../task_completion/task_completion_proof_flow.dart';
 import '../../../physical_activity/activity_controller.dart';
 import 'reminder_common.dart';
 import 'schedule_form_options.dart';
@@ -145,15 +147,32 @@ class ActivityTab extends ConsumerWidget {
       context: context,
       action: action,
       onEdit: () => _openActivityEditor(context, ref, existing: item),
-      onMarkDone: () =>
-          TaskCompletionService(
-            taskLogStore: TaskLogRemoteDataSource(),
-            reminderScheduler: ref.read(notificationServiceProvider),
-          ).markReminderDoneAndSilence(
-            taskType: 'physical_activity',
-            referenceId: item.id,
-            timeOfDay: item.timeOfDay,
-          ),
+      onMarkDone: () async {
+        final proof = await captureAndUploadTaskCompletionProof(
+          context,
+          taskType: 'physical_activity',
+          referenceId: item.id,
+        );
+        if (proof == null) {
+          if (context.mounted) {
+            context.showWarningSnackBar(AppStrings.taskProofRequiredMessage);
+          }
+          return false;
+        }
+
+        await TaskCompletionService(
+          taskLogStore: TaskLogRemoteDataSource(),
+          reminderScheduler: ref.read(notificationServiceProvider),
+        ).markReminderDoneAndSilence(
+          taskType: 'physical_activity',
+          referenceId: item.id,
+          timeOfDay: item.timeOfDay,
+          completionProofPhotoPath: proof.photoPath,
+          completionProofCapturedAt: proof.capturedAt,
+          completionProofUploadedAt: proof.uploadedAt,
+        );
+        return true;
+      },
       doneMessage: AppStrings.tr(
         'Activity marked as done.',
         'Aktivitas ditandai selesai.',
@@ -189,7 +208,6 @@ class ActivityTab extends ConsumerWidget {
     PhysicalActivityReminder? existing,
   }) async {
     final controller = ref.read(activityControllerProvider.notifier);
-    final carePersonId = ref.read(activityCarePersonFilterProvider);
     await showReminderEditorSheet(
       context: context,
       availableTypes: activityTypes,
@@ -222,7 +240,6 @@ class ActivityTab extends ConsumerWidget {
                 customName: customName,
                 timeOfDay: timeOfDay,
                 startDate: startDate,
-                carePersonId: carePersonId,
               );
             } else {
               await controller.updateReminder(
@@ -233,7 +250,6 @@ class ActivityTab extends ConsumerWidget {
                 startDate: startDate,
                 targetUnit: existing.targetUnit,
                 targetValue: existing.targetValue,
-                carePersonId: existing.carePersonId,
               );
             }
           },

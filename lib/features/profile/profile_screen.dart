@@ -18,7 +18,6 @@ import '../static_pages/help_support_screen.dart';
 import '../static_pages/privacy_policy_screen.dart';
 import '../static_pages/terms_screen.dart';
 import 'appearance/appearance_screen.dart';
-import 'care_persons/care_person_list_screen.dart';
 import 'change_password/change_password_screen.dart';
 import 'data_management/data_management_screen.dart';
 import 'edit_avatar/edit_avatar_screen.dart';
@@ -359,32 +358,6 @@ class ProfileScreen extends ConsumerWidget {
                             refreshCurrentProfile(ref);
                           }
                         },
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Manage Members section
-                _SectionHeader(
-                  title: AppStrings.tr('MANAGE MEMBERS', 'KELOLA ANGGOTA'),
-                ),
-                const SizedBox(height: 8),
-                AppCard(
-                  padding: EdgeInsets.zero,
-                  child: Column(
-                    children: [
-                      _MenuItem(
-                        icon: Icons.people_outline,
-                        label: AppStrings.carePersons,
-                        color: const Color(0xFF4299E1),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const CarePersonListScreen(),
-                          ),
-                        ),
                       ),
                     ],
                   ),

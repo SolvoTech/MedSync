@@ -8,7 +8,6 @@ class MeasurementReminder {
     this.customName,
     this.unit,
     this.targetValue,
-    this.carePersonId,
     this.isActive = true,
   });
 
@@ -20,7 +19,6 @@ class MeasurementReminder {
   final DateTime startDate;
   final String? unit;
   final String? targetValue;
-  final String? carePersonId;
   final bool isActive;
 
   factory MeasurementReminder.fromMap(Map<String, dynamic> map) {
@@ -33,7 +31,6 @@ class MeasurementReminder {
       startDate: DateTime.parse(map['start_date'] as String),
       unit: map['unit'] as String?,
       targetValue: map['target_value'] as String?,
-      carePersonId: map['care_person_id'] as String?,
       isActive: (map['is_active'] as bool?) ?? true,
     );
   }

@@ -165,6 +165,34 @@ class AdminActivityScheduleActivity {
   }
 }
 
+class AdminTaskCompletionProofActivity {
+  const AdminTaskCompletionProofActivity({
+    required this.id,
+    required this.taskType,
+    required this.referenceId,
+    required this.status,
+    required this.scheduledAt,
+    required this.completedAt,
+    required this.photoPath,
+    required this.photoUrl,
+    required this.capturedAt,
+    required this.uploadedAt,
+  });
+
+  final String id;
+  final String taskType;
+  final String referenceId;
+  final String status;
+  final DateTime scheduledAt;
+  final DateTime? completedAt;
+  final String? photoPath;
+  final String? photoUrl;
+  final DateTime? capturedAt;
+  final DateTime? uploadedAt;
+
+  bool get hasProof => photoPath != null && photoPath!.trim().isNotEmpty;
+}
+
 class AdminUserActivityData {
   const AdminUserActivityData({
     required this.user,
@@ -176,6 +204,7 @@ class AdminUserActivityData {
     required this.medicineSchedules,
     required this.measurementSchedules,
     required this.activitySchedules,
+    required this.completionProofs,
     required this.rangeStart,
     required this.rangeEnd,
     required this.fetchedAt,
@@ -190,6 +219,7 @@ class AdminUserActivityData {
   final List<AdminMedicineScheduleActivity> medicineSchedules;
   final List<AdminMeasurementScheduleActivity> measurementSchedules;
   final List<AdminActivityScheduleActivity> activitySchedules;
+  final List<AdminTaskCompletionProofActivity> completionProofs;
   final DateTime rangeStart;
   final DateTime rangeEnd;
   final DateTime fetchedAt;
@@ -221,10 +251,13 @@ class AdminUserActivityRemoteDataSource {
 
     final logsFuture = client
         .from('task_logs')
-        .select('task_type, reference_id, status')
+        .select(
+          'id, task_type, reference_id, status, scheduled_at, completed_at, completion_proof_photo_path, completion_proof_captured_at, completion_proof_uploaded_at',
+        )
         .eq('owner_id', userId)
         .gte('scheduled_at', range.start.toIso8601String())
-        .lt('scheduled_at', range.end.toIso8601String());
+        .lt('scheduled_at', range.end.toIso8601String())
+        .order('scheduled_at', ascending: false);
 
     final medicinesFuture = client
         .from('medicines')
@@ -269,6 +302,7 @@ class AdminUserActivityRemoteDataSource {
     final statsByRef = _buildStatsByReference(logRows);
 
     final byType = _aggregateByType(statsByRef);
+    final completionProofs = await _buildCompletionProofs(logRows);
 
     final medicines = (medicinesResponse as List<dynamic>)
         .cast<Map<String, dynamic>>();
@@ -406,6 +440,7 @@ class AdminUserActivityRemoteDataSource {
       medicineSchedules: medicineSchedules,
       measurementSchedules: measurementSchedules,
       activitySchedules: activitySchedules,
+      completionProofs: completionProofs,
       rangeStart: range.start,
       rangeEnd: range.end,
       fetchedAt: now,
@@ -481,5 +516,48 @@ class AdminUserActivityRemoteDataSource {
     }
 
     return AdminAdherenceStat(done: done, total: total);
+  }
+
+  Future<List<AdminTaskCompletionProofActivity>> _buildCompletionProofs(
+    List<Map<String, dynamic>> rows,
+  ) async {
+    final doneRows = rows
+        .where((row) => row['status']?.toString() == 'done')
+        .toList();
+
+    return Future.wait(
+      doneRows.map((row) async {
+        final photoPath = row['completion_proof_photo_path']?.toString();
+        String? photoUrl;
+        if (photoPath != null && photoPath.trim().isNotEmpty) {
+          try {
+            photoUrl = await SupabaseClientRef.maybeClient?.storage
+                .from('task-completion-proofs')
+                .createSignedUrl(photoPath, 60 * 30);
+          } catch (_) {
+            photoUrl = null;
+          }
+        }
+
+        return AdminTaskCompletionProofActivity(
+          id: row['id']?.toString() ?? '',
+          taskType: row['task_type']?.toString() ?? 'unknown',
+          referenceId: row['reference_id']?.toString() ?? '',
+          status: row['status']?.toString() ?? 'done',
+          scheduledAt:
+              DateTime.tryParse(row['scheduled_at']?.toString() ?? '') ??
+              DateTime.fromMillisecondsSinceEpoch(0),
+          completedAt: DateTime.tryParse(row['completed_at']?.toString() ?? ''),
+          photoPath: photoPath,
+          photoUrl: photoUrl,
+          capturedAt: DateTime.tryParse(
+            row['completion_proof_captured_at']?.toString() ?? '',
+          ),
+          uploadedAt: DateTime.tryParse(
+            row['completion_proof_uploaded_at']?.toString() ?? '',
+          ),
+        );
+      }),
+    );
   }
 }

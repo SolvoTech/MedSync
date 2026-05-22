@@ -45,8 +45,8 @@ class AboutScreen extends StatelessWidget {
                 'MedSync adalah aplikasi pendamping kesehatan pribadi yang '
                 'membantu Anda mengelola jadwal obat, memantau kesehatan, dan '
                 'menjaga gaya hidup aktif. Dengan fitur pengingat cerdas, '
-                'pelacakan kepatuhan, dan mode caregiver, MedSync membantu '
-                'Anda dan keluarga tetap sehat setiap hari.',
+                'pelacakan kepatuhan, dan laporan kesehatan, MedSync membantu '
+                'Anda tetap sehat setiap hari.',
           ),
           const SizedBox(height: 20),
           _Section(

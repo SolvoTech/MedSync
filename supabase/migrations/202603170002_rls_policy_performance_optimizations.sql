@@ -29,27 +29,6 @@ create policy "Admins can insert admin audit logs"
   on admin_audit_logs for insert
   with check ((select public.is_admin()) and actor_id = (select auth.uid()));
 
--- care_persons
-drop policy if exists "Owner manages their care persons" on care_persons;
-drop policy if exists "Admins can read care persons" on care_persons;
-
-create policy "Owner or admin reads care persons"
-  on care_persons for select
-  using ((select auth.uid()) = owner_id or (select public.is_admin()));
-
-create policy "Owner inserts care persons"
-  on care_persons for insert
-  with check ((select auth.uid()) = owner_id);
-
-create policy "Owner updates care persons"
-  on care_persons for update
-  using ((select auth.uid()) = owner_id)
-  with check ((select auth.uid()) = owner_id);
-
-create policy "Owner deletes care persons"
-  on care_persons for delete
-  using ((select auth.uid()) = owner_id);
-
 -- medicines
 drop policy if exists "Owner manages medicines" on medicines;
 drop policy if exists "Admins can read medicines" on medicines;
@@ -296,27 +275,6 @@ create policy "Owner updates streaks"
 
 create policy "Owner deletes streaks"
   on user_streaks for delete
-  using ((select auth.uid()) = owner_id);
-
--- shared_access_tokens
-drop policy if exists "Owner manages shared tokens" on shared_access_tokens;
-drop policy if exists "Admins can read shared tokens" on shared_access_tokens;
-
-create policy "Owner or admin reads shared tokens"
-  on shared_access_tokens for select
-  using ((select auth.uid()) = owner_id or (select public.is_admin()));
-
-create policy "Owner inserts shared tokens"
-  on shared_access_tokens for insert
-  with check ((select auth.uid()) = owner_id);
-
-create policy "Owner updates shared tokens"
-  on shared_access_tokens for update
-  using ((select auth.uid()) = owner_id)
-  with check ((select auth.uid()) = owner_id);
-
-create policy "Owner deletes shared tokens"
-  on shared_access_tokens for delete
   using ((select auth.uid()) = owner_id);
 
 -- education_articles: keep one SELECT policy and split admin manage policy by action

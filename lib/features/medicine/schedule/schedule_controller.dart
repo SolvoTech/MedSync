@@ -27,10 +27,6 @@ final medicineRepositoryProvider = Provider<MedicineRepository>((ref) {
   return MedicineRepositoryImpl(remote);
 });
 
-/// Provider to hold the currently selected care person filter for medicines.
-/// null means "Saya sendiri" (show own data without care_person_id).
-final medicineCarePersonFilterProvider = StateProvider<String?>((ref) => null);
-
 final scheduleControllerProvider =
     AutoDisposeAsyncNotifierProvider<ScheduleController, List<Medicine>>(
       ScheduleController.new,
@@ -52,8 +48,7 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
 
   @override
   Future<List<Medicine>> build() async {
-    final carePersonId = ref.watch(medicineCarePersonFilterProvider);
-    return _fetch(carePersonId: carePersonId);
+    return _fetch();
   }
 
   String _detectImageExtension(String path) {
@@ -142,16 +137,15 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     }
   }
 
-  Future<List<Medicine>> _fetch({String? carePersonId}) {
+  Future<List<Medicine>> _fetch() {
     return ref
         .read(medicineRepositoryProvider)
-        .getMedicines(carePersonId: carePersonId, includeInactive: true);
+        .getMedicines(includeInactive: true);
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    final carePersonId = ref.read(medicineCarePersonFilterProvider);
-    state = await AsyncValue.guard(() => _fetch(carePersonId: carePersonId));
+    state = await AsyncValue.guard(_fetch);
   }
 
   Future<void> addMedicine({
@@ -161,7 +155,6 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     String stockUnit = 'tablet',
     String medicineType = 'tablet',
     File? photoFile,
-    String? carePersonId,
   }) async {
     final previous = state.valueOrNull ?? const <Medicine>[];
     state = const AsyncLoading();
@@ -198,10 +191,8 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
             stockUnit: stockUnit,
             medicineType: medicineType,
             photoUrl: photoUrl,
-            carePersonId: carePersonId,
           );
-      final filterCarePersonId = ref.read(medicineCarePersonFilterProvider);
-      state = AsyncData(await _fetch(carePersonId: filterCarePersonId));
+      state = AsyncData(await _fetch());
     } catch (error, stackTrace) {
       state = AsyncData(previous);
       Error.throwWithStackTrace(error, stackTrace);

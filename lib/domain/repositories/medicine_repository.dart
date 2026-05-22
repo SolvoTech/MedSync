@@ -1,10 +1,7 @@
 import '../models/medicine.dart';
 
 abstract class MedicineRepository {
-  Future<List<Medicine>> getMedicines({
-    String? carePersonId,
-    bool includeInactive,
-  });
+  Future<List<Medicine>> getMedicines({bool includeInactive});
 
   Future<void> createMedicine({
     required String name,
@@ -12,7 +9,6 @@ abstract class MedicineRepository {
     required int stockCurrent,
     String stockUnit,
     String medicineType,
-    String? carePersonId,
     String? photoUrl,
   });
 

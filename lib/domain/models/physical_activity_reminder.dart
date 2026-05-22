@@ -8,7 +8,6 @@ class PhysicalActivityReminder {
     this.customName,
     this.targetUnit,
     this.targetValue,
-    this.carePersonId,
     this.isActive = true,
   });
 
@@ -20,7 +19,6 @@ class PhysicalActivityReminder {
   final DateTime startDate;
   final String? targetUnit;
   final num? targetValue;
-  final String? carePersonId;
   final bool isActive;
 
   factory PhysicalActivityReminder.fromMap(Map<String, dynamic> map) {
@@ -33,7 +31,6 @@ class PhysicalActivityReminder {
       startDate: DateTime.parse(map['start_date'] as String),
       targetUnit: map['target_unit'] as String?,
       targetValue: map['target_value'] as num?,
-      carePersonId: map['care_person_id'] as String?,
       isActive: (map['is_active'] as bool?) ?? true,
     );
   }

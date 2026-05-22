@@ -385,6 +385,21 @@ class AppStrings {
     required int done,
     required int total,
   }) => _t('$done done of $total', '$done selesai dari $total');
+  static String get adminTaskProofSection =>
+      _t('Completion Proofs', 'Bukti Penyelesaian');
+  static String get adminTaskProofSectionHint => _t(
+    'Review user-submitted photos for completed in-app tasks.',
+    'Pantau foto bukti yang dikirim pengguna saat menyelesaikan tugas di aplikasi.',
+  );
+  static String get adminTaskProofEmpty => _t(
+    'No completed task proof found in this period.',
+    'Belum ada bukti tugas selesai pada periode ini.',
+  );
+  static String get adminTaskProofAvailable =>
+      _t('Photo proof available', 'Bukti foto tersedia');
+  static String get adminTaskProofMissing =>
+      _t('No photo proof', 'Tanpa bukti foto');
+  static String get adminTaskProofOpen => _t('Open proof', 'Buka bukti');
   static String get adminUserActivityMedicineSection =>
       _t('Medicine Schedules', 'Jadwal Obat');
   static String get adminUserActivityMedicineSectionHint => _t(
@@ -612,6 +627,18 @@ class AppStrings {
   static String get taskDone =>
       _t('Task marked as done.', 'Task ditandai selesai.');
   static String get taskSkipped => _t('Task skipped.', 'Task dilewati.');
+  static String get taskProofPreviewTitle =>
+      _t('Completion Proof', 'Bukti Selesai');
+  static String get taskProofPreviewHint => _t(
+    'This photo will be saved as admin evidence. It is not used to validate the task content.',
+    'Foto ini akan disimpan sebagai bukti untuk admin. Foto tidak digunakan untuk validasi isi tugas.',
+  );
+  static String get taskProofRetakeAction => _t('Retake', 'Ambil Ulang');
+  static String get taskProofUseAction => _t('Use Photo', 'Pakai Foto');
+  static String get taskProofRequiredMessage => _t(
+    'Photo proof is required before marking this task done.',
+    'Bukti foto wajib disertakan sebelum menandai tugas selesai.',
+  );
 
   // Notifications
   static String get markAllRead =>
@@ -624,8 +651,6 @@ class AppStrings {
   static String get fullNameLabel => _t('Full Name', 'Nama Lengkap');
   static String get birthDateLabel => _t('Birth Date', 'Tanggal Lahir');
   static String get changePassword => _t('Change Password', 'Ganti Kata Sandi');
-  static String get carePersons => _t('Family Members', 'Daftar Anggota');
-  static String get addCarePerson => _t('Add Member', 'Tambah Anggota');
   static String get notificationSettings =>
       _t('Notification Settings', 'Pengaturan Notifikasi');
   static String get appearance => _t('Appearance & Theme', 'Tampilan & Tema');
@@ -842,10 +867,10 @@ class AppStrings {
     'Atur jadwal minum obat dan dapatkan notifikasi tepat waktu. Tidak ada lagi dosis yang terlewat.',
   );
   static String get onboardingFamilyTitle =>
-      _t('Track Family Health', 'Pantau Kesehatan Keluarga');
+      _t('Track Your Health', 'Pantau Kesehatan Anda');
   static String get onboardingFamilyDescription => _t(
-    'Manage medication schedules and health notes for your whole family in one practical app.',
-    'Kelola jadwal obat dan catatan kesehatan untuk seluruh anggota keluarga dalam satu aplikasi praktis.',
+    'Manage medication schedules and health notes in one practical app.',
+    'Kelola jadwal obat dan catatan kesehatan dalam satu aplikasi praktis.',
   );
   static String get onboardingReportTitle =>
       _t('Complete Reports & History', 'Laporan & Riwayat Lengkap');

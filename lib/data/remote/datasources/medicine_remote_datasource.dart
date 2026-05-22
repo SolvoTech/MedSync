@@ -41,10 +41,7 @@ class MedicineRemoteDataSource {
     });
   }
 
-  Future<List<Medicine>> getMedicines({
-    String? carePersonId,
-    bool includeInactive = false,
-  }) async {
+  Future<List<Medicine>> getMedicines({bool includeInactive = false}) async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
       throw Exception(
@@ -63,10 +60,6 @@ class MedicineRemoteDataSource {
       query = query.eq('is_active', true);
     }
 
-    query = carePersonId == null
-        ? query.filter('care_person_id', 'is', 'null')
-        : query.eq('care_person_id', carePersonId);
-
     final rows = await query.order('created_at', ascending: false);
 
     return (rows as List<dynamic>)
@@ -80,7 +73,6 @@ class MedicineRemoteDataSource {
     required int stockCurrent,
     String stockUnit = 'tablet',
     String medicineType = 'tablet',
-    String? carePersonId,
     String? photoUrl,
   }) async {
     final client = SupabaseClientRef.maybeClient;
@@ -101,7 +93,6 @@ class MedicineRemoteDataSource {
         .from('medicines')
         .insert({
           'owner_id': user.id,
-          'care_person_id': carePersonId,
           'name': name,
           'dosage': dosage,
           'medicine_type': medicineType,

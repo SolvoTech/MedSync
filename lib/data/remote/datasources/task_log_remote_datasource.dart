@@ -66,6 +66,9 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
   Future<void> updateTaskStatus({
     required String taskLogId,
     required String status,
+    String? completionProofPhotoPath,
+    DateTime? completionProofCapturedAt,
+    DateTime? completionProofUploadedAt,
   }) async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
@@ -83,6 +86,13 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
     if (status == 'done' || status == 'skipped') {
       payload['completed_at'] = DateTime.now().toIso8601String();
     }
+    if (status == 'done' && completionProofPhotoPath != null) {
+      payload['completion_proof_photo_path'] = completionProofPhotoPath;
+      payload['completion_proof_captured_at'] = completionProofCapturedAt
+          ?.toIso8601String();
+      payload['completion_proof_uploaded_at'] =
+          (completionProofUploadedAt ?? DateTime.now()).toIso8601String();
+    }
 
     await client
         .from('task_logs')
@@ -97,6 +107,9 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
     required String referenceId,
     String? timeOfDay,
     DateTime? scheduledAt,
+    String? completionProofPhotoPath,
+    DateTime? completionProofCapturedAt,
+    DateTime? completionProofUploadedAt,
   }) async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
@@ -144,6 +157,9 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
         await updateTaskStatus(
           taskLogId: exactDecision.taskLogId!,
           status: 'done',
+          completionProofPhotoPath: completionProofPhotoPath,
+          completionProofCapturedAt: completionProofCapturedAt,
+          completionProofUploadedAt: completionProofUploadedAt,
         );
         return;
       }
@@ -155,6 +171,11 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
         'scheduled_at': exactScheduledAt.toIso8601String(),
         'status': 'done',
         'completed_at': now.toIso8601String(),
+        ..._completionProofPayload(
+          completionProofPhotoPath: completionProofPhotoPath,
+          completionProofCapturedAt: completionProofCapturedAt,
+          completionProofUploadedAt: completionProofUploadedAt,
+        ),
       });
       return;
     }
@@ -173,7 +194,13 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
 
     if ((pendingRows as List<dynamic>).isNotEmpty) {
       final taskLogId = pendingRows.first['id'] as String;
-      await updateTaskStatus(taskLogId: taskLogId, status: 'done');
+      await updateTaskStatus(
+        taskLogId: taskLogId,
+        status: 'done',
+        completionProofPhotoPath: completionProofPhotoPath,
+        completionProofCapturedAt: completionProofCapturedAt,
+        completionProofUploadedAt: completionProofUploadedAt,
+      );
       return;
     }
 
@@ -199,7 +226,30 @@ class TaskLogRemoteDataSource implements TaskLogCompletionStore {
       'scheduled_at': (exactScheduledAt ?? now).toIso8601String(),
       'status': 'done',
       'completed_at': now.toIso8601String(),
+      ..._completionProofPayload(
+        completionProofPhotoPath: completionProofPhotoPath,
+        completionProofCapturedAt: completionProofCapturedAt,
+        completionProofUploadedAt: completionProofUploadedAt,
+      ),
     });
+  }
+
+  Map<String, dynamic> _completionProofPayload({
+    String? completionProofPhotoPath,
+    DateTime? completionProofCapturedAt,
+    DateTime? completionProofUploadedAt,
+  }) {
+    if (completionProofPhotoPath == null) {
+      return const <String, dynamic>{};
+    }
+
+    return <String, dynamic>{
+      'completion_proof_photo_path': completionProofPhotoPath,
+      'completion_proof_captured_at': completionProofCapturedAt
+          ?.toIso8601String(),
+      'completion_proof_uploaded_at':
+          (completionProofUploadedAt ?? DateTime.now()).toIso8601String(),
+    };
   }
 
   DateTime? _scheduledAtForToday({required DateTime now, String? timeOfDay}) {

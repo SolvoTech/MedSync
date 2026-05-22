@@ -201,6 +201,14 @@ class AdminUserActivityScreen extends ConsumerWidget {
                 _SummaryGrid(data: data),
                 const SizedBox(height: 16),
                 AdminSectionTitle(
+                  title: AppStrings.adminTaskProofSection,
+                  subtitle: AppStrings.adminTaskProofSectionHint,
+                  icon: Icons.photo_camera_outlined,
+                ),
+                const SizedBox(height: 8),
+                _CompletionProofsList(items: data.completionProofs),
+                const SizedBox(height: 14),
+                AdminSectionTitle(
                   title: AppStrings.adminUserActivityMedicineSection,
                   subtitle: AppStrings.adminUserActivityMedicineSectionHint,
                   icon: Icons.medication_outlined,

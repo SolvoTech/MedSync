@@ -9,6 +9,9 @@ class _FakeTaskLogStore implements TaskLogCompletionStore {
   String? markedReferenceId;
   String? markedTimeOfDay;
   DateTime? markedScheduledAt;
+  String? completionProofPhotoPath;
+  DateTime? completionProofCapturedAt;
+  DateTime? completionProofUploadedAt;
 
   @override
   Future<void> markReminderDoneByReference({
@@ -16,20 +19,32 @@ class _FakeTaskLogStore implements TaskLogCompletionStore {
     required String referenceId,
     String? timeOfDay,
     DateTime? scheduledAt,
+    String? completionProofPhotoPath,
+    DateTime? completionProofCapturedAt,
+    DateTime? completionProofUploadedAt,
   }) async {
     markedTaskType = taskType;
     markedReferenceId = referenceId;
     markedTimeOfDay = timeOfDay;
     markedScheduledAt = scheduledAt;
+    this.completionProofPhotoPath = completionProofPhotoPath;
+    this.completionProofCapturedAt = completionProofCapturedAt;
+    this.completionProofUploadedAt = completionProofUploadedAt;
   }
 
   @override
   Future<void> updateTaskStatus({
     required String taskLogId,
     required String status,
+    String? completionProofPhotoPath,
+    DateTime? completionProofCapturedAt,
+    DateTime? completionProofUploadedAt,
   }) async {
     updatedTaskLogId = taskLogId;
     updatedStatus = status;
+    this.completionProofPhotoPath = completionProofPhotoPath;
+    this.completionProofCapturedAt = completionProofCapturedAt;
+    this.completionProofUploadedAt = completionProofUploadedAt;
   }
 }
 
@@ -85,6 +100,39 @@ void main() {
       },
     );
 
+    test(
+      'markTaskStatusAndSilence forwards completion proof metadata',
+      () async {
+        final store = _FakeTaskLogStore();
+        final scheduler = _FakeReminderScheduler();
+        final service = TaskCompletionService(
+          taskLogStore: store,
+          reminderScheduler: scheduler,
+        );
+        final capturedAt = DateTime(2026, 4, 28, 8, 1);
+        final uploadedAt = DateTime(2026, 4, 28, 8, 2);
+
+        await service.markTaskStatusAndSilence(
+          task: TaskLog(
+            id: 'task-1',
+            taskType: 'medicine',
+            referenceId: 'ref-1',
+            scheduledAt: DateTime(2026, 4, 28, 8),
+            status: 'pending',
+          ),
+          status: 'done',
+          completionProofPhotoPath: 'user/medicine/ref/proof.jpg',
+          completionProofCapturedAt: capturedAt,
+          completionProofUploadedAt: uploadedAt,
+        );
+
+        expect(store.completionProofPhotoPath, 'user/medicine/ref/proof.jpg');
+        expect(store.completionProofCapturedAt, capturedAt);
+        expect(store.completionProofUploadedAt, uploadedAt);
+        expect(scheduler.timeOfDay, '08:00');
+      },
+    );
+
     test('markTaskStatusAndSilence also silences skipped tasks', () async {
       final store = _FakeTaskLogStore();
       final scheduler = _FakeReminderScheduler();
@@ -135,6 +183,37 @@ void main() {
       expect(scheduler.timeOfDay, '08:00');
       expect(scheduler.scheduledAt, DateTime(2026, 4, 28, 8));
     });
+
+    test(
+      'markReminderDoneAndSilence forwards completion proof metadata',
+      () async {
+        final store = _FakeTaskLogStore();
+        final scheduler = _FakeReminderScheduler();
+        final service = TaskCompletionService(
+          taskLogStore: store,
+          reminderScheduler: scheduler,
+        );
+        final capturedAt = DateTime(2026, 4, 28, 8, 1);
+        final uploadedAt = DateTime(2026, 4, 28, 8, 2);
+
+        await service.markReminderDoneAndSilence(
+          taskType: 'measurement',
+          referenceId: 'reminder-1',
+          timeOfDay: '08:00',
+          completionProofPhotoPath: 'user/measurement/ref/proof.jpg',
+          completionProofCapturedAt: capturedAt,
+          completionProofUploadedAt: uploadedAt,
+        );
+
+        expect(
+          store.completionProofPhotoPath,
+          'user/measurement/ref/proof.jpg',
+        );
+        expect(store.completionProofCapturedAt, capturedAt);
+        expect(store.completionProofUploadedAt, uploadedAt);
+        expect(scheduler.timeOfDay, '08:00');
+      },
+    );
 
     test(
       'markReminderDoneAndSilence skips scheduler when time is invalid',

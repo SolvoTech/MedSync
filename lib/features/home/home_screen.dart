@@ -7,6 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_gradients.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/errors/user_error_message.dart';
 import '../../core/extensions/context_ext.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_empty_state.dart';
@@ -14,6 +15,7 @@ import '../../core/widgets/app_error_widget.dart';
 import '../../core/widgets/app_loading_skeleton.dart';
 import '../../data/remote/supabase_client.dart';
 import '../../domain/models/user_streak.dart';
+import '../task_completion/task_completion_proof_flow.dart';
 import 'home_controller.dart';
 import 'widgets/home_permissions_banner.dart';
 import 'widgets/today_task_card.dart';
@@ -279,11 +281,46 @@ class HomeScreen extends ConsumerWidget {
                       return TodayTaskCard(
                         task: task,
                         onDone: () async {
-                          await ref
-                              .read(todayTasksProvider.notifier)
-                              .markDone(task.id);
-                          if (context.mounted) {
-                            context.showSuccessSnackBar(AppStrings.taskDone);
+                          try {
+                            final proof =
+                                await captureAndUploadTaskCompletionProof(
+                                  context,
+                                  taskType: task.taskType,
+                                  referenceId: task.referenceId,
+                                );
+                            if (proof == null) {
+                              if (context.mounted) {
+                                context.showWarningSnackBar(
+                                  AppStrings.taskProofRequiredMessage,
+                                );
+                              }
+                              return;
+                            }
+
+                            if (!context.mounted) {
+                              return;
+                            }
+
+                            await ref
+                                .read(todayTasksProvider.notifier)
+                                .markDone(
+                                  task.id,
+                                  completionProofPhotoPath: proof.photoPath,
+                                  completionProofCapturedAt: proof.capturedAt,
+                                  completionProofUploadedAt: proof.uploadedAt,
+                                );
+                            if (context.mounted) {
+                              context.showSuccessSnackBar(AppStrings.taskDone);
+                            }
+                          } catch (error) {
+                            if (context.mounted) {
+                              context.showErrorSnackBar(
+                                toUserErrorMessage(
+                                  error,
+                                  fallback: AppStrings.actionFailed,
+                                ),
+                              );
+                            }
                           }
                         },
                         onSkip: () async {

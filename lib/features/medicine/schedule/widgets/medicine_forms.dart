@@ -21,7 +21,6 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
   final stockController = TextEditingController(text: '0');
   final formKey = GlobalKey<FormState>();
   final compact = MediaQuery.sizeOf(context).width < 340;
-  final carePersonId = ref.read(medicineCarePersonFilterProvider);
 
   File? photoFile;
 
@@ -207,7 +206,6 @@ Future<void> showAddMedicineSheet(BuildContext context, WidgetRef ref) async {
                                         stockController.text.trim(),
                                       ),
                                       photoFile: photoFile,
-                                      carePersonId: carePersonId,
                                     );
                                 if (context.mounted) {
                                   Navigator.pop(context);

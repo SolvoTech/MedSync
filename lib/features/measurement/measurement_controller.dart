@@ -13,10 +13,6 @@ final measurementRemoteDataSourceProvider =
       return MeasurementRemoteDataSource();
     });
 
-/// Provider to hold the currently selected care person filter for measurements.
-/// null means "Saya sendiri" (show own data without care_person_id).
-final measurementCarePersonFilterProvider = StateProvider<String?>((ref) => null);
-
 final measurementControllerProvider =
     AutoDisposeAsyncNotifierProvider<
       MeasurementController,
@@ -27,21 +23,16 @@ class MeasurementController
     extends AutoDisposeAsyncNotifier<List<MeasurementReminder>> {
   @override
   Future<List<MeasurementReminder>> build() {
-    final carePersonId = ref.watch(measurementCarePersonFilterProvider);
-    return _fetch(carePersonId: carePersonId);
+    return _fetch();
   }
 
-  Future<List<MeasurementReminder>> _fetch({String? carePersonId}) {
-    return ref.read(measurementRemoteDataSourceProvider).getReminders(
-      carePersonId: carePersonId,
-      filterByCarePersonId: true,
-    );
+  Future<List<MeasurementReminder>> _fetch() {
+    return ref.read(measurementRemoteDataSourceProvider).getReminders();
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    final carePersonId = ref.read(measurementCarePersonFilterProvider);
-    state = await AsyncValue.guard(() => _fetch(carePersonId: carePersonId));
+    state = await AsyncValue.guard(_fetch);
   }
 
   Future<void> addReminder({
@@ -51,7 +42,6 @@ class MeasurementController
     String? customName,
     String? unit,
     String? targetValue,
-    String? carePersonId,
   }) async {
     final permissionService = ref.read(permissionServiceProvider);
     await permissionService.ensureReminderReliabilityPermissions();
@@ -65,7 +55,6 @@ class MeasurementController
           customName: customName,
           unit: unit,
           targetValue: targetValue,
-          carePersonId: carePersonId,
         );
 
     if (AppPreferences.notifMeasurement) {
@@ -84,7 +73,6 @@ class MeasurementController
     String? customName,
     String? unit,
     String? targetValue,
-    String? carePersonId,
   }) async {
     final permissionService = ref.read(permissionServiceProvider);
     await permissionService.ensureReminderReliabilityPermissions();
@@ -99,7 +87,6 @@ class MeasurementController
           customName: customName,
           unit: unit,
           targetValue: targetValue,
-          carePersonId: carePersonId,
         );
 
     final oldReminder = (state.valueOrNull ?? []).firstWhere(

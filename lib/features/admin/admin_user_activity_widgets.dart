@@ -501,14 +501,239 @@ class _InlineEmptyCard extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              message,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
+            child: Text(message, maxLines: 3, overflow: TextOverflow.ellipsis),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompletionProofsList extends StatelessWidget {
+  const _CompletionProofsList({required this.items});
+
+  final List<AdminTaskCompletionProofActivity> items;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return _InlineEmptyCard(message: AppStrings.adminTaskProofEmpty);
+    }
+
+    return Column(
+      children: items
+          .map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _CompletionProofCard(item: item),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class _CompletionProofCard extends StatelessWidget {
+  const _CompletionProofCard({required this.item});
+
+  final AdminTaskCompletionProofActivity item;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final compact = MediaQuery.sizeOf(context).width < 360;
+    final proofReady = item.hasProof && item.photoUrl != null;
+    final accentColor = proofReady
+        ? const Color(0xFF2F855A)
+        : colorScheme.onSurfaceVariant;
+
+    return AppCard(
+      padding: EdgeInsets.all(compact ? 10 : 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: proofReady
+                ? () => _showProofPreview(context, item.photoUrl!)
+                : null,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: compact ? 58 : 68,
+                height: compact ? 58 : 68,
+                child: proofReady
+                    ? Image.network(
+                        item.photoUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => _ProofPlaceholder(
+                          icon: Icons.broken_image_outlined,
+                          color: colorScheme.error,
+                        ),
+                      )
+                    : _ProofPlaceholder(
+                        icon: Icons.image_not_supported_outlined,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+              ),
+            ),
+          ),
+          SizedBox(width: compact ? 9 : 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _taskTypeLabel(item.taskType),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      proofReady
+                          ? Icons.verified_rounded
+                          : Icons.info_outline_rounded,
+                      size: 17,
+                      color: accentColor,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _scheduledLabel(item.scheduledAt),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.65),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 7,
+                  runSpacing: 7,
+                  children: [
+                    _Tag(
+                      icon: proofReady
+                          ? Icons.photo_camera_outlined
+                          : Icons.no_photography_outlined,
+                      label: proofReady
+                          ? AppStrings.adminTaskProofAvailable
+                          : AppStrings.adminTaskProofMissing,
+                    ),
+                    if (item.completedAt != null)
+                      _Tag(
+                        icon: Icons.check_circle_outline,
+                        label: _completedLabel(item.completedAt!),
+                      ),
+                  ],
+                ),
+                if (proofReady) ...[
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () => _showProofPreview(context, item.photoUrl!),
+                    icon: const Icon(Icons.open_in_full_rounded, size: 16),
+                    label: Text(
+                      AppStrings.adminTaskProofOpen,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  String _scheduledLabel(DateTime value) {
+    final locale = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+    return DateFormat('dd MMM yyyy, HH:mm', locale).format(value);
+  }
+
+  String _completedLabel(DateTime value) {
+    final locale = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+    return DateFormat('HH:mm', locale).format(value);
+  }
+
+  String _taskTypeLabel(String taskType) {
+    switch (taskType) {
+      case 'medicine':
+        return AppStrings.tr('Medicine', 'Obat');
+      case 'measurement':
+        return AppStrings.tr('Measurement', 'Pengukuran');
+      case 'physical_activity':
+        return AppStrings.tr('Physical Activity', 'Aktivitas Fisik');
+      default:
+        return taskType;
+    }
+  }
+
+  void _showProofPreview(BuildContext context, String imageUrl) {
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        final colorScheme = Theme.of(context).colorScheme;
+        return Dialog.fullscreen(
+          backgroundColor: colorScheme.surface,
+          child: SafeArea(
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    tooltip: AppStrings.close,
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ),
+                Expanded(
+                  child: InteractiveViewer(
+                    minScale: 0.8,
+                    maxScale: 4,
+                    child: Center(
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => Icon(
+                          Icons.broken_image_outlined,
+                          size: 48,
+                          color: colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ProofPlaceholder extends StatelessWidget {
+  const _ProofPlaceholder({required this.icon, required this.color});
+
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      alignment: Alignment.center,
+      child: Icon(icon, color: color, size: 24),
     );
   }
 }

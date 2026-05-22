@@ -7,7 +7,6 @@ class Medicine {
     required this.stockCurrent,
     required this.stockUnit,
     this.dosage,
-    this.carePersonId,
     this.stockLowThreshold = 5,
     this.stockReminderAt = 3,
     this.notes,
@@ -24,7 +23,6 @@ class Medicine {
   final String medicineType;
   final int stockCurrent;
   final String stockUnit;
-  final String? carePersonId;
   final int stockLowThreshold;
   final int stockReminderAt;
   final String? notes;
@@ -45,7 +43,6 @@ class Medicine {
       medicineType: (map['medicine_type'] as String?) ?? 'tablet',
       stockCurrent: (map['stock_current'] as num?)?.toInt() ?? 0,
       stockUnit: (map['stock_unit'] as String?) ?? 'tablet',
-      carePersonId: map['care_person_id'] as String?,
       stockLowThreshold: (map['stock_low_threshold'] as num?)?.toInt() ?? 5,
       stockReminderAt: (map['stock_reminder_at'] as num?)?.toInt() ?? 3,
       notes: map['notes'] as String?,
@@ -59,7 +56,6 @@ class Medicine {
   Map<String, dynamic> toInsertMap() {
     return {
       'owner_id': ownerId,
-      'care_person_id': carePersonId,
       'name': name,
       'dosage': dosage,
       'medicine_type': medicineType,

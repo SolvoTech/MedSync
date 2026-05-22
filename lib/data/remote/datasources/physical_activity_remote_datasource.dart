@@ -6,10 +6,7 @@ class PhysicalActivityRemoteDataSource {
   static const int _taskLogHorizonDays = 30;
   static const String _taskType = 'physical_activity';
 
-  Future<List<PhysicalActivityReminder>> getReminders({
-    String? carePersonId,
-    bool filterByCarePersonId = false,
-  }) async {
+  Future<List<PhysicalActivityReminder>> getReminders() async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
       throw Exception(
@@ -28,12 +25,6 @@ class PhysicalActivityRemoteDataSource {
         .eq('owner_id', user.id)
         .eq('is_active', true);
 
-    if (filterByCarePersonId) {
-      query = carePersonId == null
-          ? query.filter('care_person_id', 'is', 'null')
-          : query.eq('care_person_id', carePersonId);
-    }
-
     final rows = await query.order('time_of_day', ascending: true);
 
     return (rows as List<dynamic>)
@@ -51,7 +42,6 @@ class PhysicalActivityRemoteDataSource {
     String? customName,
     String? targetUnit,
     num? targetValue,
-    String? carePersonId,
   }) async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
@@ -75,7 +65,6 @@ class PhysicalActivityRemoteDataSource {
           'start_date': startDate.toIso8601String().split('T').first,
           'target_unit': targetUnit,
           'target_value': targetValue,
-          'care_person_id': carePersonId,
           'is_active': true,
           'notification_enabled': true,
           'repeat_type': 'daily',
@@ -107,7 +96,6 @@ class PhysicalActivityRemoteDataSource {
     String? customName,
     String? targetUnit,
     num? targetValue,
-    String? carePersonId,
   }) async {
     final client = SupabaseClientRef.maybeClient;
     if (client == null) {
@@ -130,7 +118,6 @@ class PhysicalActivityRemoteDataSource {
           'start_date': startDate.toIso8601String().split('T').first,
           'target_unit': targetUnit,
           'target_value': targetValue,
-          'care_person_id': carePersonId,
         })
         .eq('id', reminderId)
         .eq('owner_id', user.id);

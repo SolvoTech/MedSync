@@ -93,12 +93,23 @@ class HomeController extends AutoDisposeAsyncNotifier<List<TaskLog>> {
     state = await AsyncValue.guard(_fetch);
   }
 
-  Future<void> markDone(String taskLogId) async {
+  Future<void> markDone(
+    String taskLogId, {
+    String? completionProofPhotoPath,
+    DateTime? completionProofCapturedAt,
+    DateTime? completionProofUploadedAt,
+  }) async {
     final task = await _findTaskByIdOrFetch(taskLogId);
     if (task == null) {
       await ref
           .read(taskLogRemoteDataSourceProvider)
-          .updateTaskStatus(taskLogId: taskLogId, status: 'done');
+          .updateTaskStatus(
+            taskLogId: taskLogId,
+            status: 'done',
+            completionProofPhotoPath: completionProofPhotoPath,
+            completionProofCapturedAt: completionProofCapturedAt,
+            completionProofUploadedAt: completionProofUploadedAt,
+          );
       await refresh();
       return;
     }
@@ -106,6 +117,9 @@ class HomeController extends AutoDisposeAsyncNotifier<List<TaskLog>> {
     await _taskCompletionService().markTaskStatusAndSilence(
       task: task,
       status: 'done',
+      completionProofPhotoPath: completionProofPhotoPath,
+      completionProofCapturedAt: completionProofCapturedAt,
+      completionProofUploadedAt: completionProofUploadedAt,
     );
     await refresh();
   }

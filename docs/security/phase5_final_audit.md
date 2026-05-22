@@ -4,12 +4,12 @@ Tanggal audit: 2026-04-03
 Lingkup: username auth, admin control center, dan fitur edukasi.
 
 ## Metode Audit
-- Review statik SQL migration pada [supabase/migrations/202604030001_auth_username_admin_education.sql](../../supabase/migrations/202604030001_auth_username_admin_education.sql) dan [supabase/migrations/202604030002_education_publish_notifications.sql](../../supabase/migrations/202604030002_education_publish_notifications.sql).
+- Review statik SQL migration pada [supabase/migrations/202603170001_init_medsync.sql](../../supabase/migrations/202603170001_init_medsync.sql), [supabase/migrations/202603170002_rls_policy_performance_optimizations.sql](../../supabase/migrations/202603170002_rls_policy_performance_optimizations.sql), dan [supabase/migrations/202605220002_live_cleanup_storage_rpc_hardening.sql](../../supabase/migrations/202605220002_live_cleanup_storage_rpc_hardening.sql).
 - Review alur otorisasi aplikasi di [lib/core/router/app_router.dart](../../lib/core/router/app_router.dart) dan [lib/features/admin/admin_control_screen.dart](../../lib/features/admin/admin_control_screen.dart).
 - Verifikasi otomatis dengan test kritikal di [test/integration/critical_scenarios_test.dart](../../test/integration/critical_scenarios_test.dart).
 
 ## Hasil Audit
-- RLS dan kebijakan admin tersedia untuk tabel inti admin/edukasi, termasuk fungsi `is_admin(...)` dan kebijakan khusus admin.
+- RLS dan kebijakan admin tersedia untuk tabel inti admin/edukasi, termasuk helper admin pada schema non-exposed dan kebijakan khusus admin.
 - Guard route admin memblokir user non-admin dan mengizinkan admin.
 - Endpoint alur auth sudah berbasis username, dengan normalisasi lowercase dan regex validasi username.
 - Trigger publish artikel tidak menyiarkan ke akun suspended, hanya ke role user aktif.

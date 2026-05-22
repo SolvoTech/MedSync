@@ -105,16 +105,6 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       ),
     ),
     (
-      q: AppStrings.tr(
-        'How to add a family member?',
-        'Cara menambahkan anggota keluarga?',
-      ),
-      a: AppStrings.tr(
-        'Open Profile -> Manage Members -> Member List -> tap Add Member -> fill in name, relationship, and notes.',
-        'Buka Profil -> Kelola Anggota -> Daftar Anggota -> Ketuk Tambah Anggota -> Isi nama, hubungan, dan catatan.',
-      ),
-    ),
-    (
       q: AppStrings.tr('Cannot access account?', 'Tidak bisa mengakses akun?'),
       a: AppStrings.tr(
         'Contact your administrator to reset your account access from the Admin Control Center.',

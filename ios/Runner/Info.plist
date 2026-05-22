@@ -16,6 +16,8 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>med_syn</string>
+	<key>NSCameraUsageDescription</key>
+	<string>MedSync uses the camera to capture task completion proof photos.</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

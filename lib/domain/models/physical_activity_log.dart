@@ -8,7 +8,6 @@ class PhysicalActivityLog {
     this.caloriesBurned,
     this.notes,
     required this.completedAt,
-    this.carePersonId,
   });
 
   final String id;
@@ -19,7 +18,6 @@ class PhysicalActivityLog {
   final int? caloriesBurned;
   final String? notes;
   final DateTime completedAt;
-  final String? carePersonId;
 
   factory PhysicalActivityLog.fromMap(Map<String, dynamic> map) {
     return PhysicalActivityLog(
@@ -31,7 +29,6 @@ class PhysicalActivityLog {
       caloriesBurned: (map['calories_burned'] as num?)?.toInt(),
       notes: map['notes'] as String?,
       completedAt: DateTime.parse(map['completed_at'] as String),
-      carePersonId: map['care_person_id'] as String?,
     );
   }
 
@@ -44,7 +41,6 @@ class PhysicalActivityLog {
       'calories_burned': caloriesBurned,
       'notes': notes,
       'completed_at': completedAt.toIso8601String(),
-      'care_person_id': carePersonId,
     };
   }
 }

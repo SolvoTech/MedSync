@@ -59,7 +59,7 @@ Future<void> handleReminderAction({
   required BuildContext context,
   required String action,
   required Future<void> Function() onEdit,
-  Future<void> Function()? onMarkDone,
+  Future<bool> Function()? onMarkDone,
   required Future<void> Function() onDeactivate,
   required Future<void> Function() onDelete,
   String? doneMessage,
@@ -85,7 +85,10 @@ Future<void> handleReminderAction({
         return;
       }
 
-      await onMarkDone();
+      final completed = await onMarkDone();
+      if (!completed) {
+        return;
+      }
       if (context.mounted) {
         context.showSuccessSnackBar(
           doneMessage ?? AppStrings.tr('Marked as done.', 'Ditandai selesai.'),
