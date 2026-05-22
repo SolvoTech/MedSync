@@ -185,6 +185,10 @@ final adminSelectedUserIdsProvider = StateProvider.autoDispose<Set<String>>(
   (ref) => <String>{},
 );
 
+final adminUserSelectionModeProvider = StateProvider.autoDispose<bool>(
+  (ref) => false,
+);
+
 final adminActionControllerProvider =
     AutoDisposeNotifierProvider<AdminActionController, AsyncValue<void>>(
       AdminActionController.new,
@@ -423,6 +427,7 @@ class AdminControlScreen extends ConsumerWidget {
         final accountFilter = ref.watch(adminUserAccountFilterProvider);
         final roleFilter = ref.watch(adminUserRoleFilterProvider);
         final selectedUserIds = ref.watch(adminSelectedUserIdsProvider);
+        final selectionMode = ref.watch(adminUserSelectionModeProvider);
 
         return Scaffold(
           appBar: AppBar(
@@ -628,6 +633,8 @@ class AdminControlScreen extends ConsumerWidget {
                     final selectedActivateCandidates = selectedFilteredUsers
                         .where((user) => user.accountStatus == 'suspended')
                         .toList();
+                    final showBulkPanel =
+                        selectionMode || selectedFilteredUsers.isNotEmpty;
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -659,41 +666,68 @@ class AdminControlScreen extends ConsumerWidget {
                           },
                         ),
                         const SizedBox(height: 12),
-                        _AdminBulkActionPanel(
+                        _SelectionModePanel(
+                          enabled: selectionMode,
                           selectedCount: selectedFilteredUsers.length,
-                          suspendCandidateCount:
-                              selectedSuspendCandidates.length,
-                          activateCandidateCount:
-                              selectedActivateCandidates.length,
-                          isBusy: actionState.isLoading,
-                          onSelectAll: () {
-                            final ids = manageableFilteredUsers
-                                .map((user) => user.id)
-                                .toSet();
+                          onChanged: (value) {
                             ref
-                                    .read(adminSelectedUserIdsProvider.notifier)
+                                    .read(
+                                      adminUserSelectionModeProvider.notifier,
+                                    )
                                     .state =
-                                ids;
+                                value;
+                            if (!value) {
+                              ref
+                                      .read(
+                                        adminSelectedUserIdsProvider.notifier,
+                                      )
+                                      .state =
+                                  <String>{};
+                            }
                           },
-                          onClearSelection: () {
-                            ref
-                                    .read(adminSelectedUserIdsProvider.notifier)
-                                    .state =
-                                <String>{};
-                          },
-                          onBulkSuspend: () => _onBulkSetStatus(
-                            context,
-                            ref,
-                            targets: selectedFilteredUsers,
-                            suspend: true,
-                          ),
-                          onBulkActivate: () => _onBulkSetStatus(
-                            context,
-                            ref,
-                            targets: selectedFilteredUsers,
-                            suspend: false,
-                          ),
                         ),
+                        if (showBulkPanel) ...[
+                          const SizedBox(height: 10),
+                          _AdminBulkActionPanel(
+                            selectedCount: selectedFilteredUsers.length,
+                            suspendCandidateCount:
+                                selectedSuspendCandidates.length,
+                            activateCandidateCount:
+                                selectedActivateCandidates.length,
+                            isBusy: actionState.isLoading,
+                            onSelectAll: () {
+                              final ids = manageableFilteredUsers
+                                  .map((user) => user.id)
+                                  .toSet();
+                              ref
+                                      .read(
+                                        adminSelectedUserIdsProvider.notifier,
+                                      )
+                                      .state =
+                                  ids;
+                            },
+                            onClearSelection: () {
+                              ref
+                                      .read(
+                                        adminSelectedUserIdsProvider.notifier,
+                                      )
+                                      .state =
+                                  <String>{};
+                            },
+                            onBulkSuspend: () => _onBulkSetStatus(
+                              context,
+                              ref,
+                              targets: selectedFilteredUsers,
+                              suspend: true,
+                            ),
+                            onBulkActivate: () => _onBulkSetStatus(
+                              context,
+                              ref,
+                              targets: selectedFilteredUsers,
+                              suspend: false,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 12),
                         if (filteredUsers.isEmpty)
                           AppEmptyState(
@@ -714,6 +748,7 @@ class AdminControlScreen extends ConsumerWidget {
                                       isSelected: selectedUserIds.contains(
                                         user.id,
                                       ),
+                                      showSelectionControls: showBulkPanel,
                                       canResetAccess: _canResetAccess(user),
                                       onSelectionChanged: (value) {
                                         _toggleUserSelection(

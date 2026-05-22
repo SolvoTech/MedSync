@@ -93,13 +93,13 @@ class AdminHomeScreen extends ConsumerWidget {
               data: (dashboard) {
                 final xxs = media.size.width < 340;
                 final firstRow = [
-                  _OverviewMetric(
+                  AdminMetricTile(
                     title: AppStrings.adminMetricTotalUsers,
                     value: '${dashboard.totalUsers}',
                     icon: Icons.groups_2_outlined,
                     color: const Color(0xFF2B6CB0),
                   ),
-                  _OverviewMetric(
+                  AdminMetricTile(
                     title: AppStrings.adminMetricActiveUsers,
                     value: '${dashboard.activeUsers}',
                     icon: Icons.check_circle_outline,
@@ -107,17 +107,22 @@ class AdminHomeScreen extends ConsumerWidget {
                   ),
                 ];
                 final secondRow = [
-                  _OverviewMetric(
+                  AdminMetricTile(
                     title: AppStrings.adminMetricSuspendedUsers,
                     value: '${dashboard.suspendedUsers}',
                     icon: Icons.block_outlined,
                     color: const Color(0xFFC53030),
                   ),
-                  _OverviewMetric(
+                  AdminMetricTile(
                     title: AppStrings.adminMetricAdherenceToday,
                     value: '${dashboard.adherencePercent}%',
                     icon: Icons.trending_up_rounded,
                     color: const Color(0xFF805AD5),
+                    subtitle: AppStrings.adminTodayAdherenceSummary(
+                      completed: dashboard.todayCompleted,
+                      total: dashboard.todayTasks,
+                      percent: dashboard.adherencePercent,
+                    ),
                   ),
                 ];
 
@@ -181,111 +186,50 @@ class _QuickActionCard extends StatelessWidget {
 
     return AppCard(
       padding: EdgeInsets.all(isCompact ? 12 : 16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Row(
-          children: [
-            Container(
-              width: isCompact ? 36 : 40,
-              height: isCompact ? 36 : 40,
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                icon,
-                color: colorScheme.primary,
-                size: isCompact ? 18 : 20,
-              ),
-            ),
-            SizedBox(width: isCompact ? 8 : 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    maxLines: isCompact ? 2 : 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.65),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: colorScheme.onSurface.withValues(alpha: 0.45),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OverviewMetric extends StatelessWidget {
-  const _OverviewMetric({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final isCompact = media.size.width < 390 || media.textScaler.scale(1) > 1.1;
-
-    return AppCard(
-      padding: EdgeInsets.all(isCompact ? 12 : 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      onTap: onTap,
+      child: Row(
         children: [
           Container(
-            width: isCompact ? 32 : 36,
-            height: isCompact ? 32 : 36,
+            width: isCompact ? 36 : 40,
+            height: isCompact ? 36 : 40,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16),
+              color: colorScheme.primaryContainer.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: isCompact ? 18 : 20),
-          ),
-          SizedBox(height: isCompact ? 8 : 10),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.6),
+            child: Icon(
+              icon,
+              color: colorScheme.primary,
+              size: isCompact ? 18 : 20,
             ),
+          ),
+          SizedBox(width: isCompact ? 8 : 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: isCompact ? 2 : 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.65),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.chevron_right_rounded,
+            color: colorScheme.onSurface.withValues(alpha: 0.45),
           ),
         ],
       ),

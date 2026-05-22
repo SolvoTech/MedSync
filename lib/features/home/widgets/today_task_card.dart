@@ -66,9 +66,7 @@ class TodayTaskCard extends StatelessWidget {
     return AppCard(
       padding: EdgeInsets.zero,
       borderRadius: radius,
-      color: isCompleted
-          ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.42)
-          : colorScheme.surface,
+      color: colorScheme.surface,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
         child: Column(
@@ -150,29 +148,9 @@ class TodayTaskCard extends StatelessWidget {
                       child: buildTimeChip(),
                     ),
                   ],
-                  SizedBox(height: compact ? 10 : 12),
-                  Row(
-                    children: [
-                      StatusChip(status: task.status),
-                      if (isCompleted) ...[
-                        SizedBox(width: compact ? 6 : 8),
-                        Expanded(
-                          child: Text(
-                            _completedText(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.58,
-                              ),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
                   if (!isCompleted) ...[
+                    SizedBox(height: compact ? 10 : 12),
+                    StatusChip(status: task.status),
                     SizedBox(height: compact ? 12 : 14),
                     Row(
                       children: [
@@ -263,52 +241,15 @@ class TodayTaskCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ] else ...[
-                    SizedBox(height: compact ? 12 : 14),
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: compact ? 10 : 11,
-                        vertical: compact ? 8 : 9,
-                      ),
-                      decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(compact ? 14 : 16),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            isSkipped
-                                ? Icons.pause_circle_outline_rounded
-                                : Icons.verified_rounded,
-                            size: compact ? 15 : 16,
-                            color: accentColor,
-                          ),
-                          const SizedBox(width: 7),
-                          Expanded(
-                            child: Text(
-                              isSkipped
-                                  ? AppStrings.tr(
-                                      'This task was skipped for today.',
-                                      'Tugas ini dilewati untuk hari ini.',
-                                    )
-                                  : AppStrings.tr(
-                                      'Great, this task is done for today.',
-                                      'Bagus, tugas ini sudah selesai hari ini.',
-                                    ),
-                              maxLines: compact ? 2 : 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.72,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                  ] else
+                    Padding(
+                      padding: EdgeInsets.only(top: compact ? 12 : 14),
+                      child: _CompletedTaskState(
+                        task: task,
+                        isSkipped: isSkipped,
+                        compact: compact,
                       ),
                     ),
-                  ],
                 ],
               ),
             ),
@@ -344,19 +285,6 @@ class TodayTaskCard extends StatelessWidget {
           'Scheduled task reminder.',
           'Pengingat tugas terjadwal.',
         );
-    }
-  }
-
-  String _completedText() {
-    switch (task.status) {
-      case 'done':
-        return AppStrings.tr('Marked complete', 'Sudah ditandai selesai');
-      case 'skipped':
-        return AppStrings.tr('Skipped for today', 'Dilewati untuk hari ini');
-      case 'missed':
-        return AppStrings.tr('Missed schedule', 'Jadwal terlewat');
-      default:
-        return AppStrings.tr('Waiting action', 'Menunggu aksi');
     }
   }
 
@@ -397,5 +325,95 @@ class TodayTaskCard extends StatelessWidget {
       default:
         return taskType;
     }
+  }
+}
+
+class _CompletedTaskState extends StatelessWidget {
+  const _CompletedTaskState({
+    required this.task,
+    required this.isSkipped,
+    required this.compact,
+  });
+
+  final TaskLog task;
+  final bool isSkipped;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final tone = isSkipped ? AppColors.warning : AppColors.success;
+    final hasProof = (task.completionProofPhotoPath ?? '').trim().isNotEmpty;
+    final title = isSkipped
+        ? AppStrings.tr('Skipped', 'Dilewati')
+        : AppStrings.tr('Done', 'Selesai');
+    final subtitle = isSkipped
+        ? AppStrings.tr(
+            'This task was skipped today.',
+            'Tugas ini dilewati hari ini.',
+          )
+        : hasProof
+        ? AppStrings.tr('Photo proof saved.', 'Bukti foto tersimpan.')
+        : AppStrings.tr('Marked complete.', 'Sudah ditandai selesai.');
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 12 : 14,
+        vertical: compact ? 10 : 12,
+      ),
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(compact ? 16 : 18),
+        border: Border.all(color: tone.withValues(alpha: 0.16)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: compact ? 34 : 38,
+            height: compact ? 34 : 38,
+            decoration: BoxDecoration(
+              color: tone.withValues(alpha: 0.14),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isSkipped
+                  ? Icons.pause_circle_outline_rounded
+                  : Icons.check_circle_rounded,
+              color: tone,
+              size: compact ? 18 : 20,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.labelLarge?.copyWith(
+                    color: tone,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: compact ? 2 : 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.66),
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

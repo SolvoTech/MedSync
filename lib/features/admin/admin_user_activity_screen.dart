@@ -208,29 +208,37 @@ class AdminUserActivityScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 _CompletionProofsList(items: data.completionProofs),
                 const SizedBox(height: 14),
-                AdminSectionTitle(
+                AdminCollapsibleSection(
                   title: AppStrings.adminUserActivityMedicineSection,
-                  subtitle: AppStrings.adminUserActivityMedicineSectionHint,
                   icon: Icons.medication_outlined,
+                  subtitle: AppStrings.tr(
+                    '${data.medicineSchedules.length} schedules. ${AppStrings.adminUserActivityMedicineSectionHint}',
+                    '${data.medicineSchedules.length} jadwal. ${AppStrings.adminUserActivityMedicineSectionHint}',
+                  ),
+                  child: _MedicineSchedulesList(items: data.medicineSchedules),
                 ),
-                const SizedBox(height: 8),
-                _MedicineSchedulesList(items: data.medicineSchedules),
                 const SizedBox(height: 14),
-                AdminSectionTitle(
+                AdminCollapsibleSection(
                   title: AppStrings.adminUserActivityMeasurementSection,
-                  subtitle: AppStrings.adminUserActivityMeasurementSectionHint,
                   icon: Icons.monitor_heart_outlined,
+                  subtitle: AppStrings.tr(
+                    '${data.measurementSchedules.length} schedules. ${AppStrings.adminUserActivityMeasurementSectionHint}',
+                    '${data.measurementSchedules.length} jadwal. ${AppStrings.adminUserActivityMeasurementSectionHint}',
+                  ),
+                  child: _MeasurementSchedulesList(
+                    items: data.measurementSchedules,
+                  ),
                 ),
-                const SizedBox(height: 8),
-                _MeasurementSchedulesList(items: data.measurementSchedules),
                 const SizedBox(height: 14),
-                AdminSectionTitle(
+                AdminCollapsibleSection(
                   title: AppStrings.adminUserActivityActivitySection,
-                  subtitle: AppStrings.adminUserActivityActivitySectionHint,
                   icon: Icons.directions_walk_outlined,
+                  subtitle: AppStrings.tr(
+                    '${data.activitySchedules.length} schedules. ${AppStrings.adminUserActivityActivitySectionHint}',
+                    '${data.activitySchedules.length} jadwal. ${AppStrings.adminUserActivityActivitySectionHint}',
+                  ),
+                  child: _ActivitySchedulesList(items: data.activitySchedules),
                 ),
-                const SizedBox(height: 8),
-                _ActivitySchedulesList(items: data.activitySchedules),
               ],
             );
           },

@@ -150,6 +150,7 @@ class AppStrings {
 
   // Admin
   static String get adminHomeTitle => _t('Admin Home', 'Beranda Admin');
+  static String get adminDashboardNavLabel => _t('Dashboard', 'Dashboard');
   static String get adminUsersTitle => _t('Users', 'Pengguna');
   static String get adminContentTitle => _t('Content', 'Konten');
   static String get adminControlCenterTitle =>
@@ -633,8 +634,8 @@ class AppStrings {
     'This photo will be saved as admin evidence. It is not used to validate the task content.',
     'Foto ini akan disimpan sebagai bukti untuk admin. Foto tidak digunakan untuk validasi isi tugas.',
   );
-  static String get taskProofRetakeAction => _t('Retake', 'Ambil Ulang');
-  static String get taskProofUseAction => _t('Use Photo', 'Pakai Foto');
+  static String get taskProofRetakeAction => _t('Retake', 'Ulangi');
+  static String get taskProofUseAction => _t('Use', 'Gunakan');
   static String get taskProofRequiredMessage => _t(
     'Photo proof is required before marking this task done.',
     'Bukti foto wajib disertakan sebelum menandai tugas selesai.',

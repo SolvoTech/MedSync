@@ -503,39 +503,118 @@ class _ArticleEditorSheetState extends ConsumerState<_ArticleEditorSheet> {
                         20,
                       ),
                       children: [
-                        AppCard(
-                          padding: EdgeInsets.all(isXxs ? 10 : 14),
+                        TextFormField(
+                          controller: _titleController,
+                          textInputAction: TextInputAction.next,
+                          decoration: _fieldDecoration(
+                            context,
+                            label: AppStrings.adminArticleFieldTitleLabel,
+                            icon: Icons.title,
+                          ),
+                          validator: (value) {
+                            if ((value ?? '').trim().isEmpty) {
+                              return AppStrings.fieldRequired;
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        TextFormField(
+                          controller: _contentController,
+                          minLines: 8,
+                          maxLines: 14,
+                          decoration: _fieldDecoration(
+                            context,
+                            label: AppStrings.adminArticleFieldContentLabel,
+                            icon: Icons.article_outlined,
+                          ),
+                          validator: (value) {
+                            if ((value ?? '').trim().isEmpty) {
+                              return AppStrings.fieldRequired;
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        AdminCollapsibleSection(
+                          title: AppStrings.tr(
+                            'Article details',
+                            'Detail artikel',
+                          ),
+                          subtitle: AppStrings.tr(
+                            'Optional slug, category, and summary.',
+                            'Slug, kategori, dan ringkasan opsional.',
+                          ),
+                          icon: Icons.tune_rounded,
+                          child: Column(
+                            children: [
+                              TextFormField(
+                                controller: _slugController,
+                                textInputAction: TextInputAction.next,
+                                decoration: _fieldDecoration(
+                                  context,
+                                  label: AppStrings
+                                      .adminArticleFieldSlugOptionalLabel,
+                                  icon: Icons.link,
+                                  helper: AppStrings
+                                      .adminArticleSlugAutoGenerateHint,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              TextFormField(
+                                controller: _categoryController,
+                                textInputAction: TextInputAction.next,
+                                decoration: _fieldDecoration(
+                                  context,
+                                  label: AppStrings
+                                      .adminArticleFieldCategoryOptionalLabel,
+                                  icon: Icons.category_outlined,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              TextFormField(
+                                controller: _summaryController,
+                                textInputAction: TextInputAction.newline,
+                                maxLines: 3,
+                                decoration: _fieldDecoration(
+                                  context,
+                                  label: AppStrings
+                                      .adminArticleFieldSummaryOptionalLabel,
+                                  icon: Icons.notes_outlined,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        AdminCollapsibleSection(
+                          title: AppStrings.adminArticleCoverFieldTitle,
+                          subtitle:
+                              AppStrings.adminArticleCoverUploadOnSaveHint,
+                          icon: Icons.image_outlined,
+                          initiallyExpanded:
+                              _coverFile != null ||
+                              ((_coverUrl ?? '').trim().isNotEmpty),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.image_outlined, size: 18),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      AppStrings.adminArticleCoverFieldTitle,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                              if (_coverFile != null ||
+                                  ((_coverUrl ?? '').trim().isNotEmpty)) ...[
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton.icon(
+                                    onPressed: _isSaving ? null : _clearCover,
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                    ),
+                                    label: Text(
+                                      AppStrings.adminArticleCoverRemoveAction,
                                     ),
                                   ),
-                                  if (_coverFile != null ||
-                                      ((_coverUrl ?? '').trim().isNotEmpty))
-                                    IconButton(
-                                      onPressed: _isSaving ? null : _clearCover,
-                                      tooltip: AppStrings
-                                          .adminArticleCoverRemoveAction,
-                                      icon: const Icon(Icons.delete_outline),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
+                                ),
+                                const SizedBox(height: 8),
+                              ],
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(14),
                                 child: AspectRatio(
@@ -693,83 +772,12 @@ class _ArticleEditorSheetState extends ConsumerState<_ArticleEditorSheet> {
                                   return Wrap(
                                     spacing: 8,
                                     runSpacing: 8,
-                                    children: [
-                                      galleryButton,
-                                      cameraButton,
-                                    ],
+                                    children: [galleryButton, cameraButton],
                                   );
                                 },
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _titleController,
-                          textInputAction: TextInputAction.next,
-                          decoration: _fieldDecoration(
-                            context,
-                            label: AppStrings.adminArticleFieldTitleLabel,
-                            icon: Icons.title,
-                          ),
-                          validator: (value) {
-                            if ((value ?? '').trim().isEmpty) {
-                              return AppStrings.fieldRequired;
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: _slugController,
-                          textInputAction: TextInputAction.next,
-                          decoration: _fieldDecoration(
-                            context,
-                            label:
-                                AppStrings.adminArticleFieldSlugOptionalLabel,
-                            icon: Icons.link,
-                            helper: AppStrings.adminArticleSlugAutoGenerateHint,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: _categoryController,
-                          textInputAction: TextInputAction.next,
-                          decoration: _fieldDecoration(
-                            context,
-                            label: AppStrings
-                                .adminArticleFieldCategoryOptionalLabel,
-                            icon: Icons.category_outlined,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: _summaryController,
-                          textInputAction: TextInputAction.newline,
-                          maxLines: 3,
-                          decoration: _fieldDecoration(
-                            context,
-                            label: AppStrings
-                                .adminArticleFieldSummaryOptionalLabel,
-                            icon: Icons.notes_outlined,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: _contentController,
-                          minLines: 8,
-                          maxLines: 14,
-                          decoration: _fieldDecoration(
-                            context,
-                            label: AppStrings.adminArticleFieldContentLabel,
-                            icon: Icons.article_outlined,
-                          ),
-                          validator: (value) {
-                            if ((value ?? '').trim().isEmpty) {
-                              return AppStrings.fieldRequired;
-                            }
-                            return null;
-                          },
                         ),
                       ],
                     ),

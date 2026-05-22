@@ -57,15 +57,28 @@ class AppShell extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(28),
-                  child: NavigationBar(
-                    selectedIndex: selectedIndex,
-                    backgroundColor: Colors.transparent,
-                    onDestinationSelected: (index) {
-                      navigationShell.goBranch(navItems[index].branchIndex);
-                    },
-                    destinations: [
-                      for (final item in navItems) item.destination,
-                    ],
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          for (var i = 0; i < navItems.length; i++)
+                            Expanded(
+                              child: _ShellNavButton(
+                                item: navItems[i],
+                                selected: i == selectedIndex,
+                                onTap: () => navigationShell.goBranch(
+                                  navItems[i].branchIndex,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -81,35 +94,27 @@ class AppShell extends StatelessWidget {
       return [
         _ShellNavItem(
           branchIndex: 0,
-          destination: NavigationDestination(
-            icon: const Icon(Icons.space_dashboard_outlined),
-            selectedIcon: const Icon(Icons.space_dashboard_rounded),
-            label: AppStrings.adminHomeTitle,
-          ),
+          icon: Icons.space_dashboard_outlined,
+          selectedIcon: Icons.space_dashboard_rounded,
+          label: AppStrings.adminDashboardNavLabel,
         ),
         _ShellNavItem(
           branchIndex: 5,
-          destination: NavigationDestination(
-            icon: const Icon(Icons.manage_accounts_outlined),
-            selectedIcon: const Icon(Icons.manage_accounts_rounded),
-            label: AppStrings.adminUsersTitle,
-          ),
+          icon: Icons.manage_accounts_outlined,
+          selectedIcon: Icons.manage_accounts_rounded,
+          label: AppStrings.adminUsersTitle,
         ),
         _ShellNavItem(
           branchIndex: 6,
-          destination: NavigationDestination(
-            icon: const Icon(Icons.edit_note_outlined),
-            selectedIcon: const Icon(Icons.edit_note_rounded),
-            label: AppStrings.adminContentTitle,
-          ),
+          icon: Icons.edit_note_outlined,
+          selectedIcon: Icons.edit_note_rounded,
+          label: AppStrings.adminContentTitle,
         ),
         _ShellNavItem(
           branchIndex: 4,
-          destination: NavigationDestination(
-            icon: const Icon(Icons.person_outline),
-            selectedIcon: const Icon(Icons.person_rounded),
-            label: AppStrings.profileTitle,
-          ),
+          icon: Icons.person_outline,
+          selectedIcon: Icons.person_rounded,
+          label: AppStrings.profileTitle,
         ),
       ];
     }
@@ -117,51 +122,118 @@ class AppShell extends StatelessWidget {
     return [
       _ShellNavItem(
         branchIndex: 0,
-        destination: NavigationDestination(
-          icon: const Icon(Icons.home_outlined),
-          selectedIcon: const Icon(Icons.home_rounded),
-          label: AppStrings.homeTitle,
-        ),
+        icon: Icons.home_outlined,
+        selectedIcon: Icons.home_rounded,
+        label: AppStrings.homeTitle,
       ),
       _ShellNavItem(
         branchIndex: 1,
-        destination: NavigationDestination(
-          icon: const Icon(Icons.medication_outlined),
-          selectedIcon: const Icon(Icons.medication_rounded),
-          label: AppStrings.scheduleTitle,
-        ),
+        icon: Icons.medication_outlined,
+        selectedIcon: Icons.medication_rounded,
+        label: AppStrings.scheduleTitle,
       ),
       _ShellNavItem(
         branchIndex: 2,
-        destination: NavigationDestination(
-          icon: const Icon(Icons.bar_chart_outlined),
-          selectedIcon: const Icon(Icons.bar_chart_rounded),
-          label: AppStrings.reportTitle,
-        ),
+        icon: Icons.bar_chart_outlined,
+        selectedIcon: Icons.bar_chart_rounded,
+        label: AppStrings.reportTitle,
       ),
       _ShellNavItem(
         branchIndex: 3,
-        destination: NavigationDestination(
-          icon: const Icon(Icons.menu_book_outlined),
-          selectedIcon: const Icon(Icons.menu_book_rounded),
-          label: AppStrings.articleTitle,
-        ),
+        icon: Icons.menu_book_outlined,
+        selectedIcon: Icons.menu_book_rounded,
+        label: AppStrings.articleTitle,
       ),
       _ShellNavItem(
         branchIndex: 4,
-        destination: NavigationDestination(
-          icon: const Icon(Icons.person_outline),
-          selectedIcon: const Icon(Icons.person_rounded),
-          label: AppStrings.profileTitle,
-        ),
+        icon: Icons.person_outline,
+        selectedIcon: Icons.person_rounded,
+        label: AppStrings.profileTitle,
       ),
     ];
   }
 }
 
 class _ShellNavItem {
-  const _ShellNavItem({required this.branchIndex, required this.destination});
+  const _ShellNavItem({
+    required this.branchIndex,
+    required this.icon,
+    required this.selectedIcon,
+    required this.label,
+  });
 
   final int branchIndex;
-  final NavigationDestination destination;
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+}
+
+class _ShellNavButton extends StatelessWidget {
+  const _ShellNavButton({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final _ShellNavItem item;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedColor = isDark ? AppColors.primaryLight : AppColors.primary;
+    final idleColor = isDark
+        ? AppColors.darkTextTertiary
+        : AppColors.textTertiary;
+    final indicatorColor = selectedColor.withValues(
+      alpha: isDark ? 0.18 : 0.12,
+    );
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: item.label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                width: selected ? 46 : 44,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: selected ? indicatorColor : Colors.transparent,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(
+                  selected ? item.selectedIcon : item.icon,
+                  color: selected ? selectedColor : idleColor,
+                  size: selected ? 24 : 23,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: selected ? selectedColor : idleColor,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+                  fontSize: 11,
+                  height: 1.1,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

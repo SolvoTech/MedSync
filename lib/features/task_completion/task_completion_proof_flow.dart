@@ -130,7 +130,7 @@ Future<_ProofPreviewAction> _showProofPreview(
           horizontal: compact ? 12 : 20,
           vertical: 20,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: media.height * 0.86),
           child: Padding(
@@ -200,35 +200,51 @@ Future<_ProofPreviewAction> _showProofPreview(
                   ),
                 ),
                 const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => Navigator.of(
-                          context,
-                        ).pop(_ProofPreviewAction.retake),
-                        icon: const Icon(Icons.refresh_rounded),
-                        label: Text(
-                          AppStrings.taskProofRetakeAction,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final stackButtons =
+                        constraints.maxWidth < 340 ||
+                        MediaQuery.textScalerOf(context).scale(1) > 1.08;
+                    final retakeButton = OutlinedButton.icon(
+                      onPressed: () =>
+                          Navigator.of(context).pop(_ProofPreviewAction.retake),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: Text(
+                        AppStrings.taskProofRetakeAction,
+                        maxLines: 1,
+                        softWrap: false,
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () =>
-                            Navigator.of(context).pop(_ProofPreviewAction.use),
-                        icon: const Icon(Icons.check_rounded),
-                        label: Text(
-                          AppStrings.taskProofUseAction,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                    );
+                    final useButton = FilledButton.icon(
+                      onPressed: () =>
+                          Navigator.of(context).pop(_ProofPreviewAction.use),
+                      icon: const Icon(Icons.check_rounded),
+                      label: Text(
+                        AppStrings.taskProofUseAction,
+                        maxLines: 1,
+                        softWrap: false,
                       ),
-                    ),
-                  ],
+                    );
+
+                    if (stackButtons) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          useButton,
+                          const SizedBox(height: 10),
+                          retakeButton,
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        Expanded(child: retakeButton),
+                        const SizedBox(width: 10),
+                        Expanded(child: useButton),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
