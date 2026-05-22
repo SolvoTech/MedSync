@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/status_chip.dart';
@@ -28,7 +29,7 @@ class TodayTaskCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final accentColor = _colorForTaskType(task.taskType);
     final timeLabel = _timeLabel();
-    final radius = compact ? 10.0 : 12.0;
+    final radius = compact ? 20.0 : 24.0;
 
     Widget buildTimeChip() {
       return Container(
@@ -37,7 +38,7 @@ class TodayTaskCard extends StatelessWidget {
           vertical: compact ? 4 : 5,
         ),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
+          color: accentColor.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(999),
         ),
         child: Row(
@@ -46,7 +47,7 @@ class TodayTaskCard extends StatelessWidget {
             Icon(
               Icons.schedule_rounded,
               size: compact ? 13 : 14,
-              color: colorScheme.onSurface.withValues(alpha: 0.68),
+              color: accentColor,
             ),
             const SizedBox(width: 4),
             Text(
@@ -65,18 +66,20 @@ class TodayTaskCard extends StatelessWidget {
     return AppCard(
       padding: EdgeInsets.zero,
       borderRadius: radius,
+      color: isCompleted
+          ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.42)
+          : colorScheme.surface,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(height: 3, color: accentColor),
             Padding(
               padding: EdgeInsets.fromLTRB(
-                compact ? 10 : 12,
-                compact ? 10 : 11,
-                compact ? 10 : 12,
-                compact ? 10 : 11,
+                compact ? 12 : 16,
+                compact ? 12 : 16,
+                compact ? 12 : 16,
+                compact ? 12 : 16,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,8 +90,17 @@ class TodayTaskCard extends StatelessWidget {
                         width: compact ? 36 : 40,
                         height: compact ? 36 : 40,
                         decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.13),
-                          borderRadius: BorderRadius.circular(compact ? 8 : 9),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              accentColor.withValues(alpha: 0.20),
+                              accentColor.withValues(alpha: 0.08),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            compact ? 14 : 16,
+                          ),
                         ),
                         child: Icon(
                           _iconForTaskType(task.taskType),
@@ -138,7 +150,7 @@ class TodayTaskCard extends StatelessWidget {
                       child: buildTimeChip(),
                     ),
                   ],
-                  SizedBox(height: compact ? 8 : 9),
+                  SizedBox(height: compact ? 10 : 12),
                   Row(
                     children: [
                       StatusChip(status: task.status),
@@ -161,7 +173,7 @@ class TodayTaskCard extends StatelessWidget {
                     ],
                   ),
                   if (!isCompleted) ...[
-                    SizedBox(height: compact ? 9 : 10),
+                    SizedBox(height: compact ? 12 : 14),
                     Row(
                       children: [
                         Expanded(
@@ -170,6 +182,9 @@ class TodayTaskCard extends StatelessWidget {
                                   onPressed: onSkip,
                                   style: OutlinedButton.styleFrom(
                                     minimumSize: const Size(0, 44),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                     ),
@@ -188,6 +203,9 @@ class TodayTaskCard extends StatelessWidget {
                                   ),
                                   style: OutlinedButton.styleFrom(
                                     minimumSize: const Size(0, 44),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                     ),
@@ -206,6 +224,10 @@ class TodayTaskCard extends StatelessWidget {
                                   onPressed: onDone,
                                   style: FilledButton.styleFrom(
                                     minimumSize: const Size(0, 44),
+                                    backgroundColor: AppColors.primary,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                     ),
@@ -224,6 +246,10 @@ class TodayTaskCard extends StatelessWidget {
                                   ),
                                   style: FilledButton.styleFrom(
                                     minimumSize: const Size(0, 44),
+                                    backgroundColor: AppColors.primary,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                     ),
@@ -238,7 +264,7 @@ class TodayTaskCard extends StatelessWidget {
                       ],
                     ),
                   ] else ...[
-                    SizedBox(height: compact ? 9 : 10),
+                    SizedBox(height: compact ? 12 : 14),
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(
@@ -246,8 +272,8 @@ class TodayTaskCard extends StatelessWidget {
                         vertical: compact ? 8 : 9,
                       ),
                       decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(compact ? 10 : 11),
+                        color: accentColor.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(compact ? 14 : 16),
                       ),
                       child: Row(
                         children: [

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_gradients.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_card.dart';
 import 'widgets/activity_tab.dart';
 import 'widgets/measurement_tab.dart';
 import 'widgets/medicine_tab.dart';
@@ -45,6 +48,15 @@ class _ScheduleListScreenState extends ConsumerState<ScheduleListScreen> {
           Padding(
             padding: EdgeInsets.fromLTRB(
               compact ? 12 : 16,
+              8,
+              compact ? 12 : 16,
+              0,
+            ),
+            child: const _ScheduleHero(),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              compact ? 12 : 16,
               12,
               compact ? 12 : 16,
               0,
@@ -54,7 +66,7 @@ class _ScheduleListScreenState extends ConsumerState<ScheduleListScreen> {
               child: Container(
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: colorScheme.outlineVariant.withValues(alpha: 0.45),
                   ),
@@ -111,6 +123,69 @@ class _ScheduleListScreenState extends ConsumerState<ScheduleListScreen> {
           SizedBox(height: compact ? 10 : 12),
           Expanded(child: _pages[_selected.index]),
         ],
+      ),
+    );
+  }
+}
+
+class _ScheduleHero extends StatelessWidget {
+  const _ScheduleHero();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      gradient: AppGradients.softSky,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(
+                Icons.alarm_add_rounded,
+                color: AppColors.primary,
+                size: 27,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.tr('Plan your reminders', 'Atur pengingat Anda'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    AppStrings.tr(
+                      'Medication, measurement, and activity schedules stay in one place.',
+                      'Jadwal obat, pengukuran, dan aktivitas tetap dalam satu tempat.',
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

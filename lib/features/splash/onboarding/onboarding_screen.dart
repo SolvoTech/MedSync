@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_gradients.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/widgets/app_button.dart';
@@ -43,14 +45,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final pages = OnboardingPageModel.pages;
     final isLastPage = _currentPage == pages.length - 1;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
+          Positioned(
+            top: -90,
+            right: -120,
+            child: Container(
+              width: 260,
+              height: 260,
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
           SafeArea(
             child: Column(
               children: [
@@ -77,14 +91,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               MediaQuery.sizeOf(context).width < 340;
                           final compactHeight = constraints.maxHeight < 520;
                           final imageHeight = compactHeight
-                              ? 128.0
+                              ? 148.0
                               : compactWidth
-                              ? 160.0
-                              : 220.0;
+                              ? 190.0
+                              : 252.0;
 
                           return SingleChildScrollView(
                             padding: EdgeInsets.symmetric(
-                              horizontal: compactWidth ? 20 : 32,
+                              horizontal: compactWidth ? 18 : 28,
                             ),
                             child: ConstrainedBox(
                               constraints: BoxConstraints(
@@ -93,12 +107,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Image.asset(
-                                    page.icon,
-                                    height: imageHeight,
-                                    fit: BoxFit.contain,
+                                  Container(
+                                    width: double.infinity,
+                                    padding: EdgeInsets.all(
+                                      compactWidth ? 16 : 20,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: AppGradients.softSky,
+                                      borderRadius: BorderRadius.circular(32),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.85,
+                                        ),
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.softShadow
+                                              .withValues(alpha: 0.10),
+                                          blurRadius: 28,
+                                          offset: const Offset(0, 14),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Image.asset(
+                                      page.icon,
+                                      height: imageHeight,
+                                      fit: BoxFit.contain,
+                                    ),
                                   ),
-                                  SizedBox(height: compactHeight ? 24 : 40),
+                                  SizedBox(height: compactHeight ? 24 : 34),
                                   Text(
                                     page.title,
                                     textAlign: TextAlign.center,
@@ -111,9 +148,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     page.description,
                                     textAlign: TextAlign.center,
                                     style: textTheme.bodyLarge?.copyWith(
-                                      color: colorScheme.onSurface.withValues(
-                                        alpha: 0.55,
-                                      ),
+                                      color: AppColors.textSecondary,
                                       height: 1.6,
                                     ),
                                   ),
@@ -152,8 +187,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 height: 8,
                                 decoration: BoxDecoration(
                                   color: isActive
-                                      ? colorScheme.primary
-                                      : colorScheme.primary.withValues(
+                                      ? AppColors.primary
+                                      : AppColors.primary.withValues(
                                           alpha: 0.15,
                                         ),
                                   borderRadius: BorderRadius.circular(4),

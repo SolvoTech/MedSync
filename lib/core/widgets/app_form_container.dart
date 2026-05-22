@@ -35,29 +35,29 @@ class AppFormContainer extends StatelessWidget {
         vertical: compact ? 12 : 14,
       ),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide(
           color: colorScheme.outlineVariant.withValues(alpha: 0.95),
           width: 1.2,
         ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide(
           color: colorScheme.outlineVariant.withValues(alpha: 0.95),
           width: 1.2,
         ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide(color: colorScheme.primary, width: 2.2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide(color: colorScheme.error, width: 1.4),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide(color: colorScheme.error, width: 1.8),
       ),
     );
@@ -70,7 +70,7 @@ class AppFormContainer extends StatelessWidget {
             : padding,
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: colorScheme.outlineVariant.withValues(
               alpha: isDark ? 0.35 : 0.8,
@@ -80,9 +80,9 @@ class AppFormContainer extends StatelessWidget {
               ? null
               : [
                   BoxShadow(
-                    color: const Color(0xFF0F1419).withValues(alpha: 0.05),
-                    blurRadius: 14,
-                    offset: const Offset(0, 4),
+                    color: const Color(0xFF0B5CAD).withValues(alpha: 0.08),
+                    blurRadius: 22,
+                    offset: const Offset(0, 10),
                   ),
                 ],
         ),
@@ -111,7 +111,7 @@ class AppFormContainer extends StatelessWidget {
                       height: 34,
                       decoration: BoxDecoration(
                         color: colorScheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(icon, size: 18, color: colorScheme.primary),
                     ),

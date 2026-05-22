@@ -24,21 +24,37 @@ class AppGradients {
   static const LinearGradient heroHeader = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [AppColors.gradientStart, AppColors.secondary],
+    colors: [Color(0xFF0066CC), Color(0xFF57C8FF)],
+  );
+
+  /// Soft airy panel gradient used for friendly dashboard cards.
+  static const LinearGradient softSky = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFFFFFFF), Color(0xFFE6F4FF), Color(0xFFDDF7FF)],
+    stops: [0.0, 0.58, 1.0],
+  );
+
+  /// Stronger blue hero with enough contrast for white foreground text.
+  static const LinearGradient blueHero = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF0066CC), Color(0xFF0284C7), Color(0xFF5CCBFF)],
+    stops: [0.0, 0.62, 1.0],
   );
 
   /// Subtle card accent gradient (overlay with low opacity).
   static const LinearGradient cardAccent = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0x0C0066CC), Color(0x0C00B4D8)],
+    colors: [Color(0x140066CC), Color(0x0F48CAE4)],
   );
 
   /// Auth page top decoration.
   static const LinearGradient auth = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF0066CC), Color(0xFF00A3CC)],
+    colors: [Color(0xFF0066CC), Color(0xFF46BFFF)],
     stops: [0.0, 1.0],
   );
 

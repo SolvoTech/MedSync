@@ -26,7 +26,7 @@ class AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final effectiveRadius = borderRadius ?? 12;
+    final effectiveRadius = borderRadius ?? 22;
     final cardColor = color ?? colorScheme.surface;
 
     Widget card;
@@ -44,9 +44,9 @@ class AppCard extends StatelessWidget {
           boxShadow: hasShadow && !isDark
               ? [
                   BoxShadow(
-                    color: const Color(0xFF0F1419).withValues(alpha: 0.05),
-                    blurRadius: 14,
-                    offset: const Offset(0, 6),
+                    color: const Color(0xFF0B5CAD).withValues(alpha: 0.10),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
                   ),
                 ]
               : null,
@@ -59,7 +59,7 @@ class AppCard extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(effectiveRadius),
             child: Padding(
-              padding: padding ?? const EdgeInsets.all(14),
+              padding: padding ?? const EdgeInsets.all(16),
               child: child,
             ),
           ),
@@ -74,16 +74,16 @@ class AppCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(effectiveRadius),
           border: Border.all(
             color: colorScheme.outlineVariant.withValues(
-              alpha: isDark ? 0.38 : 0.75,
+              alpha: isDark ? 0.34 : 0.46,
             ),
             width: 1,
           ),
           boxShadow: hasShadow && !isDark
               ? [
                   BoxShadow(
-                    color: const Color(0xFF0F1419).withValues(alpha: 0.035),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
+                    color: const Color(0xFF0B5CAD).withValues(alpha: 0.08),
+                    blurRadius: 22,
+                    offset: const Offset(0, 10),
                   ),
                 ]
               : null,
@@ -96,7 +96,7 @@ class AppCard extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(effectiveRadius),
             child: Padding(
-              padding: padding ?? const EdgeInsets.all(14),
+              padding: padding ?? const EdgeInsets.all(16),
               child: child,
             ),
           ),

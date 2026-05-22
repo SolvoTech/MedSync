@@ -75,7 +75,7 @@ class AppButton extends StatelessWidget {
             gradient: AppGradients.primaryFor(
               isDark ? Brightness.dark : Brightness.light,
             ),
-            borderRadius: 12,
+            borderRadius: 999,
             child: child,
           );
         } else {
@@ -131,7 +131,7 @@ class _GradientButton extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       opacity: isDisabled ? 0.5 : 1.0,
       child: Container(
-        height: 52,
+        height: 54,
         decoration: BoxDecoration(
           gradient: gradient,
           borderRadius: BorderRadius.circular(borderRadius),
@@ -140,8 +140,8 @@ class _GradientButton extends StatelessWidget {
               : [
                   BoxShadow(
                     color: AppColors.primary.withValues(alpha: 0.16),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
                   ),
                 ],
         ),

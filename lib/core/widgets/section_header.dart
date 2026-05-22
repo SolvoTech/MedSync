@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Consistent section header with optional action button and accent bar.
+/// Consistent soft section header with optional action button.
 class SectionHeader extends StatelessWidget {
   const SectionHeader({
     super.key,
@@ -22,16 +22,20 @@ class SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Row(
         children: [
-          // Accent bar
           Container(
-            width: 3,
-            height: 16,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              size: 14,
               color: colorScheme.primary,
-              borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               title,

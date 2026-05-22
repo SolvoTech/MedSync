@@ -168,7 +168,7 @@ class ReminderSectionHeader extends StatelessWidget {
           height: 30,
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(icon, size: 16, color: color),
         ),
@@ -231,7 +231,7 @@ class ReminderListTile extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final tone = accentColor ?? _toneFromIcon(icon);
-    final radius = compact ? 18.0 : 20.0;
+    final radius = compact ? 20.0 : 24.0;
 
     return AppCard(
       padding: EdgeInsets.zero,
@@ -242,13 +242,12 @@ class ReminderListTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(height: 3, color: tone),
             Padding(
               padding: EdgeInsets.fromLTRB(
-                compact ? 10 : 12,
-                compact ? 10 : 11,
-                compact ? 10 : 12,
-                compact ? 10 : 11,
+                compact ? 12 : 16,
+                compact ? 12 : 16,
+                compact ? 12 : 16,
+                compact ? 12 : 16,
               ),
               child: Row(
                 children: [
@@ -257,7 +256,7 @@ class ReminderListTile extends StatelessWidget {
                     height: compact ? 36 : 40,
                     decoration: BoxDecoration(
                       color: tone.withValues(alpha: 0.13),
-                      borderRadius: BorderRadius.circular(compact ? 10 : 12),
+                      borderRadius: BorderRadius.circular(compact ? 14 : 16),
                     ),
                     child: Icon(icon, color: tone, size: compact ? 18 : 20),
                   ),
@@ -281,8 +280,7 @@ class ReminderListTile extends StatelessWidget {
                             vertical: compact ? 4 : 5,
                           ),
                           decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.6),
+                            color: tone.withValues(alpha: 0.10),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Row(
@@ -291,9 +289,7 @@ class ReminderListTile extends StatelessWidget {
                               Icon(
                                 Icons.schedule_rounded,
                                 size: compact ? 12 : 13,
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.66,
-                                ),
+                                color: tone,
                               ),
                               const SizedBox(width: 4),
                               Text(
@@ -318,7 +314,7 @@ class ReminderListTile extends StatelessWidget {
                         color: colorScheme.surfaceContainerHighest.withValues(
                           alpha: 0.55,
                         ),
-                        borderRadius: BorderRadius.circular(compact ? 9 : 10),
+                        borderRadius: BorderRadius.circular(compact ? 14 : 16),
                       ),
                       child: Icon(
                         Icons.more_vert_rounded,

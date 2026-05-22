@@ -84,6 +84,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final compactHeight = mediaSize.height < 700;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // Gradient top decoration
@@ -98,7 +99,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   isDark ? Brightness.dark : Brightness.light,
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(16),
+                  bottom: Radius.circular(34),
                 ),
               ),
             ),
@@ -126,7 +127,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(22),
                             border: Border.all(
                               color: Colors.white.withValues(alpha: 0.2),
                               width: 1,
@@ -142,7 +143,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ],
                           ),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(16),
                             child: Image.asset(
                               'assets/images/app_logo.jpeg',
                               width: 44,
@@ -184,24 +185,33 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         textAlign: TextAlign.center,
                       ),
+                      SizedBox(height: compactHeight ? 6 : 10),
+                      Center(
+                        child: Image.asset(
+                          'assets/images/medsync_hero_medication.png',
+                          width: compactWidth ? 96 : 118,
+                          height: compactWidth ? 70 : 86,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
 
-                      SizedBox(height: compactHeight ? 24 : 36),
+                      SizedBox(height: compactHeight ? 14 : 24),
 
                       // Form card
                       Container(
                         padding: EdgeInsets.all(compactWidth ? 18 : 24),
                         decoration: BoxDecoration(
                           color: colorScheme.surface,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(28),
                           boxShadow: isDark
                               ? null
                               : [
                                   BoxShadow(
-                                    color: const Color(
-                                      0xFF0F1419,
-                                    ).withValues(alpha: 0.06),
-                                    blurRadius: 14,
-                                    offset: const Offset(0, 4),
+                                    color: AppColors.softShadow.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                    blurRadius: 28,
+                                    offset: const Offset(0, 14),
                                   ),
                                 ],
                           border: isDark

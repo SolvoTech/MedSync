@@ -8,10 +8,10 @@ class AppTheme {
   const AppTheme._();
 
   // ─── Border Radii ──────────────────────────────────
-  static const double radiusSm = 8;
-  static const double radiusMd = 12;
-  static const double radiusLg = 12;
-  static const double radiusXl = 16;
+  static const double radiusSm = 12;
+  static const double radiusMd = 18;
+  static const double radiusLg = 22;
+  static const double radiusXl = 28;
   static const double radiusFull = 100;
 
   // ═══════════════════════════════════════════════════
@@ -77,7 +77,7 @@ class AppTheme {
       // ─── Navigation Bar ──────────────────────────
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
-        height: 68,
+        height: 72,
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         indicatorColor: AppColors.primary.withValues(alpha: 0.12),
@@ -114,15 +114,16 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          minimumSize: const Size(0, 52),
+          minimumSize: const Size(0, 54),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
+            borderRadius: BorderRadius.circular(radiusFull),
           ),
           textStyle: AppTextStyles.labelLarge.copyWith(
             fontWeight: FontWeight.w600,
           ),
           elevation: 0,
+          shadowColor: AppColors.primary.withValues(alpha: 0.24),
         ),
       ),
 
@@ -133,9 +134,12 @@ class AppTheme {
           minimumSize: const Size(0, 52),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
+            borderRadius: BorderRadius.circular(radiusFull),
           ),
-          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          side: BorderSide(
+            color: AppColors.primary.withValues(alpha: 0.35),
+            width: 1.5,
+          ),
           textStyle: AppTextStyles.labelLarge.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -162,29 +166,29 @@ class AppTheme {
           vertical: 16,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
+          borderRadius: BorderRadius.circular(radiusLg),
           borderSide: BorderSide(
             color: AppColors.divider.withValues(alpha: 0.95),
             width: 1.2,
           ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
+          borderRadius: BorderRadius.circular(radiusLg),
           borderSide: BorderSide(
             color: AppColors.divider.withValues(alpha: 0.95),
             width: 1.2,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
+          borderRadius: BorderRadius.circular(radiusLg),
           borderSide: const BorderSide(color: AppColors.primary, width: 2.2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
+          borderRadius: BorderRadius.circular(radiusLg),
           borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
+          borderRadius: BorderRadius.circular(radiusLg),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
         labelStyle: AppTextStyles.bodyMedium.copyWith(
@@ -200,17 +204,16 @@ class AppTheme {
       tabBarTheme: TabBarThemeData(
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.textTertiary,
-        indicatorColor: AppColors.primary,
+        indicatorColor: AppColors.primary.withValues(alpha: 0.14),
         labelStyle: AppTextStyles.labelLarge.copyWith(
           fontWeight: FontWeight.w700,
         ),
         unselectedLabelStyle: AppTextStyles.labelLarge,
         dividerHeight: 0,
-        indicatorSize: TabBarIndicatorSize.label,
+        indicatorSize: TabBarIndicatorSize.tab,
         indicator: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: AppColors.primary, width: 3),
-          ),
+          color: AppColors.primary.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(radiusFull),
         ),
       ),
 
@@ -234,7 +237,7 @@ class AppTheme {
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         dragHandleColor: AppColors.divider,
         dragHandleSize: const Size(40, 4),
@@ -249,7 +252,7 @@ class AppTheme {
           color: AppColors.textPrimary,
           fontWeight: FontWeight.w600,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         elevation: 4,
         insetPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       ),
@@ -273,7 +276,7 @@ class AppTheme {
       listTileTheme: ListTileThemeData(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusSm),
+          borderRadius: BorderRadius.circular(radiusMd),
         ),
       ),
 
@@ -359,7 +362,7 @@ class AppTheme {
       // ─── Navigation Bar (Dark) ───────────────────
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
-        height: 68,
+        height: 72,
         backgroundColor: AppColors.darkSurface,
         surfaceTintColor: Colors.transparent,
         indicatorColor: AppColors.primaryLight.withValues(alpha: 0.15),
@@ -399,10 +402,10 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primaryLight,
           foregroundColor: const Color(0xFF0F1419),
-          minimumSize: const Size(0, 52),
+          minimumSize: const Size(0, 54),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
+            borderRadius: BorderRadius.circular(radiusFull),
           ),
           textStyle: AppTextStyles.labelLarge.copyWith(
             fontWeight: FontWeight.w600,
@@ -418,7 +421,7 @@ class AppTheme {
           minimumSize: const Size(0, 52),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
+            borderRadius: BorderRadius.circular(radiusFull),
           ),
           side: BorderSide(
             color: AppColors.primaryLight.withValues(alpha: 0.5),
@@ -450,32 +453,32 @@ class AppTheme {
           vertical: 16,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
+          borderRadius: BorderRadius.circular(radiusLg),
           borderSide: BorderSide(
             color: AppColors.darkDivider.withValues(alpha: 0.9),
             width: 1.2,
           ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
+          borderRadius: BorderRadius.circular(radiusLg),
           borderSide: BorderSide(
             color: AppColors.darkDivider.withValues(alpha: 0.9),
             width: 1.2,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
+          borderRadius: BorderRadius.circular(radiusLg),
           borderSide: const BorderSide(
             color: AppColors.primaryLight,
             width: 2.2,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
+          borderRadius: BorderRadius.circular(radiusLg),
           borderSide: const BorderSide(color: Color(0xFFF56565), width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
+          borderRadius: BorderRadius.circular(radiusLg),
           borderSide: const BorderSide(color: Color(0xFFF56565), width: 2),
         ),
         labelStyle: AppTextStyles.bodyMedium.copyWith(
@@ -491,17 +494,16 @@ class AppTheme {
       tabBarTheme: TabBarThemeData(
         labelColor: AppColors.primaryLight,
         unselectedLabelColor: AppColors.darkTextTertiary,
-        indicatorColor: AppColors.primaryLight,
+        indicatorColor: AppColors.primaryLight.withValues(alpha: 0.18),
         labelStyle: AppTextStyles.labelLarge.copyWith(
           fontWeight: FontWeight.w700,
         ),
         unselectedLabelStyle: AppTextStyles.labelLarge,
         dividerHeight: 0,
-        indicatorSize: TabBarIndicatorSize.label,
+        indicatorSize: TabBarIndicatorSize.tab,
         indicator: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: AppColors.primaryLight, width: 3),
-          ),
+          color: AppColors.primaryLight.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(radiusFull),
         ),
       ),
 
@@ -525,7 +527,7 @@ class AppTheme {
         backgroundColor: AppColors.darkSurface,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         dragHandleColor: AppColors.darkDivider,
         dragHandleSize: const Size(40, 4),
@@ -540,7 +542,7 @@ class AppTheme {
           color: AppColors.darkTextPrimary,
           fontWeight: FontWeight.w600,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         elevation: 4,
         insetPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       ),
@@ -564,7 +566,7 @@ class AppTheme {
       listTileTheme: ListTileThemeData(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusSm),
+          borderRadius: BorderRadius.circular(radiusMd),
         ),
       ),
 

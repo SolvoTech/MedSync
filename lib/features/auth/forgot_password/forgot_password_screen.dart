@@ -75,6 +75,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final headerToCardSpacing = screenHeight < 760 ? 20.0 : 28.0;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           Positioned(
@@ -88,7 +89,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   isDark ? Brightness.dark : Brightness.light,
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(16),
+                  bottom: Radius.circular(34),
                 ),
               ),
             ),
@@ -113,7 +114,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(22),
                           border: Border.all(
                             color: Colors.white.withValues(alpha: 0.2),
                             width: 1,
@@ -166,23 +167,32 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       textAlign: TextAlign.center,
                       maxLines: 2,
                     ),
+                    SizedBox(height: compactWidth ? 8 : 12),
+                    Center(
+                      child: Image.asset(
+                        'assets/images/medsync_hero_medication.png',
+                        width: compactWidth ? 104 : 128,
+                        height: compactWidth ? 76 : 94,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
 
-                    SizedBox(height: headerToCardSpacing),
+                    SizedBox(height: headerToCardSpacing * 0.55),
 
                     Container(
                       padding: EdgeInsets.all(compactWidth ? 18 : 24),
                       decoration: BoxDecoration(
                         color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(28),
                         boxShadow: isDark
                             ? null
                             : [
                                 BoxShadow(
-                                  color: const Color(
-                                    0xFF0F1419,
-                                  ).withValues(alpha: 0.06),
-                                  blurRadius: 14,
-                                  offset: const Offset(0, 4),
+                                  color: AppColors.softShadow.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  blurRadius: 28,
+                                  offset: const Offset(0, 14),
                                 ),
                               ],
                         border: isDark

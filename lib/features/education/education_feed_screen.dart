@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_gradients.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/errors/user_error_message.dart';
 import '../../core/router/app_routes.dart';
@@ -106,18 +108,85 @@ class EducationFeedScreen extends ConsumerWidget {
             return ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              itemCount: highlights.length + 1,
+              itemCount: highlights.length + 2,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 if (index == 0) {
+                  return const _EducationHero();
+                }
+
+                if (index == 1) {
                   return _FeaturedArticleCard(article: featured);
                 }
 
-                final article = highlights[index - 1];
+                final article = highlights[index - 2];
                 return _ArticleListCard(article: article);
               },
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _EducationHero extends StatelessWidget {
+  const _EducationHero();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      gradient: AppGradients.softSky,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(
+                Icons.menu_book_rounded,
+                color: AppColors.primary,
+                size: 27,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.tr('Health education', 'Edukasi kesehatan'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    AppStrings.tr(
+                      'Read practical guidance for safer daily care.',
+                      'Baca panduan praktis untuk perawatan harian yang lebih aman.',
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -261,9 +330,7 @@ class _ArticleListCard extends StatelessWidget {
                   Row(
                     children: [
                       if ((article.category ?? '').trim().isNotEmpty)
-                        Flexible(
-                          child: _ArticleChip(label: article.category!),
-                        ),
+                        Flexible(child: _ArticleChip(label: article.category!)),
                       const Spacer(),
                       Flexible(
                         child: Text(

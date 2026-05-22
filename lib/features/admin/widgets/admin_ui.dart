@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_gradients.dart';
 import '../../../core/widgets/app_card.dart';
 
 class AdminIntroCard extends StatelessWidget {
@@ -28,6 +29,7 @@ class AdminIntroCard extends StatelessWidget {
     final tone = accentColor ?? colorScheme.primary;
 
     return AppCard(
+      gradient: AppGradients.softSky,
       padding: EdgeInsets.all(isCompact ? 12 : 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,7 +39,7 @@ class AdminIntroCard extends StatelessWidget {
             height: isCompact ? 40 : 44,
             decoration: BoxDecoration(
               color: tone.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: tone, size: isCompact ? 20 : 22),
           ),

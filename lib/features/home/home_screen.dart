@@ -52,7 +52,6 @@ class HomeScreen extends ConsumerWidget {
     final tasksState = ref.watch(todayTasksProvider);
     final streakState = ref.watch(streakProvider);
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -63,76 +62,44 @@ class HomeScreen extends ConsumerWidget {
         },
         child: CustomScrollView(
           slivers: [
-            SliverAppBar(
-              floating: true,
-              expandedHeight: 118,
-              toolbarHeight: 60,
-              backgroundColor: Colors.transparent,
-              foregroundColor: Colors.white,
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: IconButton(
-                    tooltip: AppStrings.notificationTitle,
-                    onPressed: () => context.push(AppRoutes.notifications),
-                    icon: const Icon(Icons.notifications_none_rounded),
-                  ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  MediaQuery.paddingOf(context).top + 14,
+                  16,
+                  6,
                 ),
-              ],
-              surfaceTintColor: Colors.transparent,
-              flexibleSpace: Container(
-                decoration: BoxDecoration(
-                  gradient: AppGradients.primaryFor(
-                    isDark ? Brightness.dark : Brightness.light,
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(16),
-                  ),
-                ),
-                child: SafeArea(
-                  bottom: false,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final showDate = constraints.maxHeight >= 76;
+                child: tasksState.when(
+                  data: (tasks) {
+                    final total = tasks.length;
+                    final completed = tasks
+                        .where(
+                          (t) => t.status == 'done' || t.status == 'skipped',
+                        )
+                        .length;
 
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-                        child: Align(
-                          alignment: Alignment.bottomLeft,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _greeting(),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: textTheme.titleLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              if (showDate) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  DateFormat(
-                                    'EEEE, d MMMM yyyy',
-                                    AppStrings.languageCode == 'id'
-                                        ? 'id_ID'
-                                        : 'en_US',
-                                  ).format(DateTime.now()),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textTheme.bodyMedium?.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.82),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+                    return _HomeHero(
+                      greeting: _greeting(),
+                      total: total,
+                      completed: completed,
+                      onNotifications: () =>
+                          context.push(AppRoutes.notifications),
+                    );
+                  },
+                  loading: () => _HomeHero(
+                    greeting: _greeting(),
+                    total: 0,
+                    completed: 0,
+                    onNotifications: () =>
+                        context.push(AppRoutes.notifications),
+                  ),
+                  error: (_, _) => _HomeHero(
+                    greeting: _greeting(),
+                    total: 0,
+                    completed: 0,
+                    onNotifications: () =>
+                        context.push(AppRoutes.notifications),
                   ),
                 ),
               ),
@@ -174,6 +141,9 @@ class HomeScreen extends ConsumerWidget {
                         : 0;
 
                     return AppCard(
+                      color: isDark
+                          ? colorScheme.surface
+                          : AppColors.surfaceBlue,
                       child: Row(
                         children: [
                           Expanded(
@@ -207,7 +177,7 @@ class HomeScreen extends ConsumerWidget {
                   loading: () => const AppLoadingSkeleton(
                     width: double.infinity,
                     height: 64,
-                    borderRadius: 12,
+                    borderRadius: 22,
                   ),
                   error: (_, _) => const SizedBox.shrink(),
                 ),
@@ -238,7 +208,7 @@ class HomeScreen extends ConsumerWidget {
                   child: const AppLoadingSkeleton(
                     width: double.infinity,
                     height: 78,
-                    borderRadius: 12,
+                    borderRadius: 22,
                   ),
                 ),
               ),
@@ -347,7 +317,7 @@ class HomeScreen extends ConsumerWidget {
                         child: AppLoadingSkeleton(
                           width: double.infinity,
                           height: 72,
-                          borderRadius: 12,
+                          borderRadius: 22,
                         ),
                       ),
                     ),
@@ -366,6 +336,188 @@ class HomeScreen extends ConsumerWidget {
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _HomeHero extends StatelessWidget {
+  const _HomeHero({
+    required this.greeting,
+    required this.total,
+    required this.completed,
+    required this.onNotifications,
+  });
+
+  final String greeting;
+  final int total;
+  final int completed;
+  final VoidCallback onNotifications;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 360;
+    final progress = total > 0 ? (completed / total * 100).round() : 0;
+    final locale = AppStrings.languageCode == 'id' ? 'id_ID' : 'en_US';
+
+    return Container(
+      height: compact ? 188 : 206,
+      padding: EdgeInsets.fromLTRB(
+        compact ? 16 : 18,
+        16,
+        compact ? 16 : 18,
+        16,
+      ),
+      decoration: BoxDecoration(
+        gradient: AppGradients.blueHero,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.20),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            right: compact ? -42 : -34,
+            bottom: compact ? -48 : -44,
+            child: Image.asset(
+              'assets/images/medsync_hero_medication.png',
+              width: compact ? 150 : 176,
+              fit: BoxFit.contain,
+            ),
+          ),
+          Positioned(
+            right: compact ? 70 : 88,
+            top: 34,
+            child: Container(
+              width: compact ? 38 : 46,
+              height: compact ? 38 : 46,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      greeting,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.20),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.22),
+                      ),
+                    ),
+                    child: IconButton(
+                      tooltip: AppStrings.notificationTitle,
+                      onPressed: onNotifications,
+                      icon: const Icon(Icons.notifications_none_rounded),
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              SizedBox(
+                width: compact ? 190 : 230,
+                child: Text(
+                  DateFormat(
+                    'EEEE, d MMMM yyyy',
+                    locale,
+                  ).format(DateTime.now()),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.82),
+                    height: 1.35,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: compact ? 196 : 230),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.20),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$completed/$total ${AppStrings.completedLabel}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.labelLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              '$progress% ${AppStrings.progressLabel}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.bodySmall?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.76),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

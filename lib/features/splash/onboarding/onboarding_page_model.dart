@@ -16,11 +16,11 @@ class OnboardingPageModel {
     OnboardingPageModel(
       title: AppStrings.onboardingMedicationTitle,
       description: AppStrings.onboardingMedicationDescription,
-      icon: 'assets/images/onboarding_1.png',
+      icon: 'assets/images/medsync_hero_medication.png',
     ),
     OnboardingPageModel(
-      title: AppStrings.onboardingFamilyTitle,
-      description: AppStrings.onboardingFamilyDescription,
+      title: AppStrings.onboardingHealthTitle,
+      description: AppStrings.onboardingHealthDescription,
       icon: 'assets/images/onboarding_2.png',
     ),
     OnboardingPageModel(

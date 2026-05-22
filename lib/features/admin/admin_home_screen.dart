@@ -191,7 +191,7 @@ class _QuickActionCard extends StatelessWidget {
               height: isCompact ? 36 : 40,
               decoration: BoxDecoration(
                 color: colorScheme.primaryContainer.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
                 icon,
@@ -263,7 +263,7 @@ class _OverviewMetric extends StatelessWidget {
             height: isCompact ? 32 : 36,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: color, size: isCompact ? 18 : 20),
           ),
@@ -303,13 +303,13 @@ class _OverviewLoading extends StatelessWidget {
         AppLoadingSkeleton(
           width: double.infinity,
           height: 110,
-          borderRadius: 12,
+          borderRadius: 22,
         ),
         SizedBox(height: 10),
         AppLoadingSkeleton(
           width: double.infinity,
           height: 110,
-          borderRadius: 12,
+          borderRadius: 22,
         ),
       ],
     );

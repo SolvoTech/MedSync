@@ -5,8 +5,8 @@ class AppColors {
 
   // ─── Primary Blues ──────────────────────────────────
   static const Color primary = Color(0xFF0066CC);
-  static const Color primaryLight = Color(0xFF3D8BDB);
-  static const Color primaryDark = Color(0xFF004C99);
+  static const Color primaryLight = Color(0xFF4EA5FF);
+  static const Color primaryDark = Color(0xFF064B96);
 
   // ─── Secondary Teal ─────────────────────────────────
   static const Color secondary = Color(0xFF00B4D8);
@@ -17,10 +17,13 @@ class AppColors {
   static const Color tertiary = Color(0xFF48CAE4);
 
   // ─── Surfaces (Light) ───────────────────────────────
-  static const Color background = Color(0xFFF5F7FA);
+  static const Color background = Color(0xFFEEF7FF);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFF0F4F8);
-  static const Color surfaceTint = Color(0xFFE8F0FE);
+  static const Color surfaceVariant = Color(0xFFEAF4FF);
+  static const Color surfaceTint = Color(0xFFDFF0FF);
+  static const Color surfaceBlue = Color(0xFFF7FBFF);
+  static const Color surfaceMint = Color(0xFFEAFBF4);
+  static const Color surfacePeach = Color(0xFFFFF4EA);
 
   // ─── Surfaces (Dark) ───────────────────────────────
   static const Color darkBackground = Color(0xFF0F1419);
@@ -45,9 +48,9 @@ class AppColors {
   static const Color streakAccent = Color(0xFFE53E3E);
 
   // ─── Text (Light) ──────────────────────────────────
-  static const Color textPrimary = Color(0xFF1A202C);
-  static const Color textSecondary = Color(0xFF4A5568);
-  static const Color textTertiary = Color(0xFF718096);
+  static const Color textPrimary = Color(0xFF17324D);
+  static const Color textSecondary = Color(0xFF4B627A);
+  static const Color textTertiary = Color(0xFF7D93AA);
   static const Color textDisabled = Color(0xFFA0AEC0);
 
   // ─── Text (Dark) ───────────────────────────────────
@@ -63,9 +66,12 @@ class AppColors {
   static const Color darkShimmerBase = Color(0xFF2D3748);
   static const Color darkShimmerHighlight = Color(0xFF4A5568);
 
+  static const Color softShadow = Color(0xFF0B5CAD);
+  static const Color inkShadow = Color(0xFF17324D);
+
   // ─── Gradient Anchors ──────────────────────────────
   static const Color gradientStart = Color(0xFF0066CC);
-  static const Color gradientEnd = Color(0xFF00B4D8);
+  static const Color gradientEnd = Color(0xFF4DB7FF);
   static const Color gradientDarkStart = Color(0xFF1A5FB4);
   static const Color gradientDarkEnd = Color(0xFF0090AD);
 }

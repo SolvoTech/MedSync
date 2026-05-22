@@ -1,100 +1,107 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Centralized text styles using Inter font per spec §9.
+/// Centralized text styles for the MedSync visual system.
 class AppTextStyles {
   AppTextStyles._();
 
+  static TextStyle _heading({
+    required double fontSize,
+    required FontWeight fontWeight,
+  }) {
+    return GoogleFonts.nunito(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle _body({
+    required double fontSize,
+    required FontWeight fontWeight,
+  }) {
+    return GoogleFonts.dmSans(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      letterSpacing: 0,
+    );
+  }
+
   // ─── Display ─────────────────────────────────────
-  static TextStyle displayLarge = GoogleFonts.inter(
+  static TextStyle displayLarge = _heading(
     fontSize: 57,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
+    fontWeight: FontWeight.w700,
   );
 
-  static TextStyle displayMedium = GoogleFonts.inter(
+  static TextStyle displayMedium = _heading(
     fontSize: 45,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w700,
   );
 
-  static TextStyle displaySmall = GoogleFonts.inter(
+  static TextStyle displaySmall = _heading(
     fontSize: 36,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w700,
   );
 
   // ─── Headline ────────────────────────────────────
-  static TextStyle headlineLarge = GoogleFonts.inter(
+  static TextStyle headlineLarge = _heading(
     fontSize: 32,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w800,
   );
 
-  static TextStyle headlineMedium = GoogleFonts.inter(
+  static TextStyle headlineMedium = _heading(
     fontSize: 28,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w800,
   );
 
-  static TextStyle headlineSmall = GoogleFonts.inter(
+  static TextStyle headlineSmall = _heading(
     fontSize: 24,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w800,
   );
 
   // ─── Title ───────────────────────────────────────
-  static TextStyle titleLarge = GoogleFonts.inter(
+  static TextStyle titleLarge = _heading(
     fontSize: 22,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w700,
   );
 
-  static TextStyle titleMedium = GoogleFonts.inter(
+  static TextStyle titleMedium = _body(
     fontSize: 16,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0,
+    fontWeight: FontWeight.w700,
   );
 
-  static TextStyle titleSmall = GoogleFonts.inter(
+  static TextStyle titleSmall = _body(
     fontSize: 14,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0,
+    fontWeight: FontWeight.w700,
   );
 
   // ─── Body ────────────────────────────────────────
-  static TextStyle bodyLarge = GoogleFonts.inter(
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
-  );
+  static TextStyle bodyLarge = _body(fontSize: 16, fontWeight: FontWeight.w400);
 
-  static TextStyle bodyMedium = GoogleFonts.inter(
+  static TextStyle bodyMedium = _body(
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    letterSpacing: 0,
   );
 
-  static TextStyle bodySmall = GoogleFonts.inter(
-    fontSize: 12,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
-  );
+  static TextStyle bodySmall = _body(fontSize: 12, fontWeight: FontWeight.w400);
 
   // ─── Label ───────────────────────────────────────
-  static TextStyle labelLarge = GoogleFonts.inter(
+  static TextStyle labelLarge = _body(
     fontSize: 14,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0,
+    fontWeight: FontWeight.w700,
   );
 
-  static TextStyle labelMedium = GoogleFonts.inter(
+  static TextStyle labelMedium = _body(
     fontSize: 12,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0,
+    fontWeight: FontWeight.w700,
   );
 
-  static TextStyle labelSmall = GoogleFonts.inter(
+  static TextStyle labelSmall = _body(
     fontSize: 11,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0,
+    fontWeight: FontWeight.w700,
   );
 
-  /// Build a complete TextTheme with Inter.
+  /// Build a complete TextTheme with the app font pairing.
   static TextTheme get textTheme => TextTheme(
     displayLarge: displayLarge,
     displayMedium: displayMedium,

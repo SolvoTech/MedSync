@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 
 class AppShell extends StatelessWidget {
@@ -31,24 +32,43 @@ class AppShell extends StatelessWidget {
 
         return Scaffold(
           body: navigationShell,
-          bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              border: Border(
-                top: BorderSide(
-                  color: isDark
-                      ? colorScheme.outlineVariant.withValues(alpha: 0.3)
-                      : colorScheme.outlineVariant.withValues(alpha: 0.5),
-                  width: 0.5,
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: isDark
+                        ? colorScheme.outlineVariant.withValues(alpha: 0.34)
+                        : Colors.white.withValues(alpha: 0.86),
+                  ),
+                  boxShadow: isDark
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: AppColors.softShadow.withValues(alpha: 0.12),
+                            blurRadius: 26,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: NavigationBar(
+                    selectedIndex: selectedIndex,
+                    backgroundColor: Colors.transparent,
+                    onDestinationSelected: (index) {
+                      navigationShell.goBranch(navItems[index].branchIndex);
+                    },
+                    destinations: [
+                      for (final item in navItems) item.destination,
+                    ],
+                  ),
                 ),
               ),
-            ),
-            child: NavigationBar(
-              selectedIndex: selectedIndex,
-              onDestinationSelected: (index) {
-                navigationShell.goBranch(navItems[index].branchIndex);
-              },
-              destinations: [for (final item in navItems) item.destination],
             ),
           ),
         );

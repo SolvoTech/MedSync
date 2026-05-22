@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_gradients.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/errors/user_error_message.dart';
 import '../../core/extensions/context_ext.dart';
@@ -207,6 +208,16 @@ class ReportScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              compact ? 12 : 16,
+              8,
+              compact ? 12 : 16,
+              0,
+            ),
+            child: _ReportHero(period: period),
+          ),
+          const SizedBox(height: 4),
           // Period filter bar
           Padding(
             padding: EdgeInsets.fromLTRB(
@@ -220,7 +231,7 @@ class ReportScreen extends ConsumerWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: colorScheme.outlineVariant.withValues(alpha: 0.55),
                   ),
@@ -235,10 +246,7 @@ class ReportScreen extends ConsumerWidget {
                       ),
                     ),
                     textStyle: WidgetStatePropertyAll(
-                      TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                     ),
                   ),
                   segments: [
@@ -472,6 +480,76 @@ class _StatPill extends StatelessWidget {
                 color: Theme.of(
                   context,
                 ).colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReportHero extends StatelessWidget {
+  const _ReportHero({required this.period});
+
+  final ReportPeriod period;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final label = switch (period) {
+      ReportPeriod.daily => AppStrings.dailyLabel,
+      ReportPeriod.weekly => AppStrings.weeklyLabel,
+      ReportPeriod.monthly => AppStrings.monthlyLabel,
+    };
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      gradient: AppGradients.softSky,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(
+                Icons.insights_rounded,
+                color: AppColors.primary,
+                size: 27,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.tr('Health report', 'Laporan kesehatan'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    AppStrings.tr(
+                      'Review adherence and export the current $label summary.',
+                      'Tinjau kepatuhan dan ekspor ringkasan $label saat ini.',
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

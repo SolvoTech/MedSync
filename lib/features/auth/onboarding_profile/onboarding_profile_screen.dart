@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_gradients.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/errors/user_error_message.dart';
 import '../../../core/extensions/context_ext.dart';
@@ -92,6 +94,7 @@ class _OnboardingProfileScreenState
     final compact = MediaQuery.sizeOf(context).width < 340;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
           AppStrings.completeProfileTitle,
@@ -108,6 +111,48 @@ class _OnboardingProfileScreenState
               : AutovalidateMode.disabled,
           child: ListView(
             children: [
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  gradient: AppGradients.softSky,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.softShadow.withValues(alpha: 0.08),
+                      blurRadius: 22,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Image.asset(
+                      'assets/images/medsync_hero_medication.png',
+                      width: compact ? 72 : 92,
+                      height: compact ? 62 : 78,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        AppStrings.tr(
+                          'Complete your profile so reminders feel personal.',
+                          'Lengkapi profil agar pengingat terasa lebih personal.',
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
               AppFormContainer(
                 title: AppStrings.basicProfileTitle,
                 subtitle: AppStrings.basicProfileSubtitle,

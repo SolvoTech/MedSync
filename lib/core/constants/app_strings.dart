@@ -866,9 +866,9 @@ class AppStrings {
     'Set medication schedules and get timely notifications. No more missed doses.',
     'Atur jadwal minum obat dan dapatkan notifikasi tepat waktu. Tidak ada lagi dosis yang terlewat.',
   );
-  static String get onboardingFamilyTitle =>
+  static String get onboardingHealthTitle =>
       _t('Track Your Health', 'Pantau Kesehatan Anda');
-  static String get onboardingFamilyDescription => _t(
+  static String get onboardingHealthDescription => _t(
     'Manage medication schedules and health notes in one practical app.',
     'Kelola jadwal obat dan catatan kesehatan dalam satu aplikasi praktis.',
   );

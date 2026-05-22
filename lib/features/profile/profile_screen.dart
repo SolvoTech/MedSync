@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_gradients.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/constants/app_strings.dart';
@@ -173,7 +174,7 @@ class ProfileScreen extends ConsumerWidget {
                     isDark ? Brightness.dark : Brightness.light,
                   ),
                   borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(16),
+                    bottom: Radius.circular(34),
                   ),
                 ),
                 child: SafeArea(
@@ -205,16 +206,16 @@ class ProfileScreen extends ConsumerWidget {
                   padding: EdgeInsets.all(compact ? 12 : 16),
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(28),
                     boxShadow: isDark
                         ? null
                         : [
                             BoxShadow(
-                              color: const Color(
-                                0xFF0F1419,
-                              ).withValues(alpha: 0.05),
-                              blurRadius: 14,
-                              offset: const Offset(0, 4),
+                              color: AppColors.softShadow.withValues(
+                                alpha: 0.12,
+                              ),
+                              blurRadius: 28,
+                              offset: const Offset(0, 14),
                             ),
                           ],
                     border: isDark
@@ -312,10 +313,11 @@ class ProfileScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Account section
-                _SectionHeader(title: AppStrings.tr('ACCOUNT', 'AKUN')),
+                _SectionHeader(title: AppStrings.tr('Account', 'Akun')),
                 const SizedBox(height: 8),
                 AppCard(
                   padding: EdgeInsets.zero,
+                  color: isDark ? colorScheme.surface : AppColors.surfaceBlue,
                   child: Column(
                     children: [
                       _MenuItem(
@@ -372,6 +374,7 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 AppCard(
                   padding: EdgeInsets.zero,
+                  color: isDark ? colorScheme.surface : AppColors.surfaceBlue,
                   child: Column(
                     children: [
                       _MenuItem(
@@ -422,6 +425,7 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 AppCard(
                   padding: EdgeInsets.zero,
+                  color: isDark ? colorScheme.surface : AppColors.surfaceBlue,
                   child: Column(
                     children: [
                       if (isAdmin != true) ...[
@@ -499,6 +503,7 @@ class ProfileScreen extends ConsumerWidget {
                 // Logout
                 AppCard(
                   padding: EdgeInsets.zero,
+                  color: isDark ? colorScheme.surface : AppColors.surfaceBlue,
                   child: Column(
                     children: [
                       _MenuItem(
@@ -568,11 +573,18 @@ class _SectionHeader extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 3,
-            height: 14,
+            width: 24,
+            height: 24,
             decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Icon(
+              Icons.tune_rounded,
+              size: 13,
               color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(width: 8),
@@ -648,7 +660,7 @@ class _MenuItem extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: effectiveTextColor,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w700,
         ),
       ),
       trailing: Icon(

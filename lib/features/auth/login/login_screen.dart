@@ -82,6 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final headerToCardSpacing = screenHeight < 760 ? 20.0 : 28.0;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // Gradient top decoration
@@ -96,7 +97,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   isDark ? Brightness.dark : Brightness.light,
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(16),
+                  bottom: Radius.circular(34),
                 ),
               ),
             ),
@@ -123,7 +124,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(22),
                           border: Border.all(
                             color: Colors.white.withValues(alpha: 0.2),
                             width: 1,
@@ -139,7 +140,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ],
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(16),
                           child: Image.asset(
                             'assets/images/app_logo.jpeg',
                             width: 44,
@@ -181,24 +182,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       textAlign: TextAlign.center,
                       maxLines: 2,
                     ),
+                    SizedBox(height: compactWidth ? 8 : 12),
+                    Center(
+                      child: Image.asset(
+                        'assets/images/medsync_hero_medication.png',
+                        width: compactWidth ? 112 : 136,
+                        height: compactWidth ? 82 : 100,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
 
-                    SizedBox(height: headerToCardSpacing),
+                    SizedBox(height: headerToCardSpacing * 0.55),
 
                     // Form card
                     Container(
                       padding: EdgeInsets.all(compactWidth ? 18 : 24),
                       decoration: BoxDecoration(
                         color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(28),
                         boxShadow: isDark
                             ? null
                             : [
                                 BoxShadow(
-                                  color: const Color(
-                                    0xFF0F1419,
-                                  ).withValues(alpha: 0.06),
-                                  blurRadius: 14,
-                                  offset: const Offset(0, 4),
+                                  color: AppColors.softShadow.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  blurRadius: 28,
+                                  offset: const Offset(0, 14),
                                 ),
                               ],
                         border: isDark
