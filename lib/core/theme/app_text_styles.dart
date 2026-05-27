@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Centralized text styles for the MedSync visual system.
+/// Centralized text styles for the MEDISNA visual system.
 class AppTextStyles {
   AppTextStyles._();
 

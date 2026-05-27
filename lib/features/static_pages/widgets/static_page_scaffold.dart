@@ -44,7 +44,7 @@ class StaticPageScaffold extends StatelessWidget {
             const SizedBox(height: 32),
             Center(
               child: Text(
-                '© 2025 MedSync. Hak cipta dilindungi undang-undang.',
+                '© 2025 MEDISNA. Hak cipta dilindungi undang-undang.',
                 style: textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurface.withValues(alpha: 0.4),
                 ),

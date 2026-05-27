@@ -1,11 +1,11 @@
 {
-    "name": "med_syn",
-    "short_name": "med_syn",
+    "name": "MEDISNA",
+    "short_name": "MEDISNA",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "MEDISNA health companion app.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

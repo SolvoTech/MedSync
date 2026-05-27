@@ -29,7 +29,7 @@ Future<void> main() async {
   await AppPreferences.init();
   Intl.defaultLocale = AppPreferences.languageCode == 'id' ? 'id_ID' : 'en_US';
 
-  runApp(const ProviderScope(child: MedSyncApp()));
+  runApp(const ProviderScope(child: MedisnaApp()));
 
   // Keep first frame fast: notification bootstrap runs after app is rendered.
   unawaited(_initializeNotificationsSafely());

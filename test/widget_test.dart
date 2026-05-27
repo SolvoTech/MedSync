@@ -13,10 +13,10 @@ void main() {
   testWidgets('Renders basic provider shell', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
-        child: MaterialApp(home: Scaffold(body: Text('MedSync Test Shell'))),
+        child: MaterialApp(home: Scaffold(body: Text('MEDISNA Test Shell'))),
       ),
     );
 
-    expect(find.text('MedSync Test Shell'), findsOneWidget);
+    expect(find.text('MEDISNA Test Shell'), findsOneWidget);
   });
 }

@@ -129,7 +129,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 ),
                 const SizedBox(height: 28),
                 const Text(
-                  'MedSync',
+                  'MEDISNA',
                   style: TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.w800,

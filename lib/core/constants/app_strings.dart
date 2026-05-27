@@ -15,7 +15,7 @@ class AppStrings {
   static String tr(String en, String id) => _t(en, id);
 
   // App
-  static String get appName => 'MedSync';
+  static String get appName => 'MEDISNA';
   static String get appTagline => 'Your Personal Health Companion';
   static String get loading => _t('Loading...', 'Memuat...');
   static String get errorGeneral => _t(
@@ -27,21 +27,21 @@ class AppStrings {
   static String get emptyData => _t('No data yet', 'Belum ada data');
 
   // Splash
-  static String get splashTitle => 'MedSync';
+  static String get splashTitle => 'MEDISNA';
   static String get splashSubtitle => 'Your Personal Health Companion';
 
   // Auth
   static String get loginTitle => _t('Welcome Back', 'Selamat Datang');
   static String get loginSubtitle =>
-      _t('Sign in to your MedSync account', 'Masuk ke akun MedSync Anda');
+      _t('Sign in to your MEDISNA account', 'Masuk ke akun MEDISNA Anda');
   static String get loginGreeting => _t(
     'Hello, wishing you a healthy day.',
     'Halo, semoga harimu sehat hari ini.',
   );
   static String get registerTitle => _t('Create New Account', 'Buat Akun Baru');
   static String get registerSubtitle => _t(
-    'Register to start using MedSync',
-    'Daftar untuk mulai menggunakan MedSync',
+    'Register to start using MEDISNA',
+    'Daftar untuk mulai menggunakan MEDISNA',
   );
   static String get registerGreeting =>
       _t('Let us start your healthy journey.', 'Yuk mulai perjalanan sehatmu.');
@@ -656,7 +656,7 @@ class AppStrings {
       _t('Notification Settings', 'Pengaturan Notifikasi');
   static String get appearance => _t('Appearance & Theme', 'Tampilan & Tema');
   static String get dataManagement => _t('Data & Backup', 'Data & Cadangan');
-  static String get about => _t('About MedSync', 'Tentang MedSync');
+  static String get about => _t('About MEDISNA', 'Tentang MEDISNA');
   static String get privacyPolicy => _t('Privacy Policy', 'Kebijakan Privasi');
   static String get termsConditions =>
       _t('Terms & Conditions', 'Syarat & Ketentuan');

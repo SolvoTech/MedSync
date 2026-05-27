@@ -1,4 +1,4 @@
-# Supabase Setup (MedSync)
+# Supabase Setup (MEDISNA)
 
 ## Local prerequisites
 - Supabase CLI installed

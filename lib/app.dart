@@ -8,8 +8,8 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
 
-class MedSyncApp extends ConsumerWidget {
-  const MedSyncApp({super.key});
+class MedisnaApp extends ConsumerWidget {
+  const MedisnaApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,7 +20,7 @@ class MedSyncApp extends ConsumerWidget {
     AppStrings.setLanguageCode(appLocale.languageCode);
 
     return MaterialApp.router(
-      title: 'MedSync',
+      title: 'MEDISNA',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

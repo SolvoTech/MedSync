@@ -15,7 +15,7 @@ class BootReceiver : BroadcastReceiver() {
                 action = intent.action
             }
             context.sendBroadcast(rescheduleIntent)
-            Log.i("MedSync", "Boot receiver triggered: ${intent.action}")
+            Log.i("MEDISNA", "Boot receiver triggered: ${intent.action}")
         }
     }
 }

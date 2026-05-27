@@ -27,7 +27,7 @@
     <uses-permission android:name="android.permission.health.READ_SLEEP"/>
 
     <application
-        android:label="Med Sync"
+        android:label="MEDISNA"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">

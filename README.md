@@ -1,6 +1,6 @@
-# MedSync
+# MEDISNA
 
-MedSync adalah aplikasi Flutter untuk manajemen pengobatan, pengukuran kesehatan, dan aktivitas fisik dengan dukungan Supabase.
+MEDISNA adalah aplikasi Flutter untuk manajemen pengobatan, pengukuran kesehatan, dan aktivitas fisik dengan dukungan Supabase.
 
 ## Menjalankan Proyek
 

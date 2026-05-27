@@ -24,12 +24,14 @@ import '../../features/splash/splash_screen.dart';
 import '../observability/app_monitoring.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
+import 'root_navigation.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = GoRouterAuthNotifier();
   ref.onDispose(authNotifier.dispose);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.splash,
     refreshListenable: authNotifier,
     redirect: (context, state) {

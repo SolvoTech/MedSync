@@ -90,8 +90,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         'Notifikasi tidak muncul, bagaimana cara memperbaikinya?',
       ),
       a: AppStrings.tr(
-        'Make sure notification and exact alarm permissions are enabled. Open Settings -> Apps -> MedSync -> Permissions. Also disable battery optimization for MedSync.',
-        'Pastikan izin notifikasi dan alarm tepat waktu sudah diaktifkan. Buka Pengaturan -> Aplikasi -> MedSync -> Izin. Nonaktifkan juga optimasi baterai untuk MedSync.',
+        'Make sure notification and exact alarm permissions are enabled. Open Settings -> Apps -> MEDISNA -> Permissions. Also disable battery optimization for MEDISNA.',
+        'Pastikan izin notifikasi dan alarm tepat waktu sudah diaktifkan. Buka Pengaturan -> Aplikasi -> MEDISNA -> Izin. Nonaktifkan juga optimasi baterai untuk MEDISNA.',
       ),
     ),
     (
@@ -118,7 +118,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       scheme: 'mailto',
       path: _supportEmail,
       queryParameters: {
-        'subject': AppStrings.tr('MedSync Support', 'Bantuan MedSync'),
+        'subject': AppStrings.tr('MEDISNA Support', 'Bantuan MEDISNA'),
       },
     );
 
@@ -243,7 +243,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       scheme: 'mailto',
       path: _supportEmail,
       queryParameters: {
-        'subject': AppStrings.tr('MedSync Bug Report', 'Laporan Bug MedSync'),
+        'subject': AppStrings.tr('MEDISNA Bug Report', 'Laporan Bug MEDISNA'),
         'body': bugBody,
       },
     );

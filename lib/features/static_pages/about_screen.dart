@@ -12,7 +12,7 @@ class AboutScreen extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 340;
 
     return StaticPageScaffold(
-      title: 'Tentang MedSync',
+      title: 'Tentang MEDISNA',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -24,7 +24,7 @@ class AboutScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'MedSync',
+            'MEDISNA',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: textTheme.headlineMedium?.copyWith(
@@ -42,10 +42,10 @@ class AboutScreen extends StatelessWidget {
           _Section(
             title: 'Deskripsi Aplikasi',
             content:
-                'MedSync adalah aplikasi pendamping kesehatan pribadi yang '
+                'MEDISNA adalah aplikasi pendamping kesehatan pribadi yang '
                 'membantu Anda mengelola jadwal obat, memantau kesehatan, dan '
                 'menjaga gaya hidup aktif. Dengan fitur pengingat cerdas, '
-                'pelacakan kepatuhan, dan laporan kesehatan, MedSync membantu '
+                'pelacakan kepatuhan, dan laporan kesehatan, MEDISNA membantu '
                 'Anda tetap sehat setiap hari.',
           ),
           const SizedBox(height: 20),

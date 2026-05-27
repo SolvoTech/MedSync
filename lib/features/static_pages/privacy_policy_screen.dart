@@ -20,7 +20,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         children: [
           _heading(context, '1. Data yang Kami Kumpulkan'),
           Text(
-            'Kami mengumpulkan data berikut saat Anda menggunakan MedSync:\n'
+            'Kami mengumpulkan data berikut saat Anda menggunakan MEDISNA:\n'
             '• Alamat email untuk autentikasi\n'
             '• Nama dan tanggal lahir (opsional)\n'
             '• Data jadwal obat, pengukuran, dan aktivitas yang Anda input\n'
@@ -64,7 +64,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _heading(context, '6. Data Anak-Anak'),
           Text(
-            'MedSync tidak diperuntukkan bagi anak di bawah 13 tahun. '
+            'MEDISNA tidak diperuntukkan bagi anak di bawah 13 tahun. '
             'Aplikasi ini ditujukan untuk orang dewasa yang mengelola '
             'jadwal dan catatan kesehatannya sendiri.',
             style: bodyStyle,

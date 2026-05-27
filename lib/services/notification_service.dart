@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -10,9 +9,9 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../core/constants/alarm_ringtones.dart';
+import '../core/router/root_navigation.dart';
 import '../core/utils/reminder_time.dart';
 import '../data/local/preferences/app_preferences.dart';
-import '../data/remote/datasources/task_log_remote_datasource.dart';
 import '../data/remote/supabase_client.dart';
 import 'task_completion_service.dart';
 
@@ -122,6 +121,25 @@ class NotificationService implements TaskReminderScheduler {
     }
 
     await _ensureAndroidChannels();
+    await _handleLaunchNotificationResponse();
+  }
+
+  Future<void> _handleLaunchNotificationResponse() async {
+    try {
+      final details = await _plugin.getNotificationAppLaunchDetails();
+      final response = details?.notificationResponse;
+      if (details?.didNotificationLaunchApp != true ||
+          response == null ||
+          !shouldOpenDashboardForNotificationAction(response)) {
+        return;
+      }
+
+      await _openDashboardForNotificationAction();
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('Failed to handle notification launch action: $error');
+      }
+    }
   }
 
   Future<void> applyRingtonePreferenceChanges() async {
@@ -258,7 +276,7 @@ class NotificationService implements TaskReminderScheduler {
                   AndroidNotificationAction(
                     markDoneActionId,
                     'Selesai',
-                    showsUserInterface: false,
+                    showsUserInterface: true,
                     cancelNotification: true,
                   ),
                 ]
@@ -753,7 +771,7 @@ class NotificationService implements TaskReminderScheduler {
       case dailySummaryChannelId:
         return 'Ringkasan Harian';
       default:
-        return 'MedSync';
+        return 'MEDISNA';
     }
   }
 
@@ -775,7 +793,7 @@ class NotificationService implements TaskReminderScheduler {
       case dailySummaryChannelId:
         return 'Notifikasi ringkasan aktivitas harian';
       default:
-        return 'Notifikasi MedSync';
+        return 'Notifikasi MEDISNA';
     }
   }
 
@@ -889,7 +907,7 @@ class NotificationService implements TaskReminderScheduler {
         );
       default:
         return const _ReminderText(
-          title: 'Pengingat MedSync',
+          title: 'Pengingat MEDISNA',
           body: 'Saatnya tugas Anda.',
         );
     }
@@ -1798,23 +1816,6 @@ int _currentRuntimeNotificationId(String seed) {
 Future<void> notificationTapBackground(NotificationResponse response) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize timezone for background isolate
-  tz.initializeTimeZones();
-  try {
-    final timezoneInfo = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
-  } catch (_) {}
-
-  // Initialize Supabase for background isolate
-  try {
-    await dotenv.load(fileName: '.env');
-    final url = dotenv.env['SUPABASE_URL'] ?? '';
-    final anonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
-    if (url.isNotEmpty && anonKey.isNotEmpty) {
-      await Supabase.initialize(url: url, anonKey: anonKey);
-    }
-  } catch (_) {}
-
   await _handleNotificationResponse(response);
 
   if (kDebugMode) {
@@ -1823,45 +1824,22 @@ Future<void> notificationTapBackground(NotificationResponse response) async {
 }
 
 Future<void> _handleNotificationResponse(NotificationResponse response) async {
-  if (response.actionId != NotificationService.markDoneActionId) {
+  if (!shouldOpenDashboardForNotificationAction(response)) {
     return;
   }
 
-  final payload = response.payload;
-  if (payload == null || payload.isEmpty) {
-    return;
-  }
+  await _openDashboardForNotificationAction();
+}
 
-  final parsed = _parseTaskPayload(payload);
-  if (parsed == null) {
-    return;
-  }
+@visibleForTesting
+bool shouldOpenDashboardForNotificationAction(NotificationResponse response) {
+  return response.actionId == NotificationService.markDoneActionId;
+}
 
-  await _ensureSessionReadyForPayload(parsed.userId);
-
-  if (!_isPayloadAllowedForCurrentSession(parsed)) {
-    if (kDebugMode) {
-      debugPrint(
-        'Skip notification action due to user mismatch: ${parsed.userId}',
-      );
-    }
-    return;
-  }
-
-  try {
-    await TaskCompletionService(
-      taskLogStore: TaskLogRemoteDataSource(),
-      reminderScheduler: NotificationService(),
-    ).markReminderDoneAndSilence(
-      taskType: parsed.taskType,
-      referenceId: parsed.referenceId,
-      timeOfDay: parsed.timeOfDay,
-      scheduledAt: parsed.scheduledAt,
-    );
-  } catch (error) {
-    if (kDebugMode) {
-      debugPrint('Failed to mark task from notification action: $error');
-    }
+Future<void> _openDashboardForNotificationAction() async {
+  final didOpen = await openDashboardFromRootNavigator();
+  if (!didOpen && kDebugMode) {
+    debugPrint('Notification action could not open dashboard yet.');
   }
 }
 
@@ -1985,39 +1963,6 @@ _TaskPayload? _parseTaskPayload(String payload) {
     scheduledAt: null,
     snoozeIndex: snoozeIndex,
   );
-}
-
-bool _isPayloadAllowedForCurrentSession(_TaskPayload parsed) {
-  final payloadUserId = parsed.userId;
-  if (payloadUserId == null || payloadUserId.isEmpty) {
-    return false;
-  }
-
-  try {
-    final activeUserId = Supabase.instance.client.auth.currentUser?.id;
-    return activeUserId != null && activeUserId == payloadUserId;
-  } catch (_) {
-    return false;
-  }
-}
-
-Future<void> _ensureSessionReadyForPayload(String? payloadUserId) async {
-  if (payloadUserId == null || payloadUserId.isEmpty) {
-    return;
-  }
-
-  for (var i = 0; i < 8; i++) {
-    try {
-      final activeUserId = Supabase.instance.client.auth.currentUser?.id;
-      if (activeUserId == payloadUserId) {
-        return;
-      }
-    } catch (_) {
-      return;
-    }
-
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-  }
 }
 
 class _TaskPayload {

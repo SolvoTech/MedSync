@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# MedSync pre-commit sample
+# MEDISNA pre-commit sample
 # Usage:
 # 1) cp tooling/pre-commit.sample .git/hooks/pre-commit
 # 2) chmod +x .git/hooks/pre-commit

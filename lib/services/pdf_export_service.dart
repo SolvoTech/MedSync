@@ -120,7 +120,7 @@ class PdfExportService {
       await Printing.sharePdf(
         bytes: Uint8List.fromList(bytes),
         filename:
-            'MedSync_Laporan_${_formatDateShort(startDate)}_${_formatDateShort(endDate)}.pdf',
+            'MEDISNA_Laporan_${_formatDateShort(startDate)}_${_formatDateShort(endDate)}.pdf',
       );
     }
   }
@@ -135,7 +135,7 @@ class PdfExportService {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Text(
-                'MedSync',
+                'MEDISNA',
                 style: pw.TextStyle(
                   fontSize: 20,
                   fontWeight: pw.FontWeight.bold,
@@ -172,7 +172,7 @@ class PdfExportService {
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text(
-            'Digenerate oleh MedSync • ${_formatDate(DateTime.now())}',
+            'Digenerate oleh MEDISNA • ${_formatDate(DateTime.now())}',
             style: const pw.TextStyle(fontSize: 8),
           ),
           pw.Text(

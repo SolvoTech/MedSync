@@ -1,3 +1,4 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:med_syn/services/notification_service.dart';
 
@@ -16,6 +17,28 @@ void main() {
         stableNotificationId('task|medicine|schedule-1|19:10|6'),
         1160258564,
       );
+    });
+  });
+
+  group('shouldOpenDashboardForNotificationAction', () {
+    test('returns true only for the notification done action', () {
+      const response = NotificationResponse(
+        notificationResponseType:
+            NotificationResponseType.selectedNotificationAction,
+        actionId: NotificationService.markDoneActionId,
+        payload: 'taskv2|medicine|user-1|schedule-1|19:10|0',
+      );
+
+      expect(shouldOpenDashboardForNotificationAction(response), isTrue);
+    });
+
+    test('returns false for regular notification taps', () {
+      const response = NotificationResponse(
+        notificationResponseType: NotificationResponseType.selectedNotification,
+        payload: 'taskv2|medicine|user-1|schedule-1|19:10|0',
+      );
+
+      expect(shouldOpenDashboardForNotificationAction(response), isFalse);
     });
   });
 

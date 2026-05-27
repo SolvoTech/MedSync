@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-/// Reusable gradient definitions for the MedSync app.
+/// Reusable gradient definitions for the MEDISNA app.
 class AppGradients {
   const AppGradients._();
 

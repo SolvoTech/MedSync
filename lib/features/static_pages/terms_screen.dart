@@ -20,7 +20,7 @@ class TermsScreen extends StatelessWidget {
         children: [
           _heading(context, '1. Penerimaan Syarat'),
           Text(
-            'Dengan menggunakan aplikasi MedSync, Anda menyetujui untuk '
+            'Dengan menggunakan aplikasi MEDISNA, Anda menyetujui untuk '
             'terikat oleh syarat dan ketentuan ini. Jika Anda tidak setuju, '
             'harap tidak menggunakan aplikasi ini.',
             style: bodyStyle,
@@ -28,7 +28,7 @@ class TermsScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _heading(context, '2. Penggunaan yang Diizinkan'),
           Text(
-            'MedSync dirancang untuk penggunaan pribadi dalam mengelola '
+            'MEDISNA dirancang untuk penggunaan pribadi dalam mengelola '
             'jadwal obat, pengukuran kesehatan, dan aktivitas fisik. '
             'Anda bertanggung jawab atas keakuratan data yang dimasukkan.',
             style: bodyStyle,
@@ -52,7 +52,7 @@ class TermsScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              'MedSync adalah alat bantu pengingat dan pencatatan kesehatan. '
+              'MEDISNA adalah alat bantu pengingat dan pencatatan kesehatan. '
               'Aplikasi ini BUKAN pengganti saran, diagnosis, atau perawatan '
               'medis profesional. Selalu konsultasikan dengan tenaga medis '
               'profesional untuk keputusan kesehatan Anda.',
@@ -64,7 +64,7 @@ class TermsScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _heading(context, '5. Pembatasan Tanggung Jawab'),
           Text(
-            'MedSync tidak bertanggung jawab atas kerugian yang timbul '
+            'MEDISNA tidak bertanggung jawab atas kerugian yang timbul '
             'dari ketidakakuratan data, kegagalan pengingat, atau '
             'keputusan kesehatan yang diambil berdasarkan informasi '
             'dalam aplikasi.',
