@@ -7,6 +7,8 @@ import '../../data/remote/datasources/measurement_remote_datasource.dart';
 import '../../domain/models/measurement_reminder.dart';
 import '../../services/notification_service.dart';
 import '../../services/permission_service.dart';
+import '../home/home_controller.dart';
+import '../reports/report_screen.dart';
 
 final measurementRemoteDataSourceProvider =
     Provider<MeasurementRemoteDataSource>((ref) {
@@ -121,6 +123,8 @@ class MeasurementController
     await ref
         .read(measurementRemoteDataSourceProvider)
         .deactivateReminder(reminderId);
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(reportDataProvider);
     await refresh();
   }
 
@@ -137,6 +141,8 @@ class MeasurementController
     await ref
         .read(measurementRemoteDataSourceProvider)
         .deleteReminder(reminderId);
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(reportDataProvider);
     await refresh();
   }
 

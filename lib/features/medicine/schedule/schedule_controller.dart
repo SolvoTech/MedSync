@@ -246,6 +246,8 @@ class ScheduleController extends AutoDisposeAsyncNotifier<List<Medicine>> {
     }
 
     await ref.read(medicineRepositoryProvider).deleteMedicine(medicineId);
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(reportDataProvider);
     await refresh();
   }
 

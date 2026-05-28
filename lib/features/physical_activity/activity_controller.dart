@@ -7,6 +7,8 @@ import '../../data/remote/datasources/physical_activity_remote_datasource.dart';
 import '../../domain/models/physical_activity_reminder.dart';
 import '../../services/notification_service.dart';
 import '../../services/permission_service.dart';
+import '../home/home_controller.dart';
+import '../reports/report_screen.dart';
 
 final activityRemoteDataSourceProvider =
     Provider<PhysicalActivityRemoteDataSource>((ref) {
@@ -121,6 +123,8 @@ class ActivityController
     await ref
         .read(activityRemoteDataSourceProvider)
         .deactivateReminder(reminderId);
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(reportDataProvider);
     await refresh();
   }
 
@@ -135,6 +139,8 @@ class ActivityController
     }
 
     await ref.read(activityRemoteDataSourceProvider).deleteReminder(reminderId);
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(reportDataProvider);
     await refresh();
   }
 

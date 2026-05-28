@@ -160,6 +160,37 @@ class MedicineRemoteDataSource {
       throw Exception('Anda harus login terlebih dahulu.');
     }
 
+    final scheduleRows = await client
+        .from('medicine_schedules')
+        .select('id')
+        .eq('medicine_id', medicineId)
+        .eq('owner_id', user.id);
+
+    final scheduleIds = (scheduleRows as List<dynamic>)
+        .map((row) => (row as Map<String, dynamic>)['id'] as String?)
+        .whereType<String>()
+        .toList();
+
+    if (scheduleIds.isNotEmpty) {
+      await client
+          .from('task_logs')
+          .delete()
+          .eq('owner_id', user.id)
+          .eq('task_type', 'medicine')
+          .inFilter('reference_id', scheduleIds);
+
+      await client
+          .from('schedule_time_slots')
+          .delete()
+          .inFilter('schedule_id', scheduleIds);
+
+      await client
+          .from('medicine_schedules')
+          .delete()
+          .eq('owner_id', user.id)
+          .inFilter('id', scheduleIds);
+    }
+
     await client
         .from('medicines')
         .delete()
@@ -355,16 +386,16 @@ class MedicineRemoteDataSource {
     }
 
     await client
-        .from('schedule_time_slots')
-        .delete()
-        .eq('schedule_id', scheduleId);
-
-    await client
         .from('task_logs')
         .delete()
         .eq('owner_id', user.id)
         .eq('task_type', 'medicine')
         .eq('reference_id', scheduleId);
+
+    await client
+        .from('schedule_time_slots')
+        .delete()
+        .eq('schedule_id', scheduleId);
 
     await client
         .from('medicine_schedules')
